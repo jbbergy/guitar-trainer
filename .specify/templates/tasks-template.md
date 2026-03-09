@@ -12,6 +12,13 @@ description: "Task list template for feature implementation"
 
 **Organization**: Tasks are grouped by user story to enable independent implementation and testing of each story.
 
+**Constitution Compliance**: All tasks must align with Guitare Trainer principles:
+- Accessibility-First: Include keyboard shortcuts, ARIA labels, and focus management tasks
+- Simplicity & Extensibility: Separate data definition tasks from rendering tasks
+- TypeScript Strictness: Include type definition tasks for all new interfaces
+- Component-Driven UI: Break large components into sub-component tasks if over 200 lines
+- Performance: Include performance testing tasks for chord rendering
+
 ## Format: `[ID] [P?] [Story] Description`
 
 - **[P]**: Can run in parallel (different files, no dependencies)

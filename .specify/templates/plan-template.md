@@ -31,7 +31,13 @@
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-[Gates determined based on constitution file]
+- [ ] **Accessibility-First**: Does this feature maintain keyboard-only navigation? Are all visual cues accessible without color alone?
+- [ ] **Simplicity & Extensibility**: Is chord data separate from rendering? Can new chords be added without major refactoring?
+- [ ] **TypeScript Strictness**: Will strict mode remain enabled? Are all types explicitly defined?
+- [ ] **Component-Driven UI**: Are components under 200 lines? Does each have a single responsibility?
+- [ ] **Performance**: Will chord rendering stay under 100ms? Are transitions smooth?
+
+*If any principle is violated, document justification in Complexity Tracking section below.*
 
 ## Project Structure
 

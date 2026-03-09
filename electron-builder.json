@@ -1,0 +1,25 @@
+{
+  "appId": "com.guitare-trainer.app",
+  "productName": "Guitare Trainer",
+  "directories": {
+    "output": "release"
+  },
+  "files": [
+    "dist/**/*",
+    "dist-electron/**/*"
+  ],
+  "mac": {
+    "target": ["dmg", "zip"],
+    "category": "public.app-category.education",
+    "icon": "public/icon.png"
+  },
+  "win": {
+    "target": ["nsis", "portable"],
+    "icon": "public/icon.png"
+  },
+  "linux": {
+    "target": ["AppImage", "deb"],
+    "category": "Education",
+    "icon": "public/icon.png"
+  }
+}

@@ -1,0 +1,79 @@
+/**
+ * Theme CSS - Dark theme with ochre accents
+ * WCAG AA compliant contrast ratios
+ */
+
+:root {
+  /* Color Palette */
+  --bg-primary: #1a1a1a;
+  --bg-secondary: #0a0a0a;
+  --text-primary: #ffffff;
+  --text-secondary: #e0e0e0;
+  --accent-primary: #d4a574; /* Ochre */
+  --accent-hover: #e6b886;
+  --accent-yellow: #f4c542;
+  --muted: #6a6a6a;
+
+  /* Spacing */
+  --spacing-xs: 0.25rem;
+  --spacing-sm: 0.5rem;
+  --spacing-md: 1rem;
+  --spacing-lg: 2rem;
+  --spacing-xl: 3rem;
+
+  /* Typography */
+  --font-size-base: 16px;
+  --font-size-lg: 18px;
+  --font-size-xl: 24px;
+  --font-size-2xl: 32px;
+  --font-size-3xl: 48px;
+
+  /* Focus */
+  --focus-outline: 2px solid var(--accent-primary);
+  --focus-offset: 2px;
+}
+
+/* Global Styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-size: var(--font-size-base);
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  line-height: 1.5;
+}
+
+/* Focus Indicators - Accessibility */
+*:focus-visible {
+  outline: var(--focus-outline);
+  outline-offset: var(--focus-offset);
+}
+
+button:focus-visible,
+a:focus-visible {
+  outline: var(--focus-outline);
+  outline-offset: var(--focus-offset);
+}
+
+/* Hide focus outline for mouse users, show for keyboard users */
+*:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* Utility Classes */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}

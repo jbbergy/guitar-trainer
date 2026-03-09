@@ -1,0 +1,45 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="512" height="512" fill="#2c3e50" rx="64"/>
+  
+  <!-- Chord diagram container -->
+  <g transform="translate(106, 80)">
+    <!-- Nut (top thick line) -->
+    <rect x="0" y="0" width="300" height="8" fill="#ecf0f1" rx="2"/>
+    
+    <!-- Frets (horizontal lines) -->
+    <line x1="0" y1="80" x2="300" y2="80" stroke="#ecf0f1" stroke-width="3"/>
+    <line x1="0" y1="160" x2="300" y2="160" stroke="#ecf0f1" stroke-width="3"/>
+    <line x1="0" y1="240" x2="300" y2="240" stroke="#ecf0f1" stroke-width="3"/>
+    <line x1="0" y1="320" x2="300" y2="320" stroke="#ecf0f1" stroke-width="3"/>
+    
+    <!-- Strings (vertical lines) -->
+    <line x1="0" y1="0" x2="0" y2="320" stroke="#ecf0f1" stroke-width="3"/>
+    <line x1="60" y1="0" x2="60" y2="320" stroke="#ecf0f1" stroke-width="3"/>
+    <line x1="120" y1="0" x2="120" y2="320" stroke="#ecf0f1" stroke-width="3"/>
+    <line x1="180" y1="0" x2="180" y2="320" stroke="#ecf0f1" stroke-width="3"/>
+    <line x1="240" y1="0" x2="240" y2="320" stroke="#ecf0f1" stroke-width="3"/>
+    <line x1="300" y1="0" x2="300" y2="320" stroke="#ecf0f1" stroke-width="3"/>
+    
+    <!-- Finger positions (dots) for a C major chord shape -->
+    <!-- String 5, fret 3 -->
+    <circle cx="60" cy="200" r="22" fill="#3498db"/>
+    <text x="60" y="210" font-family="Arial, sans-serif" font-size="28" font-weight="bold" fill="white" text-anchor="middle">3</text>
+    
+    <!-- String 4, fret 2 -->
+    <circle cx="120" cy="120" r="22" fill="#3498db"/>
+    <text x="120" y="130" font-family="Arial, sans-serif" font-size="28" font-weight="bold" fill="white" text-anchor="middle">2</text>
+    
+    <!-- String 2, fret 1 -->
+    <circle cx="240" cy="40" r="22" fill="#3498db"/>
+    <text x="240" y="50" font-family="Arial, sans-serif" font-size="28" font-weight="bold" fill="white" text-anchor="middle">1</text>
+    
+    <!-- Open/muted string markers above nut -->
+    <circle cx="0" cy="-25" r="10" fill="none" stroke="#e74c3c" stroke-width="3"/>
+    <line x1="-7" y1="-32" x2="7" y2="-18" stroke="#e74c3c" stroke-width="3"/>
+    <line x1="-7" y1="-18" x2="7" y2="-32" stroke="#e74c3c" stroke-width="3"/>
+    
+    <circle cx="180" cy="-25" r="10" fill="none" stroke="#2ecc71" stroke-width="3"/>
+    <circle cx="300" cy="-25" r="10" fill="none" stroke="#2ecc71" stroke-width="3"/>
+  </g>
+</svg>

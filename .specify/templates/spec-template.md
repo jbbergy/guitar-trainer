@@ -18,6 +18,12 @@
   - Tested independently
   - Deployed independently
   - Demonstrated to users independently
+  
+  ACCESSIBILITY REQUIREMENT (Guitare Trainer Constitution):
+  All user stories MUST describe keyboard-only interaction paths. Verify that:
+  - No functionality requires a mouse
+  - Visual information is not conveyed by color alone
+  - Screen reader users can access chord information
 -->
 
 ### User Story 1 - [Brief Title] (Priority: P1)

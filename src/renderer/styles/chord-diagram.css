@@ -1,0 +1,183 @@
+/**
+ * Chord Diagram Specific Styles
+ * High-contrast SVG styling for guitar chord diagrams
+ * WCAG AA compliant with colorblind-safe design
+ */
+
+/* Container */
+.chord-diagram-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 1rem;
+}
+
+/* SVG Root */
+.chord-diagram {
+  max-width: 400px;
+  max-height: 350px;
+  width: 100%;
+  height: auto;
+  margin: 0 auto;
+  display: block;
+}
+
+/* Strings - Vertical lines representing guitar strings */
+.chord-diagram .string {
+  stroke: var(--text-secondary);
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
+/* Frets - Horizontal lines representing fret positions */
+.chord-diagram .fret {
+  stroke: var(--text-secondary);
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
+/* Nut - Thicker line for first fret when baseFret is 1 */
+.chord-diagram .fret--nut {
+  stroke-width: 6;
+  stroke: var(--text-primary);
+}
+
+/* String Markers - X for muted, O for open strings */
+.chord-diagram .string-marker {
+  fill: var(--text-primary);
+  font-size: 1.25rem;
+  font-weight: 700;
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+/* Fret Position Indicator - Shows starting fret (e.g., "3fr") */
+.chord-diagram .fret-indicator {
+  fill: var(--text-secondary);
+  font-size: 1rem;
+  font-weight: 500;
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+/* Finger Dots - Colored circles showing where to place fingers */
+.chord-diagram .finger-dot {
+  fill: var(--accent-primary);
+  stroke: var(--text-primary);
+  stroke-width: 2;
+}
+
+/* Finger Numbers - Numbers inside dots (1-4) for finger placement */
+.chord-diagram .finger-number {
+  fill: var(--bg-primary);
+  font-size: 1rem;
+  font-weight: 700;
+  font-family: system-ui, -apple-system, sans-serif;
+  pointer-events: none;
+  text-anchor: middle;
+  dominant-baseline: middle;
+}
+
+/* High Contrast Mode - Enhanced visibility for accessibility */
+@media (prefers-contrast: high) {
+  .chord-diagram .string,
+  .chord-diagram .fret {
+    stroke-width: 3;
+  }
+  
+  .chord-diagram .finger-dot {
+    stroke-width: 3;
+  }
+  
+  .chord-diagram .string-marker,
+  .chord-diagram .fret-indicator,
+  .chord-diagram .finger-number {
+    font-weight: 800;
+  }
+}
+
+/* Forced Colors Mode - Windows High Contrast support */
+@media (forced-colors: active) {
+  .chord-diagram .string,
+  .chord-diagram .fret {
+    stroke: CanvasText;
+  }
+  
+  .chord-diagram .finger-dot {
+    fill: Highlight;
+    stroke: CanvasText;
+  }
+  
+  .chord-diagram .string-marker,
+  .chord-diagram .fret-indicator {
+    fill: CanvasText;
+  }
+  
+  .chord-diagram .finger-number {
+    fill: HighlightText;
+  }
+}
+
+/* Colorblind-Safe Design - Dots use both shape AND number, not color alone */
+/* The numbered dots ensure information is conveyed through multiple channels */
+.chord-diagram .finger-dot {
+  /* Ochre accent provides good contrast for most colorblind types */
+  /* Numbers inside provide redundant information channel */
+}
+
+/* Responsive Sizing - Maintain readability at different screen sizes */
+@media (max-width: 1000px) {
+  .chord-diagram {
+    max-width: 350px;
+    max-height: 300px;
+  }
+  
+  .chord-diagram .string-marker {
+    font-size: 1.1rem;
+  }
+  
+  .chord-diagram .finger-number {
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 800px) {
+  .chord-diagram {
+    max-width: 300px;
+    max-height: 250px;
+  }
+  
+  .chord-diagram .string-marker {
+    font-size: 1rem;
+  }
+  
+  .chord-diagram .finger-number {
+    font-size: 0.85rem;
+  }
+  
+  .chord-diagram .fret-indicator {
+    font-size: 0.9rem;
+  }
+}
+
+/* Print Styles - Ensure diagrams print clearly */
+@media print {
+  .chord-diagram {
+    max-width: 100%;
+    page-break-inside: avoid;
+  }
+  
+  .chord-diagram .string,
+  .chord-diagram .fret {
+    stroke: black;
+    stroke-width: 2;
+  }
+  
+  .chord-diagram .finger-dot {
+    fill: white;
+    stroke: black;
+    stroke-width: 2;
+  }
+  
+  .chord-diagram .finger-number {
+    fill: black;
+  }
+}
