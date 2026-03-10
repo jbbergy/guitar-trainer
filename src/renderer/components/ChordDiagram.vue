@@ -2,7 +2,7 @@
   <svg
     class="chord-diagram"
     :viewBox="`0 0 ${width} ${height}`"
-    :aria-label="`Guitar chord diagram for ${chord.name}`"
+    :aria-label="`${instrumentLabel} chord diagram for ${chord.name}`"
     role="img"
     :style="{
       '--marker-font-size': `${1.25 * scale}rem`,
@@ -42,7 +42,7 @@
     <!-- Strings (vertical lines) -->
     <g class="strings">
       <line
-        v-for="stringIndex in 6"
+        v-for="stringIndex in stringCount"
         :key="`string-${stringIndex}`"
         :x1="stringSpacing + (stringIndex - 1) * stringSpacing"
         :y1="topMargin"
@@ -59,7 +59,7 @@
         :key="`fret-${fretIndex}`"
         :x1="stringSpacing"
         :y1="topMargin + (fretIndex - 1) * fretHeight"
-        :x2="stringSpacing + 5 * stringSpacing"
+        :x2="stringSpacing + (stringCount - 1) * stringSpacing"
         :y2="topMargin + (fretIndex - 1) * fretHeight"
         :class="{ 'fret': true, 'fret--nut': fretIndex === 1 && chord.baseFret === 1 }"
       />
@@ -96,11 +96,14 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import type { Chord } from '@/types/chord'
+import type { Instrument } from '@/types/chord'
 
 const props = withDefaults(defineProps<{
   chord: Chord
+  instrument?: Instrument
   size?: number
 }>(), {
+  instrument: 'guitar',
   size: 400
 })
 
@@ -111,8 +114,10 @@ const fretHeight = computed(() => 50 * scale.value)
 const topMargin = computed(() => 40 * scale.value)
 const dotRadius = computed(() => 15 * scale.value)
 const numFrets = 5
+const stringCount = computed(() => props.chord.frets.length)
+const instrumentLabel = computed(() => props.instrument === 'ukulele' ? 'Ukulele' : 'Guitar')
 
-const width = computed(() => stringSpacing.value * 7) // 6 strings + margins
+const width = computed(() => stringSpacing.value * (stringCount.value + 1))
 const height = computed(() => topMargin.value + numFrets * fretHeight.value + 20 * scale.value)
 </script>
 

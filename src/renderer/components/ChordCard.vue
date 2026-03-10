@@ -11,7 +11,7 @@
       {{ chord.name }}
     </div>
     <div v-if="!memoryMode" class="chord-card__diagram">
-      <ChordDiagram :chord="chord" :size="size" />
+      <ChordDiagram :chord="chord" :instrument="instrument" :size="size" />
     </div>
   </div>
 </template>
@@ -19,14 +19,17 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import type { Chord } from '@/types/chord'
+import type { Instrument } from '@/types/chord'
 import ChordDiagram from './ChordDiagram.vue'
 
 const props = withDefaults(defineProps<{
   chord: Chord
+  instrument?: Instrument
   size?: number
   memoryMode?: boolean
   zoomLevel?: number
 }>(), {
+  instrument: 'guitar',
   size: 400,
   memoryMode: false,
   zoomLevel: 100

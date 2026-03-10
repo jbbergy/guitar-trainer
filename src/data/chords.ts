@@ -3,7 +3,7 @@
  * All chords use standard guitar notation from low E (string 6) to high E (string 1)
  */
 
-import type { Chord } from '@/types/chord'
+import type { Chord, Instrument } from '@/types/chord'
 
 export const CHORDS: Chord[] = [
   // --- A ---
@@ -140,5 +140,38 @@ export const CHORDS: Chord[] = [
     baseFret: 0
   }
 ]
+
+export const UKULELE_CHORDS: Chord[] = [
+  { name: 'A', frets: [2, 1, 0, 0], fingers: [2, 1, 0, 0], baseFret: 0 },
+  { name: 'Am', frets: [2, 0, 0, 0], fingers: [2, 0, 0, 0], baseFret: 0 },
+  { name: 'A7', frets: [0, 1, 0, 0], fingers: [0, 1, 0, 0], baseFret: 0 },
+  { name: 'B', frets: [4, 3, 2, 2], fingers: [3, 2, 1, 1], baseFret: 0 },
+  { name: 'Bm', frets: [4, 2, 2, 2], fingers: [3, 1, 1, 1], baseFret: 0 },
+  { name: 'B7', frets: [2, 3, 2, 2], fingers: [1, 2, 1, 1], baseFret: 0 },
+  { name: 'C', frets: [0, 0, 0, 3], fingers: [0, 0, 0, 3], baseFret: 0 },
+  { name: 'Cm', frets: [0, 3, 3, 3], fingers: [0, 1, 2, 3], baseFret: 0 },
+  { name: 'C7', frets: [0, 0, 0, 1], fingers: [0, 0, 0, 1], baseFret: 0 },
+  { name: 'D', frets: [2, 2, 2, 0], fingers: [1, 2, 3, 0], baseFret: 0 },
+  { name: 'Dm', frets: [2, 2, 1, 0], fingers: [2, 3, 1, 0], baseFret: 0 },
+  { name: 'D7', frets: [2, 2, 2, 3], fingers: [1, 1, 1, 2], baseFret: 0 },
+  { name: 'E', frets: [1, 4, 0, 2], fingers: [1, 4, 0, 2], baseFret: 0 },
+  { name: 'Em', frets: [0, 4, 3, 2], fingers: [0, 3, 2, 1], baseFret: 0 },
+  { name: 'E7', frets: [1, 2, 0, 2], fingers: [1, 2, 0, 3], baseFret: 0 },
+  { name: 'F', frets: [2, 0, 1, 0], fingers: [2, 0, 1, 0], baseFret: 0 },
+  { name: 'Fm', frets: [1, 0, 1, 3], fingers: [1, 0, 2, 3], baseFret: 0 },
+  { name: 'F7', frets: [2, 3, 1, 3], fingers: [2, 3, 1, 4], baseFret: 0 },
+  { name: 'G', frets: [0, 2, 3, 2], fingers: [0, 1, 3, 2], baseFret: 0 },
+  { name: 'Gm', frets: [0, 2, 3, 1], fingers: [0, 2, 3, 1], baseFret: 0 },
+  { name: 'G7', frets: [0, 2, 1, 2], fingers: [0, 2, 1, 3], baseFret: 0 }
+]
+
+const CHORD_COLLECTIONS: Record<Instrument, Chord[]> = {
+  guitar: CHORDS,
+  ukulele: UKULELE_CHORDS
+}
+
+export function getChordsByInstrument(instrument: Instrument): Chord[] {
+  return CHORD_COLLECTIONS[instrument]
+}
 
 export default CHORDS

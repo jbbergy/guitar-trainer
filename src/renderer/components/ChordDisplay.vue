@@ -7,7 +7,7 @@
   >
     <transition name="fade" mode="out-in">
       <div :key="chord.name" class="chord-content">
-        <ChordCard :chord="chord" :memory-mode="memoryMode" :zoom-level="zoomLevel" />
+        <ChordCard :chord="chord" :instrument="instrument" :memory-mode="memoryMode" :zoom-level="zoomLevel" />
       </div>
     </transition>
   </div>
@@ -15,10 +15,12 @@
 
 <script setup lang="ts">
 import type { Chord } from '@/types/chord'
+import type { Instrument } from '@/types/chord'
 import ChordCard from './ChordCard.vue'
 
 defineProps<{
   chord: Chord
+  instrument?: Instrument
   memoryMode?: boolean
   zoomLevel?: number
 }>()

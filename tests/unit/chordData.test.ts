@@ -4,11 +4,15 @@
  */
 
 import { describe, it, expect } from 'vitest'
-import CHORDS from '@/data/chords'
+import CHORDS, { UKULELE_CHORDS } from '@/data/chords'
 
 describe('chordData', () => {
   it('should have exactly 21 chords', () => {
     expect(CHORDS).toHaveLength(21)
+  })
+
+  it('should have exactly 21 ukulele chords', () => {
+    expect(UKULELE_CHORDS).toHaveLength(21)
   })
 
   it('should include all expected chord names', () => {
@@ -62,6 +66,33 @@ describe('chordData', () => {
           expect(chord.baseFret).toBeDefined()
           expect(typeof chord.baseFret).toBe('number')
           expect(chord.baseFret).toBeGreaterThanOrEqual(0)
+        })
+      })
+    })
+  })
+
+  describe('ukulele chord structure validation', () => {
+    UKULELE_CHORDS.forEach((chord) => {
+      describe(`${chord.name}`, () => {
+        it('should have 4 fret positions (one per string)', () => {
+          expect(chord.frets).toBeDefined()
+          expect(chord.frets).toHaveLength(4)
+        })
+
+        it('should have 4 finger positions', () => {
+          expect(chord.fingers).toBeDefined()
+          expect(chord.fingers).toHaveLength(4)
+        })
+
+        it('should have valid fret and finger values', () => {
+          chord.frets.forEach((fret) => {
+            expect(typeof fret === 'number' || fret === 'X').toBe(true)
+          })
+
+          chord.fingers.forEach((finger) => {
+            expect(finger).toBeGreaterThanOrEqual(0)
+            expect(finger).toBeLessThanOrEqual(4)
+          })
         })
       })
     })

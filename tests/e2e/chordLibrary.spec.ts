@@ -15,7 +15,7 @@ test.describe('Chord Library', () => {
 
     const window = await electronApp.firstWindow()
     await window.waitForLoadState('domcontentloaded')
-    
+
     // Verify library is not visible initially
     const libraryOverlay = window.locator('.chord-library-overlay')
     await expect(libraryOverlay).not.toBeVisible()
@@ -27,14 +27,14 @@ test.describe('Chord Library', () => {
 
     // Verify library opens
     await expect(libraryOverlay).toBeVisible()
-    
+
     // Verify title is displayed
     const title = window.locator('.chord-library__title')
-    await expect(title).toHaveText('Available Chords')
+    await expect(title).toHaveText('Guitar Chords')
 
-    // Verify all 12 chords are displayed
+    // Verify all guitar chords are displayed
     const chordItems = window.locator('.chord-library__item')
-    await expect(chordItems).toHaveCount(12)
+    await expect(chordItems).toHaveCount(21)
 
     // Close library with close button
     const closeButton = window.locator('.chord-library__close')
@@ -54,9 +54,9 @@ test.describe('Chord Library', () => {
 
     const window = await electronApp.firstWindow()
     await window.waitForLoadState('domcontentloaded')
-    
+
     const libraryOverlay = window.locator('.chord-library-overlay')
-    
+
     // Open with L key
     await window.keyboard.press('l')
     await expect(libraryOverlay).toBeVisible()
@@ -76,9 +76,9 @@ test.describe('Chord Library', () => {
 
     const window = await electronApp.firstWindow()
     await window.waitForLoadState('domcontentloaded')
-    
+
     const libraryOverlay = window.locator('.chord-library-overlay')
-    
+
     // Open with L key
     await window.keyboard.press('l')
     await expect(libraryOverlay).toBeVisible()
@@ -98,23 +98,23 @@ test.describe('Chord Library', () => {
 
     const window = await electronApp.firstWindow()
     await window.waitForLoadState('domcontentloaded')
-    
+
     const libraryOverlay = window.locator('.chord-library-overlay')
-    
+
     // Open library
     await window.keyboard.press('l')
     await expect(libraryOverlay).toBeVisible()
 
     // Click on overlay (not on the modal content)
     await libraryOverlay.click({ position: { x: 10, y: 10 } })
-    
+
     // Verify library is closed
     await expect(libraryOverlay).not.toBeVisible()
 
     await electronApp.close()
   })
 
-  test('displays all chord names correctly', async () => {
+  test('displays expected guitar chord names', async () => {
     const electronApp = await electron.launch({
       args: [path.join(__dirname, '../../dist-electron/main.cjs')],
       env: { ...process.env, NODE_ENV: 'test' }
@@ -122,16 +122,16 @@ test.describe('Chord Library', () => {
 
     const window = await electronApp.firstWindow()
     await window.waitForLoadState('domcontentloaded')
-    
+
     // Open library
     await window.keyboard.press('l')
 
     // Expected chord names
-    const expectedChords = ['Em', 'E', 'Am', 'A', 'C', 'G', 'D', 'Dm', 'E7', 'D7', 'A7', 'C7']
+    const expectedChords = ['A', 'Am', 'A7', 'B', 'Bm', 'B7', 'C', 'Cm', 'C7', 'D', 'Dm', 'D7', 'E', 'Em', 'E7', 'F', 'Fm', 'F7', 'G', 'Gm', 'G7']
 
     // Verify each chord name is present
     for (const chordName of expectedChords) {
-      const chordElement = window.locator('.chord-library__chord-name', { hasText: chordName })
+      const chordElement = window.locator('.chord-card__name', { hasText: chordName })
       await expect(chordElement).toBeVisible()
     }
 
@@ -146,12 +146,12 @@ test.describe('Chord Library', () => {
 
     const window = await electronApp.firstWindow()
     await window.waitForLoadState('domcontentloaded')
-    
+
     const libraryButton = window.locator('.app__library-button')
-    
+
     // Check aria-label
     await expect(libraryButton).toHaveAttribute('aria-label', 'Show chord library')
-    
+
     // Check title
     await expect(libraryButton).toHaveAttribute('title', 'Show all chords')
 

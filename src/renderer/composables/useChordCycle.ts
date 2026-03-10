@@ -10,19 +10,21 @@ import { ref, onMounted, onUnmounted, watch, computed } from 'vue'
 import { useWindowSize } from '@vueuse/core'
 import { getRandomChord } from '@/utils/randomChord'
 import type { Chord } from '@/types/chord'
+import type { Instrument } from '@/types/chord'
 
 export function useChordCycle() {
-  const currentChord = ref<Chord>(getRandomChord())
+  const instrument = ref<Instrument>('guitar')
+  const currentChord = ref<Chord>(getRandomChord(undefined, instrument.value))
   const responseStartTime = ref<number>(0)
   const { width, height } = useWindowSize()
-  
+
   // Chord history for previous chord navigation
   const chordHistory = ref<Chord[]>([])
   const historyIndex = ref<number>(-1)
-  
+
   // Memory training mode toggle
   const isMemoryMode = ref<boolean>(false)
-  
+
   // Auto-cycle feature
   const isAutoCycleEnabled = ref<boolean>(false)
   const bpm = ref<number>(60)
@@ -30,8 +32,8 @@ export function useChordCycle() {
 
   const nextChord = () => {
     const startTime = performance.now()
-    const newChord = getRandomChord(currentChord.value)
-    
+    const newChord = getRandomChord(currentChord.value, instrument.value)
+
     // Add current chord to history before changing
     if (historyIndex.value === -1 || historyIndex.value === chordHistory.value.length - 1) {
       chordHistory.value.push(currentChord.value)
@@ -42,11 +44,11 @@ export function useChordCycle() {
       chordHistory.value.push(currentChord.value)
       historyIndex.value = chordHistory.value.length
     }
-    
+
     currentChord.value = newChord
     const endTime = performance.now()
     const responseTime = endTime - startTime
-    
+
     // Log performance for validation
     if (responseTime > 100) {
       console.warn(`Chord change took ${responseTime.toFixed(2)}ms (target: <100ms)`)
@@ -71,18 +73,33 @@ export function useChordCycle() {
     isMemoryMode.value = !isMemoryMode.value
   }
 
+  const setInstrument = (newInstrument: Instrument) => {
+    if (instrument.value === newInstrument) {
+      return
+    }
+
+    instrument.value = newInstrument
+    chordHistory.value = []
+    historyIndex.value = -1
+    currentChord.value = getRandomChord(undefined, instrument.value)
+  }
+
+  const toggleInstrument = () => {
+    setInstrument(instrument.value === 'guitar' ? 'ukulele' : 'guitar')
+  }
+
   const startAutoCycle = () => {
     if (autoCycleIntervalId.value !== null) {
       stopAutoCycle()
     }
-    
+
     // Convert BPM to milliseconds (60 BPM = 1 beat per second = 1000ms)
     const intervalMs = (60 / bpm.value) * 1000
-    
+
     autoCycleIntervalId.value = window.setInterval(() => {
       nextChord()
     }, intervalMs)
-    
+
     isAutoCycleEnabled.value = true
   }
 
@@ -104,7 +121,7 @@ export function useChordCycle() {
 
   const setBpm = (newBpm: number) => {
     bpm.value = Math.max(20, Math.min(240, newBpm)) // Clamp between 20 and 240 BPM
-    
+
     // Restart auto-cycle if it's currently running to apply new BPM
     if (isAutoCycleEnabled.value) {
       startAutoCycle()
@@ -122,7 +139,7 @@ export function useChordCycle() {
     // Spacebar cycles to next chord (manual mode only)
     if (event.code === 'Space' || event.key === ' ') {
       event.preventDefault() // Prevent page scroll
-      
+
       // If auto-cycle is enabled, spacebar pauses it
       if (isAutoCycleEnabled.value) {
         stopAutoCycle()
@@ -131,7 +148,7 @@ export function useChordCycle() {
         nextChord()
       }
     }
-    
+
     // Left arrow or Backspace to go to previous chord
     if (event.key === 'ArrowLeft' || event.key === 'Backspace') {
       event.preventDefault()
@@ -139,7 +156,7 @@ export function useChordCycle() {
         previousChord()
       }
     }
-    
+
     // Right arrow to go forward in history
     if (event.key === 'ArrowRight') {
       event.preventDefault()
@@ -147,7 +164,7 @@ export function useChordCycle() {
         nextHistoryChord()
       }
     }
-    
+
     // 'M' key to toggle memory mode
     if (event.key === 'm' || event.key === 'M') {
       event.preventDefault()
@@ -165,7 +182,7 @@ export function useChordCycle() {
   // Attach keyboard listener on mount
   onMounted(() => {
     window.addEventListener('keydown', handleKeyPress)
-    
+
     // Set initial focus to ensure keyboard works immediately
     window.focus()
   })
@@ -177,6 +194,9 @@ export function useChordCycle() {
   })
 
   return {
+    instrument,
+    setInstrument,
+    toggleInstrument,
     currentChord,
     nextChord,
     previousChord,

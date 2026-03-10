@@ -1,13 +1,15 @@
 <template>
-  <transition name="fade">
-    <div 
-      v-if="isVisible" 
-      class="keyboard-help"
-      role="dialog"
-      aria-labelledby="keyboard-help-title"
-      aria-modal="true"
-    >
-      <div class="keyboard-help__content">
+  <Teleport to="body">
+    <transition name="fade">
+      <div 
+        v-if="modelValue" 
+        class="keyboard-help"
+        role="dialog"
+        aria-labelledby="keyboard-help-title"
+        aria-modal="true"
+        @click.self="close"
+      >
+        <div class="keyboard-help__content">
         <h2 id="keyboard-help-title" class="keyboard-help__title">
           Keyboard Shortcuts
         </h2>
@@ -36,7 +38,16 @@
               <kbd>M</kbd>
             </dt>
             <dd class="keyboard-help__description">
-              Toggle memory training mode
+              Show or hide chord diagram
+            </dd>
+          </div>
+
+          <div class="keyboard-help__item">
+            <dt class="keyboard-help__key">
+              <kbd>I</kbd>
+            </dt>
+            <dd class="keyboard-help__description">
+              Switch instrument
             </dd>
           </div>
           
@@ -51,10 +62,10 @@
           
           <div class="keyboard-help__item">
             <dt class="keyboard-help__key">
-              <kbd>⌘</kbd> + <kbd>F</kbd> / <kbd>Ctrl</kbd> + <kbd>F</kbd>
+              <kbd>⌘</kbd>/<kbd>Ctrl</kbd> + <kbd>+</kbd> <kbd>-</kbd> <kbd>0</kbd>
             </dt>
             <dd class="keyboard-help__description">
-              Toggle fullscreen
+              Zoom in, out, or reset
             </dd>
           </div>
           
@@ -71,41 +82,24 @@
         <p class="keyboard-help__footer">
           Press <kbd>?</kbd> or <kbd>ESC</kbd> to close
         </p>
+        </div>
       </div>
-    </div>
-  </transition>
+    </transition>
+  </Teleport>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+defineProps<{
+  modelValue: boolean
+}>()
 
-const isVisible = ref(false)
+const emit = defineEmits<{
+  'update:modelValue': [value: boolean]
+}>()
 
-const toggleHelp = () => {
-  isVisible.value = !isVisible.value
+const close = (): void => {
+  emit('update:modelValue', false)
 }
-
-const handleKeyPress = (event: KeyboardEvent) => {
-  // Toggle help with "?" key
-  if (event.key === '?' && !event.shiftKey) {
-    event.preventDefault()
-    toggleHelp()
-  }
-  
-  // Close help with Escape key
-  if (event.key === 'Escape' && isVisible.value) {
-    event.preventDefault()
-    isVisible.value = false
-  }
-}
-
-onMounted(() => {
-  window.addEventListener('keydown', handleKeyPress)
-})
-
-onUnmounted(() => {
-  window.removeEventListener('keydown', handleKeyPress)
-})
 </script>
 
 <style scoped>

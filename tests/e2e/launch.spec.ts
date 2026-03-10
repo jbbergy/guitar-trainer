@@ -11,7 +11,7 @@ let window: Page
 
 test.beforeAll(async () => {
   const startTime = performance.now()
-  
+
   // Launch Electron app
   electronApp = await electron.launch({
     args: ['dist-electron/main.cjs'],
@@ -20,15 +20,15 @@ test.beforeAll(async () => {
       NODE_ENV: 'production'
     }
   })
-  
+
   // Get the first window
   window = await electronApp.firstWindow()
-  
+
   const endTime = performance.now()
   const launchTime = endTime - startTime
-  
+
   console.log(`Application launched in ${launchTime.toFixed(0)}ms`)
-  
+
   // Validate launch time is under 2 seconds (2000ms)
   expect(launchTime).toBeLessThan(2000)
 })
@@ -47,12 +47,12 @@ test.describe('Application Launch', () => {
     // Wait for the chord name to be visible
     const chordName = window.locator('.chord-name__text')
     await expect(chordName).toBeVisible({ timeout: 2000 })
-    
+
     // Verify chord name is not empty
     const text = await chordName.textContent()
     expect(text).toBeTruthy()
     expect(text?.length).toBeGreaterThan(0)
-    
+
     console.log(`Initial chord displayed: ${text}`)
   })
 
@@ -60,12 +60,12 @@ test.describe('Application Launch', () => {
     // Wait for SVG diagram to be rendered
     const svg = window.locator('.chord-diagram')
     await expect(svg).toBeVisible({ timeout: 2000 })
-    
+
     // Verify SVG has proper structure
     const strings = window.locator('.chord-diagram .string')
     const stringCount = await strings.count()
     expect(stringCount).toBe(6)
-    
+
     console.log(`SVG diagram rendered with ${stringCount} strings`)
   })
 
@@ -74,10 +74,10 @@ test.describe('Application Launch', () => {
       width: window.innerWidth,
       height: window.innerHeight
     }))
-    
+
     expect(size.width).toBeGreaterThanOrEqual(800)
     expect(size.height).toBeGreaterThanOrEqual(600)
-    
+
     console.log(`Window size: ${size.width}x${size.height}`)
   })
 
@@ -85,30 +85,28 @@ test.describe('Application Launch', () => {
     const bgColor = await window.locator('body').evaluate((el) => {
       return window.getComputedStyle(el).backgroundColor
     })
-    
+
     // Dark background should be close to #1a1a1a (rgb(26, 26, 26))
     expect(bgColor).toContain('rgb')
     console.log(`Background color: ${bgColor}`)
   })
 
-  test('should have keyboard hint visible', async () => {
-    const hint = window.locator('.app__hint')
-    await expect(hint).toBeVisible()
-    
-    const hintText = await hint.textContent()
-    expect(hintText?.toLowerCase()).toContain('space')
-    
-    console.log(`Hint displayed: ${hintText}`)
+  test('should not display keyboard shortcuts by default', async () => {
+    await expect(window.locator('.keyboard-help')).toHaveCount(0)
+
+    const shortcutsButton = window.locator('[data-testid="shortcuts-button"]')
+    await expect(shortcutsButton).toBeVisible()
+    await expect(shortcutsButton).toContainText('Shortcuts')
   })
 
   test('should have accessible ARIA labels', async () => {
     const app = window.locator('#app')
     const ariaLabel = await app.getAttribute('aria-label')
-    
+
     expect(ariaLabel).toBeTruthy()
     expect(ariaLabel?.toLowerCase()).toContain('guitar')
     expect(ariaLabel?.toLowerCase()).toContain('chord')
-    
+
     console.log(`ARIA label: ${ariaLabel}`)
   })
 })

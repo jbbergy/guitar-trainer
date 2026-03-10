@@ -10,7 +10,7 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { mount } from '@vue/test-utils'
 import ChordLibrary from '@/renderer/components/ChordLibrary.vue'
-import { CHORDS } from '@/data/chords'
+import { CHORDS, UKULELE_CHORDS } from '@/data/chords'
 
 describe('ChordLibrary', () => {
   let container: HTMLDivElement
@@ -35,14 +35,14 @@ describe('ChordLibrary', () => {
     })
 
     await wrapper.vm.$nextTick()
-    
+
     // Find in document body since it uses Teleport
     const overlay = document.querySelector('.chord-library-overlay')
     expect(overlay).toBeTruthy()
-    
+
     const library = document.querySelector('.chord-library')
     expect(library).toBeTruthy()
-    
+
     wrapper.unmount()
   })
 
@@ -55,7 +55,7 @@ describe('ChordLibrary', () => {
 
     const overlay = document.querySelector('.chord-library-overlay')
     expect(overlay).toBeNull()
-    
+
     wrapper.unmount()
   })
 
@@ -67,10 +67,10 @@ describe('ChordLibrary', () => {
     })
 
     await wrapper.vm.$nextTick()
-    
+
     const chordItems = document.querySelectorAll('.chord-library__item')
     expect(chordItems.length).toBe(CHORDS.length)
-    
+
     wrapper.unmount()
   })
 
@@ -82,14 +82,14 @@ describe('ChordLibrary', () => {
     })
 
     await wrapper.vm.$nextTick()
-    
+
     const chordNames = document.querySelectorAll('.chord-library__chord-name')
     const expectedNames = CHORDS.map(chord => chord.name)
-    
+
     chordNames.forEach((nameElement, index) => {
       expect(nameElement.textContent?.trim()).toBe(expectedNames[index])
     })
-    
+
     wrapper.unmount()
   })
 
@@ -101,16 +101,16 @@ describe('ChordLibrary', () => {
     })
 
     await wrapper.vm.$nextTick()
-    
+
     const closeButton = document.querySelector('.chord-library__close') as HTMLButtonElement
     expect(closeButton).toBeTruthy()
-    
+
     closeButton?.click()
     await wrapper.vm.$nextTick()
 
     expect(wrapper.emitted('update:modelValue')).toBeTruthy()
     expect(wrapper.emitted('update:modelValue')?.[0]).toEqual([false])
-    
+
     wrapper.unmount()
   })
 
@@ -122,10 +122,10 @@ describe('ChordLibrary', () => {
     })
 
     await wrapper.vm.$nextTick()
-    
+
     const overlay = document.querySelector('.chord-library-overlay') as HTMLDivElement
     expect(overlay).toBeTruthy()
-    
+
     // Simulate click on overlay (not on child elements)
     const event = new MouseEvent('click', { bubbles: true })
     Object.defineProperty(event, 'target', { value: overlay, enumerable: true })
@@ -134,7 +134,7 @@ describe('ChordLibrary', () => {
 
     expect(wrapper.emitted('update:modelValue')).toBeTruthy()
     expect(wrapper.emitted('update:modelValue')?.[0]).toEqual([false])
-    
+
     wrapper.unmount()
   })
 
@@ -146,7 +146,7 @@ describe('ChordLibrary', () => {
     })
 
     await wrapper.vm.$nextTick()
-    
+
     const overlay = document.querySelector('.chord-library-overlay')
     expect(overlay).toBeTruthy()
     expect(overlay?.getAttribute('role')).toBe('dialog')
@@ -158,7 +158,7 @@ describe('ChordLibrary', () => {
 
     const closeButton = document.querySelector('.chord-library__close')
     expect(closeButton?.getAttribute('aria-label')).toBe('Close chord library')
-    
+
     wrapper.unmount()
   })
 
@@ -170,10 +170,29 @@ describe('ChordLibrary', () => {
     })
 
     await wrapper.vm.$nextTick()
-    
+
     const title = document.querySelector('.chord-library__title')
-    expect(title?.textContent?.trim()).toBe('Available Chords')
-    
+    expect(title?.textContent?.trim()).toBe('Guitar Chords')
+
+    wrapper.unmount()
+  })
+
+  it('renders ukulele collection when instrument is ukulele', async () => {
+    const wrapper = mount(ChordLibrary, {
+      props: {
+        modelValue: true,
+        instrument: 'ukulele'
+      }
+    })
+
+    await wrapper.vm.$nextTick()
+
+    const title = document.querySelector('.chord-library__title')
+    expect(title?.textContent?.trim()).toBe('Ukulele Chords')
+
+    const chordItems = document.querySelectorAll('.chord-library__item')
+    expect(chordItems.length).toBe(UKULELE_CHORDS.length)
+
     wrapper.unmount()
   })
 })

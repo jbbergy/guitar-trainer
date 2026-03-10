@@ -12,7 +12,7 @@
         <div class="chord-library">
           <div class="chord-library__header">
             <h2 id="chord-library-title" class="chord-library__title">
-              Available Chords
+              {{ instrumentTitle }} Chords
             </h2>
             <button
               class="chord-library__close"
@@ -30,7 +30,7 @@
                 :key="chord.name"
                 class="chord-library__item"
               >
-                <ChordCard :chord="chord" :size="350" />
+                <ChordCard :chord="chord" :instrument="instrument" :size="350" />
               </div>
             </div>
           </div>
@@ -41,18 +41,24 @@
 </template>
 
 <script setup lang="ts">
-import { CHORDS } from '@/data/chords'
+import { computed } from 'vue'
+import { getAllChords } from '@/utils/randomChord'
+import type { Instrument } from '@/types/chord'
 import ChordCard from './ChordCard.vue'
 
-defineProps<{
+const props = withDefaults(defineProps<{
   modelValue: boolean
-}>()
+  instrument?: Instrument
+}>(), {
+  instrument: 'guitar'
+})
 
 const emit = defineEmits<{
   'update:modelValue': [value: boolean]
 }>()
 
-const chords = CHORDS
+const chords = computed(() => getAllChords(props.instrument))
+const instrumentTitle = computed(() => props.instrument === 'ukulele' ? 'Ukulele' : 'Guitar')
 
 const close = () => {
   emit('update:modelValue', false)

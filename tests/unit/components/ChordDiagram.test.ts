@@ -6,7 +6,7 @@
 import { describe, it, expect } from 'vitest'
 import { mount } from '@vue/test-utils'
 import ChordDiagram from '@/renderer/components/ChordDiagram.vue'
-import { CHORDS } from '@/data/chords'
+import { CHORDS, UKULELE_CHORDS } from '@/data/chords'
 
 describe('ChordDiagram.vue', () => {
   describe('Basic Structure', () => {
@@ -14,7 +14,7 @@ describe('ChordDiagram.vue', () => {
       const wrapper = mount(ChordDiagram, {
         props: { chord: CHORDS[0] }
       })
-      
+
       const svg = wrapper.find('svg')
       expect(svg.exists()).toBe(true)
       expect(svg.attributes('role')).toBe('img')
@@ -27,21 +27,39 @@ describe('ChordDiagram.vue', () => {
       const wrapper = mount(ChordDiagram, {
         props: { chord }
       })
-      
+
       const svg = wrapper.find('svg')
       expect(svg.attributes('aria-label')).toContain(chord.name)
       expect(svg.attributes('aria-label')).toContain('Guitar chord diagram')
     })
+
+    it('should expose ukulele aria-label when instrument is ukulele', () => {
+      const chord = UKULELE_CHORDS[0]
+      const wrapper = mount(ChordDiagram, {
+        props: { chord, instrument: 'ukulele' }
+      })
+
+      expect(wrapper.find('svg').attributes('aria-label')).toContain('Ukulele chord diagram')
+    })
   })
 
   describe('String Rendering', () => {
-    it('should render 6 vertical strings', () => {
+    it('should render 6 vertical strings for guitar', () => {
       const wrapper = mount(ChordDiagram, {
         props: { chord: CHORDS[0] }
       })
-      
+
       const strings = wrapper.findAll('.string')
       expect(strings).toHaveLength(6)
+    })
+
+    it('should render 4 vertical strings for ukulele', () => {
+      const wrapper = mount(ChordDiagram, {
+        props: { chord: UKULELE_CHORDS[0], instrument: 'ukulele' }
+      })
+
+      const strings = wrapper.findAll('.string')
+      expect(strings).toHaveLength(4)
     })
 
     it('should render X/O markers for muted/open strings', () => {
@@ -49,10 +67,10 @@ describe('ChordDiagram.vue', () => {
       const wrapper = mount(ChordDiagram, {
         props: { chord }
       })
-      
+
       const markers = wrapper.findAll('.string-marker')
       expect(markers.length).toBeGreaterThan(0)
-      
+
       // Check that markers contain X or O
       const markerTexts = markers.map(m => m.text())
       const hasXOrO = markerTexts.some(text => text === 'X' || text === 'O')
@@ -65,7 +83,7 @@ describe('ChordDiagram.vue', () => {
       const wrapper = mount(ChordDiagram, {
         props: { chord: CHORDS[0] }
       })
-      
+
       const frets = wrapper.findAll('.fret')
       expect(frets).toHaveLength(6) // 5 frets + 1 nut
     })
@@ -76,7 +94,7 @@ describe('ChordDiagram.vue', () => {
         const wrapper = mount(ChordDiagram, {
           props: { chord: barreChord }
         })
-        
+
         const indicator = wrapper.find('.fret-indicator')
         expect(indicator.exists()).toBe(true)
         expect(indicator.text()).toContain('fr')
@@ -89,10 +107,10 @@ describe('ChordDiagram.vue', () => {
       const wrapper = mount(ChordDiagram, {
         props: { chord: CHORDS[0] }
       })
-      
+
       const dots = wrapper.findAll('.finger-dot')
       const chord = CHORDS[0]
-      
+
       // Count how many frets are pressed (not X, not 0)
       const pressedFrets = chord.frets.filter(f => typeof f === 'number' && f > 0)
       expect(dots.length).toBe(pressedFrets.length)
@@ -102,10 +120,10 @@ describe('ChordDiagram.vue', () => {
       const wrapper = mount(ChordDiagram, {
         props: { chord: CHORDS[0] }
       })
-      
+
       const numbers = wrapper.findAll('.finger-number')
       expect(numbers.length).toBeGreaterThan(0)
-      
+
       // Check that numbers are 1-4 or empty
       numbers.forEach(num => {
         const text = num.text()
@@ -124,15 +142,15 @@ describe('ChordDiagram.vue', () => {
         const wrapper = mount(ChordDiagram, {
           props: { chord }
         })
-        
+
         // Verify basic structure
         expect(wrapper.find('svg').exists()).toBe(true)
-        expect(wrapper.findAll('.string')).toHaveLength(6)
+        expect(wrapper.findAll('.string')).toHaveLength(chord.frets.length)
         expect(wrapper.findAll('.fret').length).toBeGreaterThan(0)
-        
+
         // Verify aria-label contains chord name
         expect(wrapper.find('svg').attributes('aria-label')).toContain(chord.name)
-        
+
         // Verify finger positions match chord data
         const dots = wrapper.findAll('.finger-dot')
         const pressedFrets = chord.frets.filter(f => typeof f === 'number' && f > 0)
@@ -146,11 +164,11 @@ describe('ChordDiagram.vue', () => {
       const wrapper = mount(ChordDiagram, {
         props: { chord: CHORDS[0] }
       })
-      
+
       // Check for semantic grouping
       const groups = wrapper.findAll('g')
       expect(groups.length).toBeGreaterThan(0)
-      
+
       // Check for descriptive classes
       expect(wrapper.find('.strings').exists()).toBe(true)
       expect(wrapper.find('.frets').exists()).toBe(true)
@@ -162,10 +180,10 @@ describe('ChordDiagram.vue', () => {
       const wrapper = mount(ChordDiagram, {
         props: { chord }
       })
-      
+
       const svg = wrapper.find('svg')
       const ariaLabel = svg.attributes('aria-label')
-      
+
       expect(ariaLabel).toBeTruthy()
       expect(ariaLabel).toContain(chord.name)
       expect(ariaLabel?.toLowerCase()).toContain('chord')
@@ -177,12 +195,12 @@ describe('ChordDiagram.vue', () => {
       const wrapper = mount(ChordDiagram, {
         props: { chord: CHORDS[0] }
       })
-      
+
       const svg = wrapper.find('svg')
       const viewBox = svg.attributes('viewBox')
-      
+
       expect(viewBox).toBeDefined()
-      
+
       // Should have reasonable dimensions (not negative, not zero)
       const [x, y, width, height] = viewBox!.split(' ').map(Number)
       expect(width).toBeGreaterThan(0)

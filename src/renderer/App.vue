@@ -15,7 +15,8 @@
     />
     
     <ChordDisplay 
-      :chord="currentChord" 
+      :chord="currentChord"
+      :instrument="instrument"
       :memory-mode="isMemoryMode" 
       :zoom-level="zoomLevel"
     />
@@ -23,39 +24,60 @@
     <ZoomControls 
       v-model:zoom-level="zoomLevel"
     />
+
+    <button
+      class="app__instrument-switch"
+      role="switch"
+      :aria-checked="isUkulele"
+      :aria-label="`Switch instrument. Current: ${instrumentLabel}`"
+      :title="`Switch to ${instrument === 'guitar' ? 'ukulele' : 'guitar'}`"
+      data-testid="instrument-toggle"
+      @click="toggleInstrument"
+    >
+      <span class="app__instrument-switch-label app__instrument-switch-label--left">Guitar</span>
+      <span
+        class="app__instrument-switch-track"
+        aria-hidden="true"
+      >
+        <span class="app__instrument-switch-thumb" />
+      </span>
+      <span class="app__instrument-switch-label app__instrument-switch-label--right">Ukulele</span>
+    </button>
     
     <button 
       class="app__library-button"
-      @click="showLibrary = true"
       aria-label="Show chord library"
       title="Show all chords"
+      @click="showLibrary = true"
     >
       📚 All Chords
     </button>
     
-    <div 
-      class="app__hint" 
-      role="status"
-      aria-live="polite" 
-      aria-atomic="true"
+    <button
+      class="app__shortcuts-button"
+      aria-label="Show keyboard shortcuts"
+      title="Show keyboard shortcuts"
+      data-testid="shortcuts-button"
+      @click="showKeyboardHelp = true"
     >
-      Press <kbd aria-label="spacebar">SPACE</kbd> {{ isAutoCycleEnabled ? 'to pause' : 'for next chord' }} • 
-      <kbd aria-label="Left arrow or backspace">← / BKSP</kbd> previous • 
-      <kbd aria-label="Right arrow">→</kbd> forward • 
-      <kbd aria-label="M key">M</kbd> no schéma • 
-      <kbd aria-label="L key">L</kbd> for chord library • 
-      <kbd aria-label="Ctrl/Cmd plus">Ctrl/⌘ +/-</kbd> zoom • Mouse wheel to zoom
-    </div>
-    <ChordLibrary v-model="showLibrary" />
+      ⌨ Shortcuts
+    </button>
+
+    <ChordLibrary
+      v-model="showLibrary"
+      :instrument="instrument"
+    />
+    <KeyboardHelp v-model="showKeyboardHelp" />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { computed, ref, onMounted, onUnmounted } from 'vue'
 import { useChordCycle } from './composables/useChordCycle'
 import ChordDisplay from './components/ChordDisplay.vue'
 import ChordLibrary from './components/ChordLibrary.vue'
 import AutoCycleControls from './components/AutoCycleControls.vue'
+import KeyboardHelp from './components/KeyboardHelp.vue'
 import ZoomControls from './components/ZoomControls.vue'
 
 const { 
@@ -66,22 +88,42 @@ const {
   setBpm, 
   isMemoryMode, 
   toggleMemoryMode, 
-  canGoBack 
+  instrument,
+  toggleInstrument
 } = useChordCycle()
 const showLibrary = ref(false)
+const showKeyboardHelp = ref(false)
 const zoomLevel = ref(100)
+const isUkulele = computed(() => instrument.value === 'ukulele')
+const instrumentLabel = computed(() => instrument.value === 'ukulele' ? 'Ukulele (GCEA)' : 'Guitar (EADGBE)')
 
-const handleKeyPress = (event: KeyboardEvent) => {
+const handleKeyPress = (event: globalThis.KeyboardEvent): void => {
   // Toggle chord library with 'L' key
   if (event.key === 'l' || event.key === 'L') {
     event.preventDefault()
     showLibrary.value = !showLibrary.value
+  }
+
+  if (event.key === '?') {
+    event.preventDefault()
+    showKeyboardHelp.value = !showKeyboardHelp.value
+  }
+
+  // Toggle instrument with 'I' key
+  if (event.key === 'i' || event.key === 'I') {
+    event.preventDefault()
+    toggleInstrument()
   }
   
   // Close library with Escape key
   if (event.key === 'Escape' && showLibrary.value) {
     event.preventDefault()
     showLibrary.value = false
+  }
+
+  if (event.key === 'Escape' && showKeyboardHelp.value) {
+    event.preventDefault()
+    showKeyboardHelp.value = false
   }
   
   // Zoom in with Ctrl/Cmd + Plus or Equal
@@ -103,7 +145,7 @@ const handleKeyPress = (event: KeyboardEvent) => {
   }
 }
 
-const handleWheel = (event: WheelEvent) => {
+const handleWheel = (event: globalThis.WheelEvent): void => {
   // Zoom with mouse wheel when Ctrl/Cmd is pressed
   if (event.ctrlKey || event.metaKey) {
     event.preventDefault()
@@ -115,13 +157,13 @@ const handleWheel = (event: WheelEvent) => {
 }
 
 onMounted(() => {
-  window.addEventListener('keydown', handleKeyPress)
-  window.addEventListener('wheel', handleWheel, { passive: false })
+  globalThis.window.addEventListener('keydown', handleKeyPress)
+  globalThis.window.addEventListener('wheel', handleWheel, { passive: false })
 })
 
 onUnmounted(() => {
-  window.removeEventListener('keydown', handleKeyPress)
-  window.removeEventListener('wheel', handleWheel)
+  globalThis.window.removeEventListener('keydown', handleKeyPress)
+  globalThis.window.removeEventListener('wheel', handleWheel)
 })
 </script>
 
@@ -130,16 +172,6 @@ onUnmounted(() => {
   width: 100%;
   height: 100vh;
   position: relative;
-}
-
-.app__hint {
-  position: fixed;
-  bottom: 2rem;
-  left: 50%;
-  transform: translateX(-50%);
-  color: var(--text-secondary);
-  font-size: 0.875rem;
-  opacity: 0.8;
 }
 
 .app__library-button {
@@ -158,6 +190,84 @@ onUnmounted(() => {
   z-index: 100;
 }
 
+.app__instrument-switch {
+  position: fixed;
+  bottom: 5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border: 2px solid var(--text-secondary);
+  padding: 0.55rem 0.75rem;
+  border-radius: 999px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  z-index: 100;
+}
+
+.app__instrument-switch:hover {
+  background: var(--accent-primary);
+  border-color: var(--accent-primary);
+  transform: translateX(-50%) translateY(-2px);
+}
+
+.app__instrument-switch:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.app__instrument-switch[aria-checked="true"] {
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 2px rgba(212, 165, 116, 0.25);
+}
+
+.app__instrument-switch-label {
+  line-height: 1;
+  opacity: 0.75;
+  transition: opacity 0.2s ease, color 0.2s ease;
+}
+
+.app__instrument-switch[aria-checked="false"] .app__instrument-switch-label--left {
+  color: var(--text-primary);
+  opacity: 1;
+}
+
+.app__instrument-switch[aria-checked="true"] .app__instrument-switch-label--right {
+  color: var(--text-primary);
+  opacity: 1;
+}
+
+.app__instrument-switch-track {
+  position: relative;
+  width: 42px;
+  height: 24px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  flex-shrink: 0;
+}
+
+.app__instrument-switch-thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--text-primary);
+  transition: transform 0.22s ease;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
+}
+
+.app__instrument-switch[aria-checked="true"] .app__instrument-switch-thumb {
+  transform: translateX(18px);
+}
+
 .app__library-button:hover {
   background: var(--accent-primary);
   border-color: var(--accent-primary);
@@ -174,24 +284,69 @@ onUnmounted(() => {
   transform: translateY(0);
 }
 
-.app__hint kbd {
+.app__shortcuts-button {
+  position: fixed;
+  right: 1.5rem;
+  bottom: 1.5rem;
   background: var(--bg-secondary);
-  padding: 0.25rem 0.5rem;
-  border-radius: 4px;
-  border: 1px solid var(--text-secondary);
-  font-family: monospace;
-  font-size: 0.75rem;
+  color: var(--text-primary);
+  border: 2px solid var(--text-secondary);
+  padding: 0.7rem 1rem;
+  border-radius: 999px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  z-index: 100;
 }
 
-/* Hide hint after 5 seconds */
-@keyframes fadeOut {
-  0% { opacity: 0.8; }
-  80% { opacity: 0.8; }
-  100% { opacity: 0; }
+.app__shortcuts-button:hover {
+  background: var(--accent-primary);
+  border-color: var(--accent-primary);
+  transform: translateY(-2px);
 }
 
-.app__hint {
-  animation: fadeOut 8s ease-in-out forwards;
+.app__shortcuts-button:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+@media (max-width: 640px) {
+  .app__library-button {
+    top: 5.75rem;
+    right: 1rem;
+    font-size: 0.875rem;
+    padding: 0.6rem 1rem;
+  }
+
+  .app__instrument-switch {
+    left: 50%;
+    bottom: 4.5rem;
+    font-size: 0.75rem;
+    padding: 0.45rem 0.6rem;
+    gap: 0.4rem;
+  }
+
+  .app__instrument-switch-track {
+    width: 36px;
+    height: 20px;
+  }
+
+  .app__instrument-switch-thumb {
+    width: 14px;
+    height: 14px;
+  }
+
+  .app__instrument-switch[aria-checked="true"] .app__instrument-switch-thumb {
+    transform: translateX(16px);
+  }
+
+  .app__shortcuts-button {
+    right: 1rem;
+    bottom: 1rem;
+    font-size: 0.8rem;
+    padding: 0.6rem 0.85rem;
+  }
 }
 </style>
 
