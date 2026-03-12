@@ -11,10 +11,14 @@ import { useWindowSize } from '@vueuse/core'
 import { getRandomChord } from '@/utils/randomChord'
 import type { Chord } from '@/types/chord'
 import type { Instrument } from '@/types/chord'
+import type { DifficultyFilter } from '@/types/chord'
+
+const DIFFICULTY_ORDER: DifficultyFilter[] = ['beginner', 'intermediate', 'advanced']
 
 export function useChordCycle() {
   const instrument = ref<Instrument>('guitar')
-  const currentChord = ref<Chord>(getRandomChord(undefined, instrument.value))
+  const difficultyLevel = ref<DifficultyFilter>('advanced')
+  const currentChord = ref<Chord>(getRandomChord(undefined, instrument.value, difficultyLevel.value))
   const responseStartTime = ref<number>(0)
   const { width, height } = useWindowSize()
 
@@ -30,9 +34,13 @@ export function useChordCycle() {
   const bpm = ref<number>(60)
   const autoCycleIntervalId = ref<number | null>(null)
 
+  const getNextChord = (excludeChord?: Chord) => {
+    return getRandomChord(excludeChord, instrument.value, difficultyLevel.value)
+  }
+
   const nextChord = () => {
     const startTime = performance.now()
-    const newChord = getRandomChord(currentChord.value, instrument.value)
+    const newChord = getNextChord(currentChord.value)
 
     // Add current chord to history before changing
     if (historyIndex.value === -1 || historyIndex.value === chordHistory.value.length - 1) {
@@ -81,7 +89,24 @@ export function useChordCycle() {
     instrument.value = newInstrument
     chordHistory.value = []
     historyIndex.value = -1
-    currentChord.value = getRandomChord(undefined, instrument.value)
+    currentChord.value = getNextChord()
+  }
+
+  const setDifficultyLevel = (newDifficultyLevel: DifficultyFilter) => {
+    if (difficultyLevel.value === newDifficultyLevel) {
+      return
+    }
+
+    difficultyLevel.value = newDifficultyLevel
+    chordHistory.value = []
+    historyIndex.value = -1
+    currentChord.value = getNextChord()
+  }
+
+  const cycleDifficultyLevel = () => {
+    const currentIndex = DIFFICULTY_ORDER.indexOf(difficultyLevel.value)
+    const nextIndex = (currentIndex + 1) % DIFFICULTY_ORDER.length
+    setDifficultyLevel(DIFFICULTY_ORDER[nextIndex])
   }
 
   const toggleInstrument = () => {
@@ -197,6 +222,9 @@ export function useChordCycle() {
     instrument,
     setInstrument,
     toggleInstrument,
+    difficultyLevel,
+    setDifficultyLevel,
+    cycleDifficultyLevel,
     currentChord,
     nextChord,
     previousChord,

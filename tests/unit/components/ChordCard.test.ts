@@ -13,7 +13,8 @@ describe('ChordCard', () => {
     name: 'Em',
     frets: [0, 2, 2, 0, 0, 0],
     fingers: [0, 2, 3, 0, 0, 0],
-    baseFret: 0
+    baseFret: 0,
+    difficulty: 'beginner'
   }
 
   it('renders chord name', () => {
@@ -35,31 +36,30 @@ describe('ChordCard', () => {
     expect(wrapper.html()).toContain('chord-diagram')
   })
 
-  it('uses default size of 400', () => {
+  it('renders difficulty tag', () => {
     const wrapper = mount(ChordCard, {
       props: { chord: mockChord }
     })
 
-    const card = wrapper.find('.chord-card')
-    const style = card.attributes('style')
-    expect(style).toContain('--name-font-size: 4rem')
-    expect(style).toContain('--card-gap: 2rem')
+    const tag = wrapper.find('.chord-card__difficulty')
+    expect(tag.exists()).toBe(true)
+    expect(tag.text()).toBe('Beginner')
+    expect(tag.classes()).toContain('chord-card__difficulty--beginner')
   })
 
-  it('scales font size based on size prop', () => {
+  it('renders advanced difficulty tag when chord difficulty is advanced', () => {
     const wrapper = mount(ChordCard, {
-      props: { 
-        chord: mockChord,
-        size: 200
+      props: {
+        chord: {
+          ...mockChord,
+          difficulty: 'advanced'
+        }
       }
     })
 
-    const card = wrapper.find('.chord-card')
-    const style = card.attributes('style')
-    // 4 * (200/400) = 2rem
-    expect(style).toContain('--name-font-size: 2rem')
-    // 2 * (200/400) = 1rem
-    expect(style).toContain('--card-gap: 1rem')
+    const tag = wrapper.find('.chord-card__difficulty')
+    expect(tag.text()).toBe('Advanced')
+    expect(tag.classes()).toContain('chord-card__difficulty--advanced')
   })
 
   it('has correct structure', () => {

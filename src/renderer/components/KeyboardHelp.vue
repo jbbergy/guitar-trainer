@@ -50,6 +50,15 @@
               Switch instrument
             </dd>
           </div>
+
+          <div class="keyboard-help__item">
+            <dt class="keyboard-help__key">
+              <kbd>D</kbd>
+            </dt>
+            <dd class="keyboard-help__description">
+              Cycle difficulty level
+            </dd>
+          </div>
           
           <div class="keyboard-help__item">
             <dt class="keyboard-help__key">

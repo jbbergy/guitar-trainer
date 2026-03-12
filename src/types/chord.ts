@@ -4,6 +4,8 @@
  */
 
 export type Instrument = 'guitar' | 'ukulele'
+export type ChordDifficulty = 'beginner' | 'intermediate' | 'advanced'
+export type DifficultyFilter = ChordDifficulty
 
 export interface Chord {
   /** Chord name (e.g., "Em", "C7") */
@@ -29,4 +31,7 @@ export interface Chord {
    * For open chords this is 0, for barre chords it's the starting fret
    */
   baseFret: number
+
+  /** Difficulty level of the chord */
+  difficulty: ChordDifficulty
 }

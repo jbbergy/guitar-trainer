@@ -10,6 +10,9 @@
     <div class="chord-card__name">
       {{ chord.name }}
     </div>
+    <span class="chord-card__difficulty" :class="difficultyClass">
+      {{ difficultyLabel }}
+    </span>
     <div v-if="!memoryMode" class="chord-card__diagram">
       <ChordDiagram :chord="chord" :instrument="instrument" :size="size" />
     </div>
@@ -36,6 +39,19 @@ const props = withDefaults(defineProps<{
 })
 
 const zoomScale = computed(() => props.zoomLevel / 100)
+const difficultyLabel = computed(() => {
+  if (props.chord.difficulty === 'beginner') {
+    return 'Beginner'
+  }
+
+  if (props.chord.difficulty === 'intermediate') {
+    return 'Intermediate'
+  }
+
+  return 'Advanced'
+})
+
+const difficultyClass = computed(() => `chord-card__difficulty--${props.chord.difficulty}`)
 </script>
 
 <style scoped>
@@ -60,6 +76,31 @@ const zoomScale = computed(() => props.zoomLevel / 100)
   letter-spacing: 0.05em;
   text-transform: uppercase;
   text-align: center;
+}
+
+.chord-card__difficulty {
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  border-radius: 999px;
+  padding: 0.2rem 0.6rem;
+  border: 1px solid var(--text-secondary);
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+}
+
+.chord-card__difficulty--beginner {
+  border-color: var(--text-secondary);
+}
+
+.chord-card__difficulty--intermediate {
+  border-color: var(--accent-primary);
+}
+
+.chord-card__difficulty--advanced {
+  border-color: var(--accent-primary);
+  background: var(--bg-primary);
 }
 
 .chord-card--memory-mode .chord-card__name {

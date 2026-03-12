@@ -16,6 +16,7 @@ describe('randomChord', () => {
       expect(chord).toHaveProperty('frets')
       expect(chord).toHaveProperty('fingers')
       expect(chord).toHaveProperty('baseFret')
+      expect(chord).toHaveProperty('difficulty')
     })
 
     it('should return a chord from the available chord list', () => {
@@ -58,6 +59,20 @@ describe('randomChord', () => {
       expect(secondChord.name).not.toBe(firstChord.name)
       expect(thirdChord.name).not.toBe(secondChord.name)
     })
+
+    it('should return only beginner chords when beginner difficulty is selected', () => {
+      for (let i = 0; i < 20; i++) {
+        const chord = getRandomChord(undefined, 'guitar', 'beginner')
+        expect(chord.difficulty).toBe('beginner')
+      }
+    })
+
+    it('should return beginner or intermediate chords when intermediate difficulty is selected', () => {
+      for (let i = 0; i < 20; i++) {
+        const chord = getRandomChord(undefined, 'ukulele', 'intermediate')
+        expect(['beginner', 'intermediate']).toContain(chord.difficulty)
+      }
+    })
   })
 
   describe('getAllChords', () => {
@@ -85,6 +100,22 @@ describe('randomChord', () => {
       chords.forEach((chord) => {
         expect(chord.frets).toHaveLength(4)
       })
+    })
+
+    it('should filter chords by difficulty', () => {
+      const chords = getAllChords('guitar', 'intermediate')
+
+      expect(chords.length).toBeGreaterThan(0)
+      chords.forEach((chord) => {
+        expect(['beginner', 'intermediate']).toContain(chord.difficulty)
+      })
+    })
+
+    it('should return all chords when advanced difficulty is selected', () => {
+      const defaultChords = getAllChords('guitar')
+      const advancedChords = getAllChords('guitar', 'advanced')
+
+      expect(advancedChords).toHaveLength(defaultChords.length)
     })
 
     it('should return a valid ukulele chord object', () => {

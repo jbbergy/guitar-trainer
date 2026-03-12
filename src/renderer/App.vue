@@ -9,8 +9,10 @@
       :is-enabled="isAutoCycleEnabled"
       :bpm="bpm"
       :is-memory-mode="isMemoryMode"
+      :difficulty-level="difficultyLevel"
       @toggle="toggleAutoCycle"
       @update-bpm="setBpm"
+      @update-difficulty="setDifficultyLevel"
       @toggle-memory-mode="toggleMemoryMode"
     />
     
@@ -89,7 +91,10 @@ const {
   isMemoryMode, 
   toggleMemoryMode, 
   instrument,
-  toggleInstrument
+  toggleInstrument,
+  difficultyLevel,
+  setDifficultyLevel,
+  cycleDifficultyLevel
 } = useChordCycle()
 const showLibrary = ref(false)
 const showKeyboardHelp = ref(false)
@@ -113,6 +118,12 @@ const handleKeyPress = (event: globalThis.KeyboardEvent): void => {
   if (event.key === 'i' || event.key === 'I') {
     event.preventDefault()
     toggleInstrument()
+  }
+
+  // Cycle difficulty level with 'D' key
+  if (event.key === 'd' || event.key === 'D') {
+    event.preventDefault()
+    cycleDifficultyLevel()
   }
   
   // Close library with Escape key

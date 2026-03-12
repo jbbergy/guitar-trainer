@@ -67,6 +67,10 @@ describe('chordData', () => {
           expect(typeof chord.baseFret).toBe('number')
           expect(chord.baseFret).toBeGreaterThanOrEqual(0)
         })
+
+        it('should have a valid difficulty', () => {
+          expect(['beginner', 'intermediate', 'advanced']).toContain(chord.difficulty)
+        })
       })
     })
   })
@@ -93,6 +97,10 @@ describe('chordData', () => {
             expect(finger).toBeGreaterThanOrEqual(0)
             expect(finger).toBeLessThanOrEqual(4)
           })
+        })
+
+        it('should have a valid difficulty', () => {
+          expect(['beginner', 'intermediate', 'advanced']).toContain(chord.difficulty)
         })
       })
     })

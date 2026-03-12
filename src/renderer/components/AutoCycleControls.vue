@@ -60,6 +60,29 @@
     </div>
     
     <div class="auto-cycle-controls__separator"></div>
+
+    <div class="auto-cycle-controls__difficulty">
+      <label
+        for="difficulty-select"
+        class="auto-cycle-controls__difficulty-label"
+      >
+        Level
+      </label>
+      <select
+        id="difficulty-select"
+        class="auto-cycle-controls__difficulty-select"
+        :value="difficultyLevel"
+        aria-label="Chord difficulty level"
+        data-testid="difficulty-select"
+        @change="handleDifficultyChange"
+      >
+        <option value="beginner">Beginner</option>
+        <option value="intermediate">Intermediate</option>
+        <option value="advanced">Advanced</option>
+      </select>
+    </div>
+
+    <div class="auto-cycle-controls__separator"></div>
     
     <label class="auto-cycle-controls__no-schema">
       <div class="toggle-switch">
@@ -77,16 +100,23 @@
 </template>
 
 <script setup lang="ts">
-const props = defineProps<{
+import type { DifficultyFilter } from '@/types/chord'
+
+const props = withDefaults(defineProps<{
   isEnabled: boolean
   bpm: number
-  isMemoryMode: boolean
-}>()
+  isMemoryMode?: boolean
+  difficultyLevel?: DifficultyFilter
+}>(), {
+  isMemoryMode: false,
+  difficultyLevel: 'advanced'
+})
 
 const emit = defineEmits<{
   toggle: []
   updateBpm: [value: number]
   toggleMemoryMode: []
+  updateDifficulty: [value: DifficultyFilter]
 }>()
 
 const incrementBpm = () => {
@@ -117,6 +147,11 @@ const handleBpmChange = (event: Event) => {
   
   target.value = value.toString()
   emit('updateBpm', value)
+}
+
+const handleDifficultyChange = (event: Event) => {
+  const target = event.target as HTMLSelectElement
+  emit('updateDifficulty', target.value as DifficultyFilter)
 }
 </script>
 
@@ -269,6 +304,34 @@ const handleBpmChange = (event: Event) => {
   height: 40px;
   background: var(--text-secondary);
   opacity: 0.3;
+}
+
+.auto-cycle-controls__difficulty {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.auto-cycle-controls__difficulty-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.auto-cycle-controls__difficulty-select {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  border: 2px solid var(--text-secondary);
+  border-radius: 8px;
+  padding: 0.35rem 0.55rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.auto-cycle-controls__difficulty-select:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 .auto-cycle-controls__no-schema {

@@ -122,7 +122,7 @@ describe('AutoCycleControls', () => {
 
       const buttons = wrapper.findAll('.auto-cycle-controls__bpm-button')
       const decrementButton = buttons[0]
-      
+
       expect(decrementButton.attributes('disabled')).toBeDefined()
       await decrementButton.trigger('click')
 
@@ -139,7 +139,7 @@ describe('AutoCycleControls', () => {
 
       const buttons = wrapper.findAll('.auto-cycle-controls__bpm-button')
       const incrementButton = buttons[1]
-      
+
       expect(incrementButton.attributes('disabled')).toBeDefined()
       await incrementButton.trigger('click')
 
@@ -171,12 +171,12 @@ describe('AutoCycleControls', () => {
       })
 
       const input = wrapper.find('.auto-cycle-controls__bpm-input')
-      
+
       // Test too high - emits original value on input, then clamped value on change
       await input.setValue('300')
       await input.trigger('input')
       await input.trigger('change')
-      
+
       const events = wrapper.emitted('updateBpm')
       expect(events).toBeTruthy()
       // The last event should be the clamped value
@@ -187,7 +187,7 @@ describe('AutoCycleControls', () => {
       await input.setValue('10')
       await input.trigger('input')
       await input.trigger('change')
-      
+
       const events2 = wrapper.emitted('updateBpm')
       const lastEvent2 = events2?.[events2.length - 1]
       expect(lastEvent2).toEqual([20])
@@ -206,6 +206,39 @@ describe('AutoCycleControls', () => {
     })
   })
 
+  describe('Difficulty Controls', () => {
+    it('shows all levels in the difficulty dropdown', () => {
+      const wrapper = mount(AutoCycleControls, {
+        props: {
+          isEnabled: false,
+          bpm: 60,
+          difficultyLevel: 'advanced'
+        }
+      })
+
+      const options = wrapper.findAll('.auto-cycle-controls__difficulty-select option')
+      const values = options.map(option => option.attributes('value'))
+
+      expect(values).toEqual(['beginner', 'intermediate', 'advanced'])
+    })
+
+    it('emits updateDifficulty when selected value changes', async () => {
+      const wrapper = mount(AutoCycleControls, {
+        props: {
+          isEnabled: false,
+          bpm: 60,
+          difficultyLevel: 'advanced'
+        }
+      })
+
+      const select = wrapper.find('.auto-cycle-controls__difficulty-select')
+      await select.setValue('advanced')
+
+      expect(wrapper.emitted('updateDifficulty')).toBeTruthy()
+      expect(wrapper.emitted('updateDifficulty')?.[0]).toEqual(['advanced'])
+    })
+  })
+
   describe('Accessibility', () => {
     it('has proper ARIA labels', () => {
       const wrapper = mount(AutoCycleControls, {
@@ -216,7 +249,7 @@ describe('AutoCycleControls', () => {
       })
 
       expect(wrapper.attributes('aria-label')).toBe('Auto-cycle controls')
-      
+
       const toggleButton = wrapper.find('.auto-cycle-controls__toggle')
       expect(toggleButton.attributes('aria-pressed')).toBe('false')
 
@@ -236,7 +269,7 @@ describe('AutoCycleControls', () => {
       expect(toggleButton.attributes('aria-pressed')).toBe('false')
 
       await wrapper.setProps({ isEnabled: true })
-      
+
       toggleButton = wrapper.find('.auto-cycle-controls__toggle')
       expect(toggleButton.attributes('aria-pressed')).toBe('true')
     })
