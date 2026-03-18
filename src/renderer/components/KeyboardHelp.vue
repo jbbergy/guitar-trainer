@@ -68,6 +68,15 @@
               Show chord library
             </dd>
           </div>
+
+          <div class="keyboard-help__item">
+            <dt class="keyboard-help__key">
+              <kbd>S</kbd>
+            </dt>
+            <dd class="keyboard-help__description">
+              Show scale trainer
+            </dd>
+          </div>
           
           <div class="keyboard-help__item">
             <dt class="keyboard-help__key">
