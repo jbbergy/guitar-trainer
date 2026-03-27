@@ -72,7 +72,9 @@ const close = () => {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.8);
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -81,14 +83,17 @@ const close = () => {
 }
 
 .chord-library {
-  background: var(--bg-primary);
-  border-radius: 12px;
+  background: var(--glass-bg);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid var(--glass-border-strong);
+  border-radius: var(--glass-radius);
   max-width: 900px;
   max-height: 90vh;
   width: 100%;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  box-shadow: var(--glass-shadow), var(--glass-inset-highlight);
 }
 
 .chord-library__header {
@@ -96,7 +101,7 @@ const close = () => {
   align-items: center;
   justify-content: space-between;
   padding: 1.5rem 2rem;
-  border-bottom: 1px solid var(--bg-secondary);
+  border-bottom: 1px solid var(--glass-border);
 }
 
 .chord-library__title {
@@ -123,7 +128,7 @@ const close = () => {
 }
 
 .chord-library__close:hover {
-  background: var(--bg-secondary);
+  background: rgba(255, 255, 255, 0.08);
   color: var(--text-primary);
 }
 

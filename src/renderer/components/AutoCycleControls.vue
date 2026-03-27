@@ -182,15 +182,25 @@ const handleDifficultyChange = (event: Event) => {
 /* ── Toolbar container ── */
 .toolbar {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
+  top: 12px;
+  left: 16px;
+  right: 16px;
   display: flex;
   align-items: center;
-  background: var(--bg-secondary);
-  border-bottom: 1px solid var(--text-secondary);
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow), var(--glass-inset-highlight);
+  border-radius: var(--glass-radius);
   padding: 0.5rem 1rem;
   z-index: 100;
+  transition: box-shadow 0.3s ease, background 0.3s ease;
+}
+
+.toolbar:hover {
+  box-shadow: var(--glass-shadow-hover), var(--glass-inset-highlight);
+  background: var(--glass-bg-hover);
 }
 
 /* ── Section groups ── */
@@ -202,7 +212,7 @@ const handleDifficultyChange = (event: Event) => {
 }
 
 .toolbar__section + .toolbar__section {
-  border-left: 1px solid rgba(255, 255, 255, 0.12);
+  border-left: 1px solid var(--glass-border);
 }
 
 /* ── Generic button ── */
@@ -210,16 +220,18 @@ const handleDifficultyChange = (event: Event) => {
   display: flex;
   align-items: center;
   gap: 0.4rem;
-  background: var(--bg-primary);
+  background: rgba(255, 255, 255, 0.06);
   color: var(--text-primary);
-  border: 2px solid var(--text-secondary);
+  border: 1px solid var(--glass-border);
   padding: 0.4rem 0.75rem;
-  border-radius: 8px;
+  border-radius: var(--glass-radius-sm);
   font-size: 0.85rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
   white-space: nowrap;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
 
 .toolbar__button:hover {
@@ -285,10 +297,10 @@ const handleDifficultyChange = (event: Event) => {
   display: flex;
   align-items: center;
   gap: 0.15rem;
-  background: var(--bg-primary);
-  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: var(--glass-radius-sm);
   padding: 0.15rem;
-  border: 2px solid var(--text-secondary);
+  border: 1px solid var(--glass-border);
 }
 
 .toolbar__bpm-btn {
@@ -359,10 +371,10 @@ const handleDifficultyChange = (event: Event) => {
 }
 
 .toolbar__select {
-  background: var(--bg-primary);
+  background: rgba(255, 255, 255, 0.06);
   color: var(--text-primary);
-  border: 2px solid var(--text-secondary);
-  border-radius: 6px;
+  border: 1px solid var(--glass-border);
+  border-radius: var(--glass-radius-sm);
   padding: 0.3rem 0.45rem;
   font-size: 0.8rem;
   font-weight: 600;
@@ -413,8 +425,8 @@ const handleDifficultyChange = (event: Event) => {
   position: absolute;
   cursor: pointer;
   inset: 0;
-  background-color: var(--bg-primary);
-  border: 2px solid var(--text-secondary);
+  background-color: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--glass-border);
   transition: all 0.3s ease;
   border-radius: 22px;
 }

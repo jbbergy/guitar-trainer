@@ -126,15 +126,25 @@ const handleZoom = (e: Event) => {
 /* ── Container ── */
 .bottombar {
   position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
+  bottom: 12px;
+  left: 16px;
+  right: 16px;
   display: flex;
   align-items: center;
-  background: var(--bg-secondary);
-  border-top: 1px solid var(--text-secondary);
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow), var(--glass-inset-highlight);
+  border-radius: var(--glass-radius);
   padding: 0.45rem 1rem;
   z-index: 100;
+  transition: box-shadow 0.3s ease, background 0.3s ease;
+}
+
+.bottombar:hover {
+  box-shadow: var(--glass-shadow-hover), var(--glass-inset-highlight);
+  background: var(--glass-bg-hover);
 }
 
 /* ── Sections ── */
@@ -146,7 +156,7 @@ const handleZoom = (e: Event) => {
 }
 
 .bottombar__section + .bottombar__section {
-  border-left: 1px solid rgba(255, 255, 255, 0.12);
+  border-left: 1px solid var(--glass-border);
 }
 
 .bottombar__section--center {
@@ -203,10 +213,10 @@ const handleZoom = (e: Event) => {
 
 /* ── Generic button ── */
 .bottombar__btn {
-  background: var(--bg-primary);
+  background: rgba(255, 255, 255, 0.06);
   color: var(--text-primary);
-  border: 1px solid var(--text-secondary);
-  border-radius: 4px;
+  border: 1px solid var(--glass-border);
+  border-radius: 6px;
   width: 22px;
   height: 22px;
   font-size: 0.9rem;
@@ -312,8 +322,8 @@ const handleZoom = (e: Event) => {
   width: 32px;
   height: 18px;
   border-radius: 999px;
-  background: rgba(0, 0, 0, 0.25);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--glass-border);
   flex-shrink: 0;
 }
 

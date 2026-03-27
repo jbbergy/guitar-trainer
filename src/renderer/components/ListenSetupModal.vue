@@ -217,7 +217,9 @@ watch(
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.82);
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -226,13 +228,16 @@ watch(
 }
 
 .listen-setup {
-  background: var(--bg-primary);
-  border-radius: 12px;
+  background: var(--glass-bg);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid var(--glass-border-strong);
+  border-radius: var(--glass-radius);
   max-width: 520px;
   width: 100%;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.55);
+  box-shadow: var(--glass-shadow), var(--glass-inset-highlight);
   overflow: hidden;
 }
 
@@ -241,7 +246,7 @@ watch(
   align-items: center;
   justify-content: space-between;
   padding: 1.25rem 1.5rem;
-  border-bottom: 1px solid var(--bg-secondary);
+  border-bottom: 1px solid var(--glass-border);
 }
 
 .listen-setup__header-left {
@@ -280,7 +285,7 @@ watch(
 }
 
 .listen-setup__close:hover {
-  background: var(--bg-secondary);
+  background: rgba(255, 255, 255, 0.08);
   color: var(--text-primary);
 }
 
@@ -314,10 +319,10 @@ watch(
 }
 
 .listen-setup__select {
-  background: var(--bg-secondary);
+  background: rgba(255, 255, 255, 0.06);
   color: var(--text-primary);
-  border: 2px solid var(--text-secondary);
-  border-radius: 10px;
+  border: 1px solid var(--glass-border);
+  border-radius: var(--glass-radius-sm);
   padding: 0.55rem 0.6rem;
   font-size: 0.95rem;
   font-weight: 650;
@@ -340,11 +345,11 @@ watch(
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  background: var(--bg-secondary);
+  background: rgba(255, 255, 255, 0.06);
   color: var(--text-primary);
-  border: 2px solid var(--accent-primary);
+  border: 1px solid var(--accent-primary);
   padding: 0.5rem 1.1rem;
-  border-radius: 10px;
+  border-radius: var(--glass-radius-sm);
   font-size: 0.95rem;
   font-weight: 700;
   cursor: pointer;
@@ -382,10 +387,10 @@ watch(
 .listen-setup__vu-track {
   width: 100%;
   height: 10px;
-  background: var(--bg-secondary);
+  background: rgba(255, 255, 255, 0.06);
   border-radius: 999px;
   overflow: hidden;
-  border: 1px solid var(--text-secondary);
+  border: 1px solid var(--glass-border);
 }
 
 .listen-setup__vu-bar {
@@ -445,15 +450,15 @@ watch(
   justify-content: flex-end;
   gap: 0.75rem;
   padding: 1rem 1.5rem;
-  border-top: 1px solid var(--bg-secondary);
+  border-top: 1px solid var(--glass-border);
 }
 
 .listen-setup__cancel-btn {
-  background: var(--bg-secondary);
+  background: rgba(255, 255, 255, 0.06);
   color: var(--text-primary);
-  border: 2px solid var(--text-secondary);
+  border: 1px solid var(--glass-border);
   padding: 0.5rem 1.2rem;
-  border-radius: 8px;
+  border-radius: var(--glass-radius-sm);
   font-size: 0.95rem;
   font-weight: 600;
   cursor: pointer;
@@ -467,9 +472,9 @@ watch(
 .listen-setup__validate-btn {
   background: #2ecc71;
   color: #fff;
-  border: 2px solid #27ae60;
+  border: 1px solid #27ae60;
   padding: 0.5rem 1.5rem;
-  border-radius: 8px;
+  border-radius: var(--glass-radius-sm);
   font-size: 0.95rem;
   font-weight: 700;
   cursor: pointer;

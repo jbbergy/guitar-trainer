@@ -127,22 +127,25 @@ const close = (): void => {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.85);
+  background: rgba(0, 0, 0, 0.6);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1000;
-  backdrop-filter: blur(4px);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
 
 .keyboard-help__content {
-  background: var(--bg-secondary);
-  border: 2px solid var(--accent-primary);
-  border-radius: 8px;
+  background: var(--glass-bg);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid var(--glass-border-strong);
+  border-radius: var(--glass-radius);
   padding: 2rem;
   max-width: 500px;
   width: 90%;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  box-shadow: var(--glass-shadow), var(--glass-inset-highlight);
 }
 
 .keyboard-help__title {
@@ -164,7 +167,7 @@ const close = (): void => {
   align-items: center;
   gap: 1rem;
   padding: 1rem 0;
-  border-bottom: 1px solid var(--text-secondary);
+  border-bottom: 1px solid var(--glass-border);
 }
 
 .keyboard-help__item:last-child {
@@ -179,9 +182,9 @@ const close = (): void => {
 
 .keyboard-help__key kbd {
   display: inline-block;
-  background: var(--bg-primary);
-  border: 2px solid var(--accent-primary);
-  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--glass-border-strong);
+  border-radius: 6px;
   padding: 0.25rem 0.5rem;
   font-family: monospace;
   font-size: 0.9rem;
@@ -204,8 +207,8 @@ const close = (): void => {
 
 .keyboard-help__footer kbd {
   display: inline-block;
-  background: var(--bg-primary);
-  border: 1px solid var(--text-secondary);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--glass-border);
   border-radius: 3px;
   padding: 0.2rem 0.4rem;
   font-family: monospace;

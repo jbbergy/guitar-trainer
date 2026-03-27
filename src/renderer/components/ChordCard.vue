@@ -85,8 +85,10 @@ const difficultyClass = computed(() => `chord-card__difficulty--${props.chord.di
   letter-spacing: 0.06em;
   border-radius: 999px;
   padding: 0.2rem 0.6rem;
-  border: 1px solid var(--text-secondary);
-  background: var(--bg-secondary);
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   color: var(--text-primary);
 }
 
@@ -100,7 +102,7 @@ const difficultyClass = computed(() => `chord-card__difficulty--${props.chord.di
 
 .chord-card__difficulty--advanced {
   border-color: var(--accent-primary);
-  background: var(--bg-primary);
+  background: rgba(212, 165, 116, 0.12);
 }
 
 .chord-card--memory-mode .chord-card__name {

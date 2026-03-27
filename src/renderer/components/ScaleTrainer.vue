@@ -182,7 +182,9 @@ watch(preference, pref => {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.82);
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -191,14 +193,17 @@ watch(preference, pref => {
 }
 
 .scale-trainer {
-  background: var(--bg-primary);
-  border-radius: 12px;
+  background: var(--glass-bg);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid var(--glass-border-strong);
+  border-radius: var(--glass-radius);
   max-width: 1200px;
   max-height: 92vh;
   width: 100%;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.55);
+  box-shadow: var(--glass-shadow), var(--glass-inset-highlight);
   overflow: hidden;
 }
 
@@ -207,7 +212,7 @@ watch(preference, pref => {
   align-items: center;
   justify-content: space-between;
   padding: 1.25rem 1.5rem;
-  border-bottom: 1px solid var(--bg-secondary);
+  border-bottom: 1px solid var(--glass-border);
 }
 
 .scale-trainer__header-left {
@@ -246,7 +251,7 @@ watch(preference, pref => {
 }
 
 .scale-trainer__close:hover {
-  background: var(--bg-secondary);
+  background: rgba(255, 255, 255, 0.08);
   color: var(--text-primary);
 }
 
@@ -260,8 +265,8 @@ watch(preference, pref => {
   grid-template-columns: repeat(4, minmax(170px, 1fr));
   gap: 0.75rem;
   padding: 1rem 1.5rem;
-  border-bottom: 1px solid var(--bg-secondary);
-  background: rgba(0, 0, 0, 0.08);
+  border-bottom: 1px solid var(--glass-border);
+  background: rgba(255, 255, 255, 0.03);
 }
 
 .scale-trainer__control {
@@ -277,10 +282,10 @@ watch(preference, pref => {
 }
 
 .scale-trainer__select {
-  background: var(--bg-secondary);
+  background: rgba(255, 255, 255, 0.06);
   color: var(--text-primary);
-  border: 2px solid var(--text-secondary);
-  border-radius: 10px;
+  border: 1px solid var(--glass-border);
+  border-radius: var(--glass-radius-sm);
   padding: 0.55rem 0.6rem;
   font-size: 0.95rem;
   font-weight: 650;
@@ -314,7 +319,7 @@ watch(preference, pref => {
   justify-content: center;
   padding: 0.35rem 0.65rem;
   border-radius: 999px;
-  border: 2px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid var(--glass-border);
   background: rgba(212, 165, 116, 0.12);
   color: var(--text-primary);
   font-weight: 800;
@@ -346,7 +351,7 @@ watch(preference, pref => {
 .scale-trainer__footer {
   margin: 0;
   padding: 0.9rem 1.5rem;
-  border-top: 1px solid var(--bg-secondary);
+  border-top: 1px solid var(--glass-border);
   color: var(--text-secondary);
   text-align: center;
   font-size: 0.9rem;
@@ -354,8 +359,8 @@ watch(preference, pref => {
 
 .scale-trainer__footer kbd {
   display: inline-block;
-  background: var(--bg-secondary);
-  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--glass-border);
   border-radius: 6px;
   padding: 0.15rem 0.4rem;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;

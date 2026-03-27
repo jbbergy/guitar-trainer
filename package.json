@@ -1,6 +1,6 @@
 {
   "name": "guitare-trainer",
-  "version": "1.0.6",
+  "version": "1.1.0",
   "description": "Desktop guitar chord training application with instant practice and keyboard-driven chord changes",
   "main": "dist-electron/main.cjs",
   "type": "module",

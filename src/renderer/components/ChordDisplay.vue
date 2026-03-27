@@ -40,7 +40,7 @@ withDefaults(defineProps<{
   align-items: center;
   justify-content: center;
   min-height: 100vh;
-  padding: 3.5rem 2rem 4rem;
+  padding: 5rem 2rem 5rem;
   gap: 1rem;
   outline: none;
   transition: background-color 0.3s ease;
@@ -93,7 +93,7 @@ withDefaults(defineProps<{
 
 @media (max-height: 600px) {
   .chord-display {
-    padding: 3rem 1rem 3.5rem;
+    padding: 4.5rem 1rem 4.5rem;
     gap: 0.5rem;
   }
 }
