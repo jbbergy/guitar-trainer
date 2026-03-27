@@ -12,6 +12,7 @@ import { getRandomChord } from '@/utils/randomChord'
 import type { Chord } from '@/types/chord'
 import type { Instrument } from '@/types/chord'
 import type { DifficultyFilter } from '@/types/chord'
+import { useAudioChordDetection } from './useAudioChordDetection'
 
 const DIFFICULTY_ORDER: DifficultyFilter[] = ['beginner', 'intermediate', 'advanced']
 
@@ -33,6 +34,19 @@ export function useChordCycle() {
   const isAutoCycleEnabled = ref<boolean>(false)
   const bpm = ref<number>(60)
   const autoCycleIntervalId = ref<number | null>(null)
+
+  // Listen mode: advance when correct chord is detected
+  const isListenModeEnabled = ref<boolean>(false)
+  const {
+    detectedChord,
+    detectedNotes: listenModeDetectedNotes,
+    availableDevices: listenModeDevices,
+    selectedDeviceId: listenModeDeviceId,
+    error: listenModeError,
+    signalLevel: listenModeSignalLevel,
+    start: startAudioDetection,
+    stop: stopAudioDetection,
+  } = useAudioChordDetection(instrument)
 
   const getNextChord = (excludeChord?: Chord) => {
     return getRandomChord(excludeChord, instrument.value, difficultyLevel.value)
@@ -140,9 +154,64 @@ export function useChordCycle() {
     if (isAutoCycleEnabled.value) {
       stopAutoCycle()
     } else {
+      // Stop listen mode if active
+      if (isListenModeEnabled.value) {
+        stopListenMode()
+      }
       startAutoCycle()
     }
   }
+
+  const startListenMode = async (deviceId?: string) => {
+    // Stop auto-cycle if active
+    if (isAutoCycleEnabled.value) {
+      stopAutoCycle()
+    }
+    if (deviceId) {
+      listenModeDeviceId.value = deviceId
+    }
+    await startAudioDetection()
+    isListenModeEnabled.value = true
+  }
+
+  const stopListenMode = () => {
+    stopAudioDetection()
+    isListenModeEnabled.value = false
+  }
+
+  const setListenModeDevice = async (deviceId: string) => {
+    listenModeDeviceId.value = deviceId
+    if (isListenModeEnabled.value) {
+      stopAudioDetection()
+      await startAudioDetection()
+    }
+  }
+
+  const toggleListenMode = async () => {
+    if (isListenModeEnabled.value) {
+      stopListenMode()
+    } else {
+      await startListenMode()
+    }
+  }
+
+  // Success state for visual feedback before advancing
+  const chordMatchSuccess = ref(false)
+  let successTimeout: ReturnType<typeof setTimeout> | null = null
+
+  // Watch detected chord: if it matches the current chord, show success then advance
+  watch(detectedChord, (detected) => {
+    if (!isListenModeEnabled.value || !detected || chordMatchSuccess.value) return
+
+    const currentName = currentChord.value.name
+    if (detected.fullName === currentName && detected.confidence >= 50) {
+      chordMatchSuccess.value = true
+      successTimeout = setTimeout(() => {
+        chordMatchSuccess.value = false
+        nextChord()
+      }, 800)
+    }
+  })
 
   const setBpm = (newBpm: number) => {
     bpm.value = Math.max(20, Math.min(240, newBpm)) // Clamp between 20 and 240 BPM
@@ -216,6 +285,8 @@ export function useChordCycle() {
   onUnmounted(() => {
     window.removeEventListener('keydown', handleKeyPress)
     stopAutoCycle()
+    stopListenMode()
+    if (successTimeout) clearTimeout(successTimeout)
   })
 
   return {
@@ -238,6 +309,18 @@ export function useChordCycle() {
     stopAutoCycle,
     isMemoryMode,
     toggleMemoryMode,
+    isListenModeEnabled,
+    toggleListenMode,
+    startListenMode,
+    stopListenMode,
+    setListenModeDevice,
+    listenModeDetectedNotes,
+    listenModeDevices,
+    listenModeDeviceId,
+    listenModeError,
+    listenModeSignalLevel,
+    detectedChord,
+    chordMatchSuccess,
     canGoBack: computed(() => historyIndex.value > 0),
     canGoForward: computed(() => historyIndex.value < chordHistory.value.length - 1)
   }

@@ -122,7 +122,7 @@ export function detectPitchesFromFFT(
     const noiseFloor = valuesInRange[Math.floor(valuesInRange.length * 0.5)]
 
     // Dynamic threshold: noise floor + offset (in dB)
-    const peakThreshold = Math.max(noiseFloor + 15, -60)
+    const peakThreshold = Math.max(noiseFloor + 18, -55)
 
     // Find local maxima (peaks) above threshold
     const peaks: { bin: number; magnitude: number }[] = []
@@ -140,9 +140,9 @@ export function detectPitchesFromFFT(
     // Sort by magnitude (loudest first)
     peaks.sort((a, b) => b.magnitude - a.magnitude)
 
-    // Take the top N peaks, filtering out peaks too close together (within ~1.5 semitones)
+    // Take the top N peaks, filtering out peaks too close together (within ~2 semitones)
     const detectedFreqs: number[] = []
-    const MAX_PEAKS = 8
+    const MAX_PEAKS = 6
 
     for (const peak of peaks) {
         if (detectedFreqs.length >= MAX_PEAKS) break
@@ -159,8 +159,8 @@ export function detectPitchesFromFFT(
         // Check this isn't too close to an already-picked frequency
         const tooClose = detectedFreqs.some((existing) => {
             const ratio = freq / existing
-            // Within ~1.5 semitones: ratio between 2^(-1.5/12) and 2^(1.5/12)
-            return ratio > 0.917 && ratio < 1.091
+            // Within ~2 semitones: ratio between 2^(-2/12) and 2^(2/12)
+            return ratio > 0.891 && ratio < 1.122
         })
 
         if (!tooClose) {

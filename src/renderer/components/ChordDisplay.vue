@@ -1,6 +1,7 @@
 <template>
   <div 
     class="chord-display" 
+    :class="{ 'chord-display--success': showSuccess }"
     tabindex="0"
     role="region"
     :aria-label="`Currently displaying chord: ${chord.name}`"
@@ -18,12 +19,18 @@ import type { Chord } from '@/types/chord'
 import type { Instrument } from '@/types/chord'
 import ChordCard from './ChordCard.vue'
 
-defineProps<{
+withDefaults(defineProps<{
   chord: Chord
   instrument?: Instrument
   memoryMode?: boolean
   zoomLevel?: number
-}>()
+  showSuccess?: boolean
+}>(), {
+  instrument: 'guitar',
+  memoryMode: false,
+  zoomLevel: 100,
+  showSuccess: false
+})
 </script>
 
 <style scoped>
@@ -33,9 +40,14 @@ defineProps<{
   align-items: center;
   justify-content: center;
   min-height: 100vh;
-  padding: 2rem;
+  padding: 3.5rem 2rem 4rem;
   gap: 1rem;
   outline: none;
+  transition: background-color 0.3s ease;
+}
+
+.chord-display--success {
+  background-color: rgba(46, 204, 113, 0.15);
 }
 
 .chord-content {
@@ -79,10 +91,9 @@ defineProps<{
   }
 }
 
-/* Ensure the container takes full height */
 @media (max-height: 600px) {
   .chord-display {
-    padding: 1rem;
+    padding: 3rem 1rem 3.5rem;
     gap: 0.5rem;
   }
 }

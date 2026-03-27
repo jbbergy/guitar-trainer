@@ -20,7 +20,7 @@ describe('AutoCycleControls', () => {
         }
       })
 
-      const toggleButton = wrapper.find('.auto-cycle-controls__toggle')
+      const toggleButton = wrapper.find('.toolbar__button')
       expect(toggleButton.exists()).toBe(true)
       expect(toggleButton.text()).toContain('▶')
       expect(toggleButton.text()).toContain('Auto')
@@ -34,7 +34,7 @@ describe('AutoCycleControls', () => {
         }
       })
 
-      const toggleButton = wrapper.find('.auto-cycle-controls__toggle')
+      const toggleButton = wrapper.find('.toolbar__button')
       expect(toggleButton.text()).toContain('⏸')
       expect(toggleButton.text()).toContain('Stop')
     })
@@ -47,7 +47,7 @@ describe('AutoCycleControls', () => {
         }
       })
 
-      const toggleButton = wrapper.find('.auto-cycle-controls__toggle')
+      const toggleButton = wrapper.find('.toolbar__button')
       await toggleButton.trigger('click')
 
       expect(wrapper.emitted('toggle')).toBeTruthy()
@@ -62,8 +62,8 @@ describe('AutoCycleControls', () => {
         }
       })
 
-      const toggleButton = wrapper.find('.auto-cycle-controls__toggle')
-      expect(toggleButton.classes()).toContain('auto-cycle-controls__toggle--active')
+      const toggleButton = wrapper.find('.toolbar__button')
+      expect(toggleButton.classes()).toContain('toolbar__button--active')
     })
   })
 
@@ -76,7 +76,7 @@ describe('AutoCycleControls', () => {
         }
       })
 
-      const input = wrapper.find('.auto-cycle-controls__bpm-input') as any
+      const input = wrapper.find('.toolbar__bpm-input') as any
       expect(input.element.value).toBe(120)
     })
 
@@ -88,7 +88,7 @@ describe('AutoCycleControls', () => {
         }
       })
 
-      const buttons = wrapper.findAll('.auto-cycle-controls__bpm-button')
+      const buttons = wrapper.findAll('.toolbar__bpm-btn')
       const incrementButton = buttons[1] // Second button is increment
       await incrementButton.trigger('click')
 
@@ -104,7 +104,7 @@ describe('AutoCycleControls', () => {
         }
       })
 
-      const buttons = wrapper.findAll('.auto-cycle-controls__bpm-button')
+      const buttons = wrapper.findAll('.toolbar__bpm-btn')
       const decrementButton = buttons[0] // First button is decrement
       await decrementButton.trigger('click')
 
@@ -120,7 +120,7 @@ describe('AutoCycleControls', () => {
         }
       })
 
-      const buttons = wrapper.findAll('.auto-cycle-controls__bpm-button')
+      const buttons = wrapper.findAll('.toolbar__bpm-btn')
       const decrementButton = buttons[0]
 
       expect(decrementButton.attributes('disabled')).toBeDefined()
@@ -137,7 +137,7 @@ describe('AutoCycleControls', () => {
         }
       })
 
-      const buttons = wrapper.findAll('.auto-cycle-controls__bpm-button')
+      const buttons = wrapper.findAll('.toolbar__bpm-btn')
       const incrementButton = buttons[1]
 
       expect(incrementButton.attributes('disabled')).toBeDefined()
@@ -154,7 +154,7 @@ describe('AutoCycleControls', () => {
         }
       })
 
-      const input = wrapper.find('.auto-cycle-controls__bpm-input')
+      const input = wrapper.find('.toolbar__bpm-input')
       await input.setValue('90')
       await input.trigger('change')
 
@@ -170,7 +170,7 @@ describe('AutoCycleControls', () => {
         }
       })
 
-      const input = wrapper.find('.auto-cycle-controls__bpm-input')
+      const input = wrapper.find('.toolbar__bpm-input')
 
       // Test too high - emits original value on input, then clamped value on change
       await input.setValue('300')
@@ -201,8 +201,8 @@ describe('AutoCycleControls', () => {
         }
       })
 
-      const bpmSection = wrapper.find('.auto-cycle-controls__bpm')
-      expect(bpmSection.classes()).toContain('auto-cycle-controls__bpm--disabled')
+      const bpmSection = wrapper.find('.toolbar__bpm')
+      expect(bpmSection.classes()).toContain('toolbar__bpm--disabled')
     })
   })
 
@@ -216,7 +216,7 @@ describe('AutoCycleControls', () => {
         }
       })
 
-      const options = wrapper.findAll('.auto-cycle-controls__difficulty-select option')
+      const options = wrapper.findAll('.toolbar__select option')
       const values = options.map(option => option.attributes('value'))
 
       expect(values).toEqual(['beginner', 'intermediate', 'advanced'])
@@ -231,7 +231,7 @@ describe('AutoCycleControls', () => {
         }
       })
 
-      const select = wrapper.find('.auto-cycle-controls__difficulty-select')
+      const select = wrapper.find('.toolbar__select')
       await select.setValue('advanced')
 
       expect(wrapper.emitted('updateDifficulty')).toBeTruthy()
@@ -248,12 +248,12 @@ describe('AutoCycleControls', () => {
         }
       })
 
-      expect(wrapper.attributes('aria-label')).toBe('Auto-cycle controls')
+      expect(wrapper.attributes('aria-label')).toBe('Toolbar')
 
-      const toggleButton = wrapper.find('.auto-cycle-controls__toggle')
+      const toggleButton = wrapper.find('.toolbar__button')
       expect(toggleButton.attributes('aria-pressed')).toBe('false')
 
-      const input = wrapper.find('.auto-cycle-controls__bpm-input')
+      const input = wrapper.find('.toolbar__bpm-input')
       expect(input.attributes('aria-label')).toBe('Beats per minute')
     })
 
@@ -265,12 +265,12 @@ describe('AutoCycleControls', () => {
         }
       })
 
-      let toggleButton = wrapper.find('.auto-cycle-controls__toggle')
+      let toggleButton = wrapper.find('.toolbar__button')
       expect(toggleButton.attributes('aria-pressed')).toBe('false')
 
       await wrapper.setProps({ isEnabled: true })
 
-      toggleButton = wrapper.find('.auto-cycle-controls__toggle')
+      toggleButton = wrapper.find('.toolbar__button')
       expect(toggleButton.attributes('aria-pressed')).toBe('true')
     })
   })

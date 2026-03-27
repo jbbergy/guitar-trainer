@@ -43,7 +43,12 @@ export function useAudioChordDetection(
 
     // Sliding window: accumulate pitch classes over multiple frames
     const recentPitchClasses: Map<PitchClass, number> = new Map()
-    const DECAY_MS = 1200
+    const DECAY_MS = 600
+
+    // Pre-allocated buffers (created once at start, reused every frame)
+    let timeBuffer: Float32Array<ArrayBuffer> | null = null
+    let frequencyBuffer: Float32Array<ArrayBuffer> | null = null
+    let frameSkip = false
 
     async function refreshDevices(): Promise<void> {
         try {
@@ -108,13 +113,22 @@ export function useAudioChordDetection(
             const stream = await navigator.mediaDevices.getUserMedia(constraints)
             streamRef.value = stream
 
+            // Now that we have permission, populate available devices
+            const devices = await navigator.mediaDevices.enumerateDevices()
+            availableDevices.value = devices
+                .filter((d) => d.kind === 'audioinput')
+                .map((d) => ({
+                    deviceId: d.deviceId,
+                    label: d.label || `Microphone (${d.deviceId.slice(0, 8)}…)`,
+                }))
+
             const audioContext = new AudioContext()
             audioContextRef.value = audioContext
 
             const source = audioContext.createMediaStreamSource(stream)
             const analyser = audioContext.createAnalyser()
-            analyser.fftSize = 8192 // High resolution for pitch accuracy (~5.4 Hz per bin at 44100)
-            analyser.smoothingTimeConstant = 0.4
+            analyser.fftSize = 4096 // Good balance of resolution (~10.8 Hz/bin) and speed
+            analyser.smoothingTimeConstant = 0.3
             source.connect(analyser)
             analyserRef.value = analyser
 
@@ -143,19 +157,33 @@ export function useAudioChordDetection(
     function processAudio(): void {
         if (!isListening.value || !analyserRef.value || !audioContextRef.value) return
 
+        // Skip every other frame to reduce CPU (~30 fps is plenty for chord detection)
+        frameSkip = !frameSkip
+        if (frameSkip) {
+            animationFrameId = requestAnimationFrame(processAudio)
+            return
+        }
+
         const analyser = analyserRef.value
         const sampleRate = audioContextRef.value.sampleRate
         const fftSize = analyser.fftSize
 
+        // Allocate buffers once and reuse
+        if (!timeBuffer || timeBuffer.length !== fftSize) {
+            timeBuffer = new Float32Array(fftSize)
+        }
+        if (!frequencyBuffer || frequencyBuffer.length !== analyser.frequencyBinCount) {
+            frequencyBuffer = new Float32Array(analyser.frequencyBinCount)
+        }
+
         // Get time-domain data for RMS (signal level)
-        const timeBuffer = new Float32Array(fftSize)
         analyser.getFloatTimeDomainData(timeBuffer)
         const rms = computeRMS(timeBuffer)
         signalLevel.value = Math.min(100, Math.round(rms * 500))
 
         // Get frequency-domain data for multi-pitch detection
-        const frequencyData = new Float32Array(analyser.frequencyBinCount)
-        analyser.getFloatFrequencyData(frequencyData)
+        analyser.getFloatFrequencyData(frequencyBuffer)
+        const frequencyData = frequencyBuffer
 
         const now = Date.now()
 

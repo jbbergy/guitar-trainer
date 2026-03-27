@@ -3,7 +3,7 @@
  * Manages application lifecycle, window creation, and IPC
  */
 
-import { app, BrowserWindow } from 'electron'
+import { app, BrowserWindow, systemPreferences } from 'electron'
 import { join } from 'path'
 import { WINDOW_CONFIG } from './constants/ui'
 
@@ -13,7 +13,7 @@ function createWindow(): void {
   mainWindow = new BrowserWindow({
     ...WINDOW_CONFIG,
     webPreferences: {
-      preload: process.env.VITE_DEV_SERVER_URL 
+      preload: process.env.VITE_DEV_SERVER_URL
         ? join(__dirname, 'preload.cjs')
         : join(app.getAppPath(), 'dist-electron', 'preload.cjs'),
       nodeIntegration: false,
@@ -31,7 +31,7 @@ function createWindow(): void {
     // In production, use app.getAppPath() for reliable path resolution
     const appPath = app.getAppPath()
     const indexPath = join(appPath, 'dist', 'index.html')
-    
+
     mainWindow.loadFile(indexPath).catch((err) => {
       console.error('[Main] Failed to load index.html:', err)
       console.error('[Main] Attempted path:', indexPath)
@@ -69,7 +69,15 @@ function createWindow(): void {
 }
 
 // App lifecycle
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
+  // Request microphone permission on macOS
+  if (process.platform === 'darwin') {
+    const status = systemPreferences.getMediaAccessStatus('microphone')
+    if (status !== 'granted') {
+      await systemPreferences.askForMediaAccess('microphone')
+    }
+  }
+
   createWindow()
 
   app.on('activate', () => {

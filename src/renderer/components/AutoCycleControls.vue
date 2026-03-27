@@ -1,102 +1,120 @@
 <template>
-  <div 
-    class="auto-cycle-controls"
+  <nav
+    class="toolbar"
     role="region"
-    aria-label="Auto-cycle controls"
+    aria-label="Toolbar"
   >
-    <button 
-      class="auto-cycle-controls__toggle"
-      @click="$emit('toggle')"
-      :aria-pressed="isEnabled"
-      :class="{ 'auto-cycle-controls__toggle--active': isEnabled }"
-      :title="isEnabled ? 'Stop auto-cycle' : 'Start auto-cycle'"
-    >
-      <span class="auto-cycle-controls__icon">{{ isEnabled ? '⏸' : '▶' }}</span>
-      <span class="auto-cycle-controls__label">
-        {{ isEnabled ? 'Stop' : 'Auto' }}
-      </span>
-    </button>
-    
-    <div 
-      class="auto-cycle-controls__bpm"
-      :class="{ 'auto-cycle-controls__bpm--disabled': !isEnabled }"
-    >
-      <label 
-        for="bpm-input"
-        class="auto-cycle-controls__bpm-label"
+    <!-- Section 1: Auto-cycle -->
+    <div class="toolbar__section">
+      <button 
+        class="toolbar__button"
+        @click="$emit('toggle')"
+        :aria-pressed="isEnabled"
+        :class="{ 'toolbar__button--active': isEnabled }"
+        :title="isEnabled ? 'Stop auto-cycle' : 'Start auto-cycle'"
       >
-        BPM
-      </label>
-      <div class="auto-cycle-controls__bpm-control">
-        <button 
-          class="auto-cycle-controls__bpm-button"
-          @click="decrementBpm"
-          aria-label="Decrease BPM"
-          :disabled="bpm <= 20"
-        >
-          −
-        </button>
-        <input 
-          id="bpm-input"
-          type="number"
-          class="auto-cycle-controls__bpm-input"
-          :value="bpm"
-          @input="handleBpmInput"
-          @change="handleBpmChange"
-          min="20"
-          max="240"
-          step="5"
-          aria-label="Beats per minute"
-        />
-        <button 
-          class="auto-cycle-controls__bpm-button"
-          @click="incrementBpm"
-          aria-label="Increase BPM"
-          :disabled="bpm >= 240"
-        >
-          +
-        </button>
+        <span class="toolbar__icon">{{ isEnabled ? '⏸' : '▶' }}</span>
+        <span class="toolbar__label">{{ isEnabled ? 'Stop' : 'Auto' }}</span>
+      </button>
+      <div 
+        class="toolbar__bpm"
+        :class="{ 'toolbar__bpm--disabled': !isEnabled }"
+      >
+        <label for="bpm-input" class="toolbar__bpm-label">BPM</label>
+        <div class="toolbar__bpm-control">
+          <button 
+            class="toolbar__bpm-btn"
+            @click="decrementBpm"
+            aria-label="Decrease BPM"
+            :disabled="bpm <= 20"
+          >−</button>
+          <input 
+            id="bpm-input"
+            type="number"
+            class="toolbar__bpm-input"
+            :value="bpm"
+            @input="handleBpmInput"
+            @change="handleBpmChange"
+            min="20" max="240" step="5"
+            aria-label="Beats per minute"
+          />
+          <button 
+            class="toolbar__bpm-btn"
+            @click="incrementBpm"
+            aria-label="Increase BPM"
+            :disabled="bpm >= 240"
+          >+</button>
+        </div>
       </div>
     </div>
-    
-    <div class="auto-cycle-controls__separator"></div>
 
-    <div class="auto-cycle-controls__difficulty">
-      <label
-        for="difficulty-select"
-        class="auto-cycle-controls__difficulty-label"
+    <!-- Section 2: Listen mode -->
+    <div class="toolbar__section">
+      <button
+        class="toolbar__button toolbar__button--listen"
+        :class="{ 'toolbar__button--listen-active': isListenMode }"
+        :aria-pressed="isListenMode"
+        :title="isListenMode ? 'Stop listen mode' : 'Start listen mode'"
+        @click="$emit('toggleListenMode')"
       >
-        Level
-      </label>
-      <select
-        id="difficulty-select"
-        class="auto-cycle-controls__difficulty-select"
-        :value="difficultyLevel"
-        aria-label="Chord difficulty level"
-        data-testid="difficulty-select"
-        @change="handleDifficultyChange"
-      >
-        <option value="beginner">Beginner</option>
-        <option value="intermediate">Intermediate</option>
-        <option value="advanced">Advanced</option>
-      </select>
+        <span class="toolbar__icon">{{ isListenMode ? '👂' : '🎧' }}</span>
+        <span class="toolbar__label">{{ isListenMode ? 'Listening' : 'Listen' }}</span>
+      </button>
     </div>
 
-    <div class="auto-cycle-controls__separator"></div>
-    
-    <label class="auto-cycle-controls__no-schema">
-      <div class="toggle-switch">
-        <input 
-          type="checkbox" 
-          :checked="isMemoryMode"
-          @change="$emit('toggleMemoryMode')"
-          aria-label="Toggle no schema mode"
-        />
-        <span class="toggle-slider"></span>
+    <!-- Section 3: Level + Schema -->
+    <div class="toolbar__section">
+      <div class="toolbar__difficulty">
+        <label for="difficulty-select" class="toolbar__small-label">Level</label>
+        <select
+          id="difficulty-select"
+          class="toolbar__select"
+          :value="difficultyLevel"
+          aria-label="Chord difficulty level"
+          data-testid="difficulty-select"
+          @change="handleDifficultyChange"
+        >
+          <option value="beginner">Beginner</option>
+          <option value="intermediate">Intermediate</option>
+          <option value="advanced">Advanced</option>
+        </select>
       </div>
-      <span class="toggle-label">No Schéma</span>
-    </label>
-  </div>
+      <label class="toolbar__toggle-row">
+        <div class="toggle-switch">
+          <input 
+            type="checkbox" 
+            :checked="isMemoryMode"
+            @change="$emit('toggleMemoryMode')"
+            aria-label="Toggle no schema mode"
+          />
+          <span class="toggle-slider"></span>
+        </div>
+        <span class="toolbar__toggle-text">No Schéma</span>
+      </label>
+    </div>
+
+    <!-- Section 4: Library + Scales -->
+    <div class="toolbar__section">
+      <button
+        class="toolbar__button"
+        aria-label="Show chord library"
+        title="Show all chords"
+        @click="$emit('showLibrary')"
+      >
+        <span class="toolbar__icon">📚</span>
+        <span class="toolbar__label">All Chords</span>
+      </button>
+      <button
+        class="toolbar__button"
+        aria-label="Show scale trainer"
+        title="Show scale trainer"
+        @click="$emit('showScales')"
+      >
+        <span class="toolbar__icon">🎼</span>
+        <span class="toolbar__label">Scales</span>
+      </button>
+    </div>
+  </nav>
 </template>
 
 <script setup lang="ts">
@@ -107,9 +125,11 @@ const props = withDefaults(defineProps<{
   bpm: number
   isMemoryMode?: boolean
   difficultyLevel?: DifficultyFilter
+  isListenMode?: boolean
 }>(), {
   isMemoryMode: false,
-  difficultyLevel: 'advanced'
+  difficultyLevel: 'advanced',
+  isListenMode: false
 })
 
 const emit = defineEmits<{
@@ -117,6 +137,9 @@ const emit = defineEmits<{
   updateBpm: [value: number]
   toggleMemoryMode: []
   updateDifficulty: [value: DifficultyFilter]
+  toggleListenMode: []
+  showLibrary: []
+  showScales: []
 }>()
 
 const incrementBpm = () => {
@@ -156,210 +179,228 @@ const handleDifficultyChange = (event: Event) => {
 </script>
 
 <style scoped>
-.auto-cycle-controls {
+/* ── Toolbar container ── */
+.toolbar {
   position: fixed;
-  top: 2rem;
-  left: 2rem;
+  top: 0;
+  left: 0;
+  right: 0;
   display: flex;
   align-items: center;
-  gap: 1rem;
   background: var(--bg-secondary);
-  padding: 0.75rem 1.25rem;
-  border-radius: 12px;
-  border: 2px solid var(--text-secondary);
+  border-bottom: 1px solid var(--text-secondary);
+  padding: 0.5rem 1rem;
   z-index: 100;
 }
 
-.auto-cycle-controls__toggle {
+/* ── Section groups ── */
+.toolbar__section {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.65rem;
+  padding: 0 1rem;
+}
+
+.toolbar__section + .toolbar__section {
+  border-left: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+/* ── Generic button ── */
+.toolbar__button {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
   background: var(--bg-primary);
   color: var(--text-primary);
   border: 2px solid var(--text-secondary);
-  padding: 0.5rem 1rem;
+  padding: 0.4rem 0.75rem;
   border-radius: 8px;
-  font-size: 1rem;
+  font-size: 0.85rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
-  min-width: 90px;
+  white-space: nowrap;
 }
 
-.auto-cycle-controls__toggle:hover {
+.toolbar__button:hover {
   background: var(--accent-primary);
   border-color: var(--accent-primary);
-  transform: translateY(-1px);
 }
 
-.auto-cycle-controls__toggle--active {
+.toolbar__button--active {
   background: var(--accent-primary);
   border-color: var(--accent-primary);
   animation: pulse 2s ease-in-out infinite;
 }
 
 @keyframes pulse {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.7;
-  }
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
 }
 
-.auto-cycle-controls__icon {
-  font-size: 1.2rem;
+/* ── Listen button variant ── */
+.toolbar__button--listen-active {
+  background: #2ecc71;
+  border-color: #27ae60;
+  color: #fff;
+  box-shadow: 0 0 12px rgba(46, 204, 113, 0.5);
+  animation: listen-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes listen-pulse {
+  0%, 100% { box-shadow: 0 0 12px rgba(46, 204, 113, 0.5); }
+  50% { box-shadow: 0 0 20px rgba(46, 204, 113, 0.8); }
+}
+
+/* ── Icon + label ── */
+.toolbar__icon {
+  font-size: 1rem;
   line-height: 1;
 }
 
-.auto-cycle-controls__label {
-  font-size: 0.875rem;
+.toolbar__label {
+  font-size: 0.8rem;
 }
 
-.auto-cycle-controls__bpm {
+/* ── BPM control ── */
+.toolbar__bpm {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.4rem;
   transition: opacity 0.2s ease;
 }
 
-.auto-cycle-controls__bpm--disabled {
-  opacity: 0.5;
+.toolbar__bpm--disabled {
+  opacity: 0.4;
   pointer-events: none;
 }
 
-.auto-cycle-controls__bpm-label {
-  font-size: 0.875rem;
+.toolbar__bpm-label {
+  font-size: 0.8rem;
   font-weight: 600;
   color: var(--text-primary);
 }
 
-.auto-cycle-controls__bpm-control {
+.toolbar__bpm-control {
   display: flex;
   align-items: center;
-  gap: 0.25rem;
+  gap: 0.15rem;
   background: var(--bg-primary);
-  border-radius: 8px;
-  padding: 0.25rem;
+  border-radius: 6px;
+  padding: 0.15rem;
   border: 2px solid var(--text-secondary);
 }
 
-.auto-cycle-controls__bpm-button {
-  width: 28px;
-  height: 28px;
+.toolbar__bpm-btn {
+  width: 24px;
+  height: 24px;
   background: transparent;
   color: var(--text-primary);
   border: none;
   border-radius: 4px;
-  font-size: 1.2rem;
+  font-size: 1rem;
   font-weight: bold;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: background 0.2s ease;
   display: flex;
   align-items: center;
   justify-content: center;
   line-height: 1;
 }
 
-.auto-cycle-controls__bpm-button:hover:not(:disabled) {
+.toolbar__bpm-btn:hover:not(:disabled) {
   background: var(--accent-primary);
 }
 
-.auto-cycle-controls__bpm-button:disabled {
+.toolbar__bpm-btn:disabled {
   opacity: 0.3;
   cursor: not-allowed;
 }
 
-.auto-cycle-controls__bpm-input {
-  width: 60px;
+.toolbar__bpm-input {
+  width: 48px;
   background: transparent;
   color: var(--text-primary);
   border: none;
-  padding: 0.25rem;
+  padding: 0.15rem;
   text-align: center;
-  font-size: 1rem;
+  font-size: 0.9rem;
   font-weight: 600;
   font-family: monospace;
 }
 
-.auto-cycle-controls__bpm-input:focus {
+.toolbar__bpm-input:focus {
   outline: none;
   background: rgba(255, 255, 255, 0.1);
   border-radius: 4px;
 }
 
-/* Remove spinner arrows in number input */
-.auto-cycle-controls__bpm-input::-webkit-inner-spin-button,
-.auto-cycle-controls__bpm-input::-webkit-outer-spin-button {
+.toolbar__bpm-input::-webkit-inner-spin-button,
+.toolbar__bpm-input::-webkit-outer-spin-button {
   -webkit-appearance: none;
   margin: 0;
 }
 
-.auto-cycle-controls__bpm-input[type=number] {
+.toolbar__bpm-input[type=number] {
   -moz-appearance: textfield;
 }
 
-.auto-cycle-controls__separator {
-  width: 2px;
-  height: 40px;
-  background: var(--text-secondary);
-  opacity: 0.3;
-}
-
-.auto-cycle-controls__difficulty {
+/* ── Difficulty select ── */
+.toolbar__difficulty {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.4rem;
 }
 
-.auto-cycle-controls__difficulty-label {
-  font-size: 0.875rem;
+.toolbar__small-label {
+  font-size: 0.8rem;
   font-weight: 600;
   color: var(--text-primary);
 }
 
-.auto-cycle-controls__difficulty-select {
+.toolbar__select {
   background: var(--bg-primary);
   color: var(--text-primary);
   border: 2px solid var(--text-secondary);
-  border-radius: 8px;
-  padding: 0.35rem 0.55rem;
-  font-size: 0.875rem;
+  border-radius: 6px;
+  padding: 0.3rem 0.45rem;
+  font-size: 0.8rem;
   font-weight: 600;
   cursor: pointer;
 }
 
-.auto-cycle-controls__difficulty-select:focus {
+.toolbar__select:focus {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
 
-.auto-cycle-controls__no-schema {
+/* ── Toggle (No Schéma) ── */
+.toolbar__toggle-row {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.5rem;
   cursor: pointer;
   user-select: none;
 }
 
-.toggle-label {
+.toolbar__toggle-text {
   color: var(--text-primary);
-  font-size: 0.9rem;
+  font-size: 0.8rem;
   font-weight: 600;
   white-space: nowrap;
   transition: color 0.2s ease;
 }
 
-.auto-cycle-controls__no-schema:hover .toggle-label {
+.toolbar__toggle-row:hover .toolbar__toggle-text {
   color: var(--accent-primary);
 }
 
-/* Toggle Switch Styles - Modern iOS-style switch */
+/* Toggle Switch – compact */
 .toggle-switch {
   position: relative;
   display: inline-block;
-  width: 50px;
-  height: 28px;
+  width: 40px;
+  height: 22px;
 }
 
 .toggle-switch input {
@@ -371,27 +412,24 @@ const handleDifficultyChange = (event: Event) => {
 .toggle-slider {
   position: absolute;
   cursor: pointer;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  inset: 0;
   background-color: var(--bg-primary);
   border: 2px solid var(--text-secondary);
   transition: all 0.3s ease;
-  border-radius: 28px;
+  border-radius: 22px;
 }
 
 .toggle-slider:before {
   position: absolute;
   content: "";
-  height: 18px;
-  width: 18px;
-  left: 3px;
-  bottom: 3px;
+  height: 14px;
+  width: 14px;
+  left: 2px;
+  bottom: 2px;
   background-color: var(--text-secondary);
   transition: all 0.3s ease;
   border-radius: 50%;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
 }
 
 .toggle-switch input:checked + .toggle-slider {
@@ -400,7 +438,7 @@ const handleDifficultyChange = (event: Event) => {
 }
 
 .toggle-switch input:checked + .toggle-slider:before {
-  transform: translateX(22px);
+  transform: translateX(18px);
   background-color: var(--bg-primary);
 }
 
@@ -413,7 +451,23 @@ const handleDifficultyChange = (event: Event) => {
   border-color: var(--accent-primary);
 }
 
-.toggle-switch input:checked + .toggle-slider:hover {
-  box-shadow: 0 0 8px rgba(212, 165, 116, 0.4);
+/* ── Responsive ── */
+@media (max-width: 820px) {
+  .toolbar {
+    flex-wrap: wrap;
+    gap: 0.35rem;
+  }
+
+  .toolbar__section {
+    padding: 0.25rem 0.5rem;
+  }
+
+  .toolbar__section + .toolbar__section {
+    border-left: none;
+  }
+
+  .toolbar__label {
+    display: none;
+  }
 }
 </style>

@@ -9,16 +9,28 @@
     "dist-electron/**/*"
   ],
   "mac": {
-    "target": ["dmg", "zip"],
+    "target": [
+      "dmg",
+      "zip"
+    ],
     "category": "public.app-category.education",
-    "icon": "public/icon.png"
+    "icon": "public/icon.png",
+    "extendInfo": {
+      "NSMicrophoneUsageDescription": "Guitare Trainer needs microphone access to detect chords you play."
+    }
   },
   "win": {
-    "target": ["nsis", "portable"],
+    "target": [
+      "nsis",
+      "portable"
+    ],
     "icon": "public/icon.png"
   },
   "linux": {
-    "target": ["AppImage", "deb"],
+    "target": [
+      "AppImage",
+      "deb"
+    ],
     "category": "Education",
     "icon": "public/icon.png"
   }
