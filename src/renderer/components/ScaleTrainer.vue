@@ -12,7 +12,10 @@
         <div class="scale-trainer">
           <div class="scale-trainer__header">
             <div class="scale-trainer__header-left">
-              <h2 id="scale-trainer-title" class="scale-trainer__title">
+              <h2
+                id="scale-trainer-title"
+                class="scale-trainer__title"
+              >
                 Scale trainer
               </h2>
               <p class="scale-trainer__subtitle">
@@ -22,73 +25,110 @@
 
             <button
               class="scale-trainer__close"
-              @click="close"
               aria-label="Close scale trainer"
               title="Close (Esc)"
+              @click="close"
             >
               ✕
             </button>
           </div>
 
-          <div class="scale-trainer__controls" role="region" aria-label="Scale settings">
+          <div
+            class="scale-trainer__controls"
+            role="region"
+            aria-label="Scale settings"
+          >
             <div class="scale-trainer__control">
-              <label for="scale-root" class="scale-trainer__label">Root</label>
+              <label
+                for="scale-root"
+                class="scale-trainer__label"
+              >Root</label>
               <select
                 id="scale-root"
-                class="scale-trainer__select"
                 v-model="root"
+                class="scale-trainer__select"
                 aria-label="Scale root note"
               >
-                <option v-for="note in NOTE_NAME_OPTIONS" :key="note" :value="note">
+                <option
+                  v-for="note in NOTE_NAME_OPTIONS"
+                  :key="note"
+                  :value="note"
+                >
                   {{ note }}
                 </option>
               </select>
             </div>
 
             <div class="scale-trainer__control">
-              <label for="scale-mode" class="scale-trainer__label">Mode</label>
+              <label
+                for="scale-mode"
+                class="scale-trainer__label"
+              >Mode</label>
               <select
                 id="scale-mode"
-                class="scale-trainer__select"
                 v-model="scaleId"
+                class="scale-trainer__select"
                 aria-label="Scale mode"
               >
-                <option v-for="def in SCALE_DEFINITIONS" :key="def.id" :value="def.id">
+                <option
+                  v-for="def in SCALE_DEFINITIONS"
+                  :key="def.id"
+                  :value="def.id"
+                >
                   {{ def.label }}
                 </option>
               </select>
             </div>
 
             <div class="scale-trainer__control">
-              <label for="accidental-pref" class="scale-trainer__label">Accidentals</label>
+              <label
+                for="accidental-pref"
+                class="scale-trainer__label"
+              >Accidentals</label>
               <select
                 id="accidental-pref"
-                class="scale-trainer__select"
                 v-model="preference"
+                class="scale-trainer__select"
                 aria-label="Accidental preference"
               >
-                <option value="sharps">Sharps (#)</option>
-                <option value="flats">Flats (b)</option>
+                <option value="sharps">
+                  Sharps (#)
+                </option>
+                <option value="flats">
+                  Flats (b)
+                </option>
               </select>
             </div>
 
             <div class="scale-trainer__control">
-              <label for="max-fret" class="scale-trainer__label">Frets</label>
+              <label
+                for="max-fret"
+                class="scale-trainer__label"
+              >Frets</label>
               <select
                 id="max-fret"
-                class="scale-trainer__select"
                 v-model.number="maxFret"
+                class="scale-trainer__select"
                 aria-label="Maximum fret to display"
               >
-                <option :value="12">0–12</option>
-                <option :value="15">0–15</option>
-                <option :value="17">0–17</option>
+                <option :value="12">
+                  0–12
+                </option>
+                <option :value="15">
+                  0–15
+                </option>
+                <option :value="17">
+                  0–17
+                </option>
               </select>
             </div>
           </div>
 
           <div class="scale-trainer__content">
-            <div class="scale-trainer__chips" aria-label="Scale notes">
+            <div
+              class="scale-trainer__chips"
+              aria-label="Scale notes"
+            >
               <button
                 v-for="pc in scalePitchClasses"
                 :key="pc"

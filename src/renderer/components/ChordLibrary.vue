@@ -4,20 +4,23 @@
       <div 
         v-if="modelValue"
         class="chord-library-overlay"
-        @click.self="close"
         role="dialog"
         aria-modal="true"
         aria-labelledby="chord-library-title"
+        @click.self="close"
       >
         <div class="chord-library">
           <div class="chord-library__header">
-            <h2 id="chord-library-title" class="chord-library__title">
+            <h2
+              id="chord-library-title"
+              class="chord-library__title"
+            >
               {{ instrumentTitle }} Chords
             </h2>
             <button
               class="chord-library__close"
-              @click="close"
               aria-label="Close chord library"
+              @click="close"
             >
               ✕
             </button>
@@ -30,7 +33,11 @@
                 :key="chord.name"
                 class="chord-library__item"
               >
-                <ChordCard :chord="chord" :instrument="instrument" :size="350" />
+                <ChordCard
+                  :chord="chord"
+                  :instrument="instrument"
+                  :size="350"
+                />
               </div>
             </div>
           </div>

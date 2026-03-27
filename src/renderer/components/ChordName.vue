@@ -1,6 +1,11 @@
 <template>
-  <div class="chord-name" :aria-label="`Chord: ${chord.name}`">
-    <h1 class="chord-name__text">{{ chord.name }}</h1>
+  <div
+    class="chord-name"
+    :aria-label="`Chord: ${chord.name}`"
+  >
+    <h1 class="chord-name__text">
+      {{ chord.name }}
+    </h1>
   </div>
 </template>
 

@@ -10,96 +10,99 @@
         @click.self="close"
       >
         <div class="keyboard-help__content">
-        <h2 id="keyboard-help-title" class="keyboard-help__title">
-          Keyboard Shortcuts
-        </h2>
+          <h2
+            id="keyboard-help-title"
+            class="keyboard-help__title"
+          >
+            Keyboard Shortcuts
+          </h2>
         
-        <dl class="keyboard-help__list">
-          <div class="keyboard-help__item">
-            <dt class="keyboard-help__key">
-              <kbd>SPACE</kbd>
-            </dt>
-            <dd class="keyboard-help__description">
-              Next random chord
-            </dd>
-          </div>
+          <dl class="keyboard-help__list">
+            <div class="keyboard-help__item">
+              <dt class="keyboard-help__key">
+                <kbd>SPACE</kbd>
+              </dt>
+              <dd class="keyboard-help__description">
+                Next random chord
+              </dd>
+            </div>
           
-          <div class="keyboard-help__item">
-            <dt class="keyboard-help__key">
-              <kbd>←</kbd> / <kbd>BKSP</kbd>
-            </dt>
-            <dd class="keyboard-help__description">
-              Previous chord
-            </dd>
-          </div>
+            <div class="keyboard-help__item">
+              <dt class="keyboard-help__key">
+                <kbd>←</kbd> / <kbd>BKSP</kbd>
+              </dt>
+              <dd class="keyboard-help__description">
+                Previous chord
+              </dd>
+            </div>
           
-          <div class="keyboard-help__item">
-            <dt class="keyboard-help__key">
-              <kbd>M</kbd>
-            </dt>
-            <dd class="keyboard-help__description">
-              Show or hide chord diagram
-            </dd>
-          </div>
+            <div class="keyboard-help__item">
+              <dt class="keyboard-help__key">
+                <kbd>M</kbd>
+              </dt>
+              <dd class="keyboard-help__description">
+                Show or hide chord diagram
+              </dd>
+            </div>
 
-          <div class="keyboard-help__item">
-            <dt class="keyboard-help__key">
-              <kbd>I</kbd>
-            </dt>
-            <dd class="keyboard-help__description">
-              Switch instrument
-            </dd>
-          </div>
+            <div class="keyboard-help__item">
+              <dt class="keyboard-help__key">
+                <kbd>I</kbd>
+              </dt>
+              <dd class="keyboard-help__description">
+                Switch instrument
+              </dd>
+            </div>
 
-          <div class="keyboard-help__item">
-            <dt class="keyboard-help__key">
-              <kbd>D</kbd>
-            </dt>
-            <dd class="keyboard-help__description">
-              Cycle difficulty level
-            </dd>
-          </div>
+            <div class="keyboard-help__item">
+              <dt class="keyboard-help__key">
+                <kbd>D</kbd>
+              </dt>
+              <dd class="keyboard-help__description">
+                Cycle difficulty level
+              </dd>
+            </div>
           
-          <div class="keyboard-help__item">
-            <dt class="keyboard-help__key">
-              <kbd>L</kbd>
-            </dt>
-            <dd class="keyboard-help__description">
-              Show chord library
-            </dd>
-          </div>
+            <div class="keyboard-help__item">
+              <dt class="keyboard-help__key">
+                <kbd>L</kbd>
+              </dt>
+              <dd class="keyboard-help__description">
+                Show chord library
+              </dd>
+            </div>
 
-          <div class="keyboard-help__item">
-            <dt class="keyboard-help__key">
-              <kbd>S</kbd>
-            </dt>
-            <dd class="keyboard-help__description">
-              Show scale trainer
-            </dd>
-          </div>
+            <div class="keyboard-help__item">
+              <dt class="keyboard-help__key">
+                <kbd>S</kbd>
+              </dt>
+              <dd class="keyboard-help__description">
+                Show scale trainer
+              </dd>
+            </div>
           
-          <div class="keyboard-help__item">
-            <dt class="keyboard-help__key">
-              <kbd>⌘</kbd>/<kbd>Ctrl</kbd> + <kbd>+</kbd> <kbd>-</kbd> <kbd>0</kbd>
-            </dt>
-            <dd class="keyboard-help__description">
-              Zoom in, out, or reset
-            </dd>
-          </div>
+            <div class="keyboard-help__item">
+              <dt class="keyboard-help__key">
+                <kbd>⌘</kbd>/<kbd>Ctrl</kbd> + <kbd>+</kbd> <kbd>-</kbd> <kbd>0</kbd>
+              </dt>
+              <dd class="keyboard-help__description">
+                Zoom in, out, or reset
+              </dd>
+            </div>
           
-          <div class="keyboard-help__item">
-            <dt class="keyboard-help__key">
-              <kbd>?</kbd>
-            </dt>
-            <dd class="keyboard-help__description">
-              Show/hide this help
-            </dd>
-          </div>
-        </dl>
+            <div class="keyboard-help__item">
+              <dt class="keyboard-help__key">
+                <kbd>?</kbd>
+              </dt>
+              <dd class="keyboard-help__description">
+                Show/hide this help
+              </dd>
+            </div>
+          </dl>
         
-        <p class="keyboard-help__footer">
-          Press <kbd>?</kbd> or <kbd>ESC</kbd> to close
-        </p>
+          <p class="keyboard-help__footer">
+            Press <kbd>?</kbd> or <kbd>ESC</kbd> to close
+          </p>
         </div>
       </div>
     </transition>

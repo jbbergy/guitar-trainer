@@ -202,7 +202,7 @@ describe('ChordDiagram.vue', () => {
       expect(viewBox).toBeDefined()
 
       // Should have reasonable dimensions (not negative, not zero)
-      const [x, y, width, height] = viewBox!.split(' ').map(Number)
+      const [, , width, height] = viewBox!.split(' ').map(Number)
       expect(width).toBeGreaterThan(0)
       expect(height).toBeGreaterThan(0)
     })

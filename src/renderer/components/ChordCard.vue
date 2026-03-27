@@ -10,11 +10,21 @@
     <div class="chord-card__name">
       {{ chord.name }}
     </div>
-    <span class="chord-card__difficulty" :class="difficultyClass">
+    <span
+      class="chord-card__difficulty"
+      :class="difficultyClass"
+    >
       {{ difficultyLabel }}
     </span>
-    <div v-if="!memoryMode" class="chord-card__diagram">
-      <ChordDiagram :chord="chord" :instrument="instrument" :size="size" />
+    <div
+      v-if="!memoryMode"
+      class="chord-card__diagram"
+    >
+      <ChordDiagram
+        :chord="chord"
+        :instrument="instrument"
+        :size="size"
+      />
     </div>
   </div>
 </template>

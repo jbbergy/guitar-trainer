@@ -1,6 +1,13 @@
 <template>
-  <div class="fretboard" role="img" :aria-label="ariaLabel">
-    <div class="fretboard__grid" :style="{ '--string-count': stringCount, '--fret-count': fretCount }">
+  <div
+    class="fretboard"
+    role="img"
+    :aria-label="ariaLabel"
+  >
+    <div
+      class="fretboard__grid"
+      :style="{ '--string-count': stringCount, '--fret-count': fretCount }"
+    >
       <div
         v-for="(stringNotes, stringIndex) in noteGrid"
         :key="`string-${stringIndex}`"
@@ -19,20 +26,26 @@
           <span class="fretboard__note">
             {{ cell.noteName }}
           </span>
-          <span class="fretboard__fret" aria-hidden="true">
+          <span
+            class="fretboard__fret"
+            aria-hidden="true"
+          >
             {{ fretIndex }}
           </span>
         </div>
       </div>
     </div>
 
-    <div class="fretboard__legend" aria-hidden="true">
+    <div
+      class="fretboard__legend"
+      aria-hidden="true"
+    >
       <div class="fretboard__legend-item">
-        <span class="fretboard__legend-dot fretboard__legend-dot--root"></span>
+        <span class="fretboard__legend-dot fretboard__legend-dot--root" />
         Root
       </div>
       <div class="fretboard__legend-item">
-        <span class="fretboard__legend-dot fretboard__legend-dot--scale"></span>
+        <span class="fretboard__legend-dot fretboard__legend-dot--scale" />
         In scale
       </div>
     </div>

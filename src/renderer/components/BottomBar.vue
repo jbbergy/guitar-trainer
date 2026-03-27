@@ -1,5 +1,9 @@
 <template>
-  <footer class="bottombar" role="region" aria-label="Status bar">
+  <footer
+    class="bottombar"
+    role="region"
+    aria-label="Status bar"
+  >
     <!-- Section 1: Zoom -->
     <div class="bottombar__section">
       <span class="bottombar__small-label">Zoom {{ zoomLevel }}%</span>
@@ -9,21 +13,27 @@
           aria-label="Zoom out"
           title="Zoom out (Ctrl/Cmd + −)"
           @click="$emit('update:zoomLevel', Math.max(50, zoomLevel - 10))"
-        >−</button>
+        >
+          −
+        </button>
         <input
           type="range"
           class="bottombar__zoom-slider"
-          min="50" max="200" step="10"
+          min="50"
+          max="200"
+          step="10"
           :value="zoomLevel"
           aria-label="Zoom level"
           @input="handleZoom"
-        />
+        >
         <button
           class="bottombar__btn"
           aria-label="Zoom in"
           title="Zoom in (Ctrl/Cmd + +)"
           @click="$emit('update:zoomLevel', Math.min(200, zoomLevel + 10))"
-        >+</button>
+        >
+          +
+        </button>
       </div>
     </div>
 
@@ -48,7 +58,10 @@
         >
           {{ detectedChord.fullName }}
         </span>
-        <span v-else class="bottombar__listening">🎤 Listening…</span>
+        <span
+          v-else
+          class="bottombar__listening"
+        >🎤 Listening…</span>
       </template>
     </div>
 
@@ -63,11 +76,23 @@
         data-testid="instrument-toggle"
         @click="$emit('toggleInstrument')"
       >
-        <span class="bottombar__switch-label" :class="{ 'bottombar__switch-label--active': instrument === 'guitar' }">Guitar</span>
-        <span class="bottombar__switch-track" aria-hidden="true">
-          <span class="bottombar__switch-thumb" :class="{ 'bottombar__switch-thumb--right': isUkulele }" />
+        <span
+          class="bottombar__switch-label"
+          :class="{ 'bottombar__switch-label--active': instrument === 'guitar' }"
+        >Guitar</span>
+        <span
+          class="bottombar__switch-track"
+          aria-hidden="true"
+        >
+          <span
+            class="bottombar__switch-thumb"
+            :class="{ 'bottombar__switch-thumb--right': isUkulele }"
+          />
         </span>
-        <span class="bottombar__switch-label" :class="{ 'bottombar__switch-label--active': instrument === 'ukulele' }">Ukulele</span>
+        <span
+          class="bottombar__switch-label"
+          :class="{ 'bottombar__switch-label--active': instrument === 'ukulele' }"
+        >Ukulele</span>
       </button>
     </div>
 

@@ -43,7 +43,10 @@
       v-model="showLibrary"
       :instrument="instrument"
     />
-    <ScaleTrainer v-model="showScaleTrainer" :instrument="instrument" />
+    <ScaleTrainer
+      v-model="showScaleTrainer"
+      :instrument="instrument"
+    />
     <ListenSetupModal
       v-model="showListenSetup"
       :instrument="instrument"

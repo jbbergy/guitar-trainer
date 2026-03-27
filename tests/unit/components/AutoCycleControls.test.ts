@@ -76,8 +76,8 @@ describe('AutoCycleControls', () => {
         }
       })
 
-      const input = wrapper.find('.toolbar__bpm-input') as any
-      expect(input.element.value).toBe(120)
+      const input = wrapper.find('.toolbar__bpm-input')
+      expect((input.element as HTMLInputElement).value).toBe(120)
     })
 
     it('increments BPM by 5 when + button clicked', async () => {

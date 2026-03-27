@@ -39,8 +39,7 @@ Thumbs.db
 .vscode/
 .idea/
 
-# GitHub config
-.github/
+# Editor project files
 *.sublime-project
 *.sublime-workspace
 

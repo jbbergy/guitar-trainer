@@ -1,58 +1,63 @@
 <template>
-	<div
-		class="settings-menu"
-		role="region"
-		aria-label="Settings"
-	>
-		<button
-			class="settings-menu__toggle"
-			:aria-expanded="isOpen"
-			aria-controls="settings-panel"
-			title="Settings"
-			@click="isOpen = !isOpen"
-		>
-			<span aria-hidden="true">⚙</span>
-			<span class="sr-only">Settings</span>
-		</button>
+  <div
+    class="settings-menu"
+    role="region"
+    aria-label="Settings"
+  >
+    <button
+      class="settings-menu__toggle"
+      :aria-expanded="isOpen"
+      aria-controls="settings-panel"
+      title="Settings"
+      @click="isOpen = !isOpen"
+    >
+      <span aria-hidden="true">⚙</span>
+      <span class="sr-only">Settings</span>
+    </button>
 
-		<div
-			v-if="isOpen"
-			id="settings-panel"
-			class="settings-menu__panel glass-panel"
-			role="dialog"
-			aria-label="Settings"
-		>
-			<h2 class="settings-menu__title">Settings</h2>
+    <div
+      v-if="isOpen"
+      id="settings-panel"
+      class="settings-menu__panel glass-panel"
+      role="dialog"
+      aria-label="Settings"
+    >
+      <h2 class="settings-menu__title">
+        Settings
+      </h2>
 
-			<div class="settings-menu__group">
-				<span id="theme-label" class="settings-menu__label">Theme</span>
-				<div
-					class="settings-menu__row"
-					role="radiogroup"
-					aria-labelledby="theme-label"
-				>
-					<button
-						class="settings-menu__chip"
-						:class="{ 'settings-menu__chip--active': theme === 'dark' }"
-						role="radio"
-						:aria-checked="theme === 'dark'"
-						@click="setTheme('dark')"
-					>
-						🌙 Dark
-					</button>
-					<button
-						class="settings-menu__chip"
-						:class="{ 'settings-menu__chip--active': theme === 'light' }"
-						role="radio"
-						:aria-checked="theme === 'light'"
-						@click="setTheme('light')"
-					>
-						☀ Light
-					</button>
-				</div>
-			</div>
-		</div>
-	</div>
+      <div class="settings-menu__group">
+        <span
+          id="theme-label"
+          class="settings-menu__label"
+        >Theme</span>
+        <div
+          class="settings-menu__row"
+          role="radiogroup"
+          aria-labelledby="theme-label"
+        >
+          <button
+            class="settings-menu__chip"
+            :class="{ 'settings-menu__chip--active': theme === 'dark' }"
+            role="radio"
+            :aria-checked="theme === 'dark'"
+            @click="setTheme('dark')"
+          >
+            🌙 Dark
+          </button>
+          <button
+            class="settings-menu__chip"
+            :class="{ 'settings-menu__chip--active': theme === 'light' }"
+            role="radio"
+            :aria-checked="theme === 'light'"
+            @click="setTheme('light')"
+          >
+            ☀ Light
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script setup lang="ts">

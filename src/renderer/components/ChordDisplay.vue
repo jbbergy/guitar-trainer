@@ -6,9 +6,20 @@
     role="region"
     :aria-label="`Currently displaying chord: ${chord.name}`"
   >
-    <transition name="fade" mode="out-in">
-      <div :key="chord.name" class="chord-content">
-        <ChordCard :chord="chord" :instrument="instrument" :memory-mode="memoryMode" :zoom-level="zoomLevel" />
+    <transition
+      name="fade"
+      mode="out-in"
+    >
+      <div
+        :key="chord.name"
+        class="chord-content"
+      >
+        <ChordCard
+          :chord="chord"
+          :instrument="instrument"
+          :memory-mode="memoryMode"
+          :zoom-level="zoomLevel"
+        />
       </div>
     </transition>
   </div>

@@ -27,8 +27,6 @@ test.beforeAll(async () => {
   const endTime = performance.now()
   const launchTime = endTime - startTime
 
-  console.log(`Application launched in ${launchTime.toFixed(0)}ms`)
-
   // Validate launch time is under 2 seconds (2000ms)
   expect(launchTime).toBeLessThan(2000)
 })
@@ -52,8 +50,6 @@ test.describe('Application Launch', () => {
     const text = await chordName.textContent()
     expect(text).toBeTruthy()
     expect(text?.length).toBeGreaterThan(0)
-
-    console.log(`Initial chord displayed: ${text}`)
   })
 
   test('should display chord diagram SVG', async () => {
@@ -65,8 +61,6 @@ test.describe('Application Launch', () => {
     const strings = window.locator('.chord-diagram .string')
     const stringCount = await strings.count()
     expect(stringCount).toBe(6)
-
-    console.log(`SVG diagram rendered with ${stringCount} strings`)
   })
 
   test('should have minimum window size of 800x600', async () => {
@@ -77,8 +71,6 @@ test.describe('Application Launch', () => {
 
     expect(size.width).toBeGreaterThanOrEqual(800)
     expect(size.height).toBeGreaterThanOrEqual(600)
-
-    console.log(`Window size: ${size.width}x${size.height}`)
   })
 
   test('should have dark theme applied', async () => {
@@ -88,7 +80,6 @@ test.describe('Application Launch', () => {
 
     // Dark background should be close to #1a1a1a (rgb(26, 26, 26))
     expect(bgColor).toContain('rgb')
-    console.log(`Background color: ${bgColor}`)
   })
 
   test('should not display keyboard shortcuts by default', async () => {
@@ -106,7 +97,5 @@ test.describe('Application Launch', () => {
     expect(ariaLabel).toBeTruthy()
     expect(ariaLabel?.toLowerCase()).toContain('guitar')
     expect(ariaLabel?.toLowerCase()).toContain('chord')
-
-    console.log(`ARIA label: ${ariaLabel}`)
   })
 })

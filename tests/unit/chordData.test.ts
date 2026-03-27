@@ -56,7 +56,7 @@ describe('chordData', () => {
         })
 
         it('should have valid finger values (0-4)', () => {
-          chord.fingers.forEach((finger, index) => {
+          chord.fingers.forEach((finger) => {
             expect(finger).toBeGreaterThanOrEqual(0)
             expect(finger).toBeLessThanOrEqual(4)
           })

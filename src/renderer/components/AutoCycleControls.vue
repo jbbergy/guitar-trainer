@@ -8,10 +8,10 @@
     <div class="toolbar__section">
       <button 
         class="toolbar__button"
-        @click="$emit('toggle')"
         :aria-pressed="isEnabled"
         :class="{ 'toolbar__button--active': isEnabled }"
         :title="isEnabled ? 'Stop auto-cycle' : 'Start auto-cycle'"
+        @click="$emit('toggle')"
       >
         <span class="toolbar__icon">{{ isEnabled ? '⏸' : '▶' }}</span>
         <span class="toolbar__label">{{ isEnabled ? 'Stop' : 'Auto' }}</span>
@@ -20,30 +20,39 @@
         class="toolbar__bpm"
         :class="{ 'toolbar__bpm--disabled': !isEnabled }"
       >
-        <label for="bpm-input" class="toolbar__bpm-label">BPM</label>
+        <label
+          for="bpm-input"
+          class="toolbar__bpm-label"
+        >BPM</label>
         <div class="toolbar__bpm-control">
           <button 
             class="toolbar__bpm-btn"
-            @click="decrementBpm"
             aria-label="Decrease BPM"
             :disabled="bpm <= 20"
-          >−</button>
+            @click="decrementBpm"
+          >
+            −
+          </button>
           <input 
             id="bpm-input"
             type="number"
             class="toolbar__bpm-input"
             :value="bpm"
+            min="20"
+            max="240"
+            step="5"
+            aria-label="Beats per minute"
             @input="handleBpmInput"
             @change="handleBpmChange"
-            min="20" max="240" step="5"
-            aria-label="Beats per minute"
-          />
+          >
           <button 
             class="toolbar__bpm-btn"
-            @click="incrementBpm"
             aria-label="Increase BPM"
             :disabled="bpm >= 240"
-          >+</button>
+            @click="incrementBpm"
+          >
+            +
+          </button>
         </div>
       </div>
     </div>
@@ -65,7 +74,10 @@
     <!-- Section 3: Level + Schema -->
     <div class="toolbar__section">
       <div class="toolbar__difficulty">
-        <label for="difficulty-select" class="toolbar__small-label">Level</label>
+        <label
+          for="difficulty-select"
+          class="toolbar__small-label"
+        >Level</label>
         <select
           id="difficulty-select"
           class="toolbar__select"
@@ -74,9 +86,15 @@
           data-testid="difficulty-select"
           @change="handleDifficultyChange"
         >
-          <option value="beginner">Beginner</option>
-          <option value="intermediate">Intermediate</option>
-          <option value="advanced">Advanced</option>
+          <option value="beginner">
+            Beginner
+          </option>
+          <option value="intermediate">
+            Intermediate
+          </option>
+          <option value="advanced">
+            Advanced
+          </option>
         </select>
       </div>
 
@@ -88,7 +106,7 @@
             aria-label="Toggle no schema mode"
             @change="$emit('toggleMemoryMode')"
           >
-          <span class="toggle-slider"></span>
+          <span class="toggle-slider" />
         </div>
         <span class="toolbar__toggle-text">No Schéma</span>
       </label>
