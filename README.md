@@ -2,6 +2,8 @@
 
 Desktop app (Electron + Vue) to practice chords and scales on guitar or ukulele, fast, keyboard-first, with or without a microphone.
 
+![Guitare Trainer App Screenshot](./app-screenshot.png)
+
 ## For Users
 
 ### What the App Does
