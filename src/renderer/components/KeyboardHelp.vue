@@ -77,6 +77,15 @@
               Show scale trainer
             </dd>
           </div>
+
+          <div class="keyboard-help__item">
+            <dt class="keyboard-help__key">
+              <kbd>R</kbd>
+            </dt>
+            <dd class="keyboard-help__description">
+              Show chord detector
+            </dd>
+          </div>
           
           <div class="keyboard-help__item">
             <dt class="keyboard-help__key">

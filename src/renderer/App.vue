@@ -63,6 +63,15 @@
     >
       🎼 Scales
     </button>
+
+    <button
+      class="app__detector-button"
+      aria-label="Show chord detector"
+      title="Detect chords from microphone"
+      @click="showChordDetector = true"
+    >
+      👂 Ear
+    </button>
     
     <button
       class="app__shortcuts-button"
@@ -79,6 +88,7 @@
       :instrument="instrument"
     />
     <ScaleTrainer v-model="showScaleTrainer" :instrument="instrument" />
+    <ChordDetector v-model="showChordDetector" :instrument="instrument" />
     <KeyboardHelp v-model="showKeyboardHelp" />
   </div>
 </template>
@@ -92,6 +102,7 @@ import AutoCycleControls from './components/AutoCycleControls.vue'
 import KeyboardHelp from './components/KeyboardHelp.vue'
 import ZoomControls from './components/ZoomControls.vue'
 import ScaleTrainer from './components/ScaleTrainer.vue'
+import ChordDetector from './components/ChordDetector.vue'
 
 const { 
   currentChord, 
@@ -110,6 +121,7 @@ const {
 const showLibrary = ref(false)
 const showKeyboardHelp = ref(false)
 const showScaleTrainer = ref(false)
+const showChordDetector = ref(false)
 const zoomLevel = ref(100)
 const isUkulele = computed(() => instrument.value === 'ukulele')
 const instrumentLabel = computed(() => instrument.value === 'ukulele' ? 'Ukulele (GCEA)' : 'Guitar (EADGBE)')
@@ -130,6 +142,12 @@ const handleKeyPress = (event: globalThis.KeyboardEvent): void => {
   if (event.key === 's' || event.key === 'S') {
     event.preventDefault()
     showScaleTrainer.value = !showScaleTrainer.value
+  }
+
+  // Toggle chord detector with 'R' key
+  if (event.key === 'r' || event.key === 'R') {
+    event.preventDefault()
+    showChordDetector.value = !showChordDetector.value
   }
 
   // Toggle instrument with 'I' key
@@ -153,6 +171,11 @@ const handleKeyPress = (event: globalThis.KeyboardEvent): void => {
   if (event.key === 'Escape' && showScaleTrainer.value) {
     event.preventDefault()
     showScaleTrainer.value = false
+  }
+
+  if (event.key === 'Escape' && showChordDetector.value) {
+    event.preventDefault()
+    showChordDetector.value = false
   }
 
   if (event.key === 'Escape' && showKeyboardHelp.value) {
@@ -253,6 +276,38 @@ onUnmounted(() => {
 }
 
 .app__scales-button:active {
+  transform: translateY(0);
+}
+
+.app__detector-button {
+  position: fixed;
+  top: 8.7rem;
+  right: 2rem;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border: 2px solid var(--text-secondary);
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  z-index: 100;
+}
+
+.app__detector-button:hover {
+  background: var(--accent-primary);
+  border-color: var(--accent-primary);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.app__detector-button:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.app__detector-button:active {
   transform: translateY(0);
 }
 
@@ -387,6 +442,13 @@ onUnmounted(() => {
 
   .app__scales-button {
     top: 8.95rem;
+    right: 1rem;
+    font-size: 0.875rem;
+    padding: 0.6rem 1rem;
+  }
+
+  .app__detector-button {
+    top: 12.15rem;
     right: 1rem;
     font-size: 0.875rem;
     padding: 0.6rem 1rem;
