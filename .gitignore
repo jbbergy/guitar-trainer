@@ -38,12 +38,17 @@ Thumbs.db
 # IDE
 .vscode/
 .idea/
+
+# GitHub config
+.github/
 *.sublime-project
 *.sublime-workspace
 
 # Testing
 coverage/
 .nyc_output/
+test-results/
+playwright-report/
 
 # Electron
 *.electron/
