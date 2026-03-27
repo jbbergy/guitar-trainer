@@ -79,14 +79,15 @@
           <option value="advanced">Advanced</option>
         </select>
       </div>
+
       <label class="toolbar__toggle-row">
         <div class="toggle-switch">
-          <input 
-            type="checkbox" 
+          <input
+            type="checkbox"
             :checked="isMemoryMode"
-            @change="$emit('toggleMemoryMode')"
             aria-label="Toggle no schema mode"
-          />
+            @change="$emit('toggleMemoryMode')"
+          >
           <span class="toggle-slider"></span>
         </div>
         <span class="toolbar__toggle-text">No Schéma</span>
@@ -114,11 +115,17 @@
         <span class="toolbar__label">Scales</span>
       </button>
     </div>
+
+    <!-- Section 5: Settings -->
+    <div class="toolbar__section toolbar__section--end">
+      <SettingsMenu />
+    </div>
   </nav>
 </template>
 
 <script setup lang="ts">
 import type { DifficultyFilter } from '@/types/chord'
+import SettingsMenu from './SettingsMenu.vue'
 
 const props = withDefaults(defineProps<{
   isEnabled: boolean
@@ -211,8 +218,18 @@ const handleDifficultyChange = (event: Event) => {
   padding: 0 1rem;
 }
 
+.toolbar__section:first-of-type {
+  padding-left: 0;
+}
+
 .toolbar__section + .toolbar__section {
   border-left: 1px solid var(--glass-border);
+}
+
+.toolbar__section--end {
+  margin-left: auto;
+  border-left: none !important;
+  padding-right: 0;
 }
 
 /* ── Generic button ── */
@@ -265,6 +282,7 @@ const handleDifficultyChange = (event: Event) => {
 }
 
 /* ── Icon + label ── */
+
 .toolbar__icon {
   font-size: 1rem;
   line-height: 1;

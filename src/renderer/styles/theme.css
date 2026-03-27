@@ -137,3 +137,30 @@ a:focus-visible {
     -webkit-backdrop-filter: none;
   }
 }
+
+/* ── Light Theme ── */
+[data-theme="light"] {
+  --bg-primary: #f5f0eb;
+  --bg-secondary: #ffffff;
+  --text-primary: #1a1a1a;
+  --text-secondary: #3a3a3a;
+  --accent-primary: #b07d4f;
+  --accent-hover: #9a6a3d;
+  --accent-yellow: #c9a020;
+  --muted: #8a8a8a;
+
+  --glass-bg: rgba(255, 255, 255, 0.65);
+  --glass-bg-hover: rgba(255, 255, 255, 0.8);
+  --glass-border: rgba(0, 0, 0, 0.1);
+  --glass-border-strong: rgba(0, 0, 0, 0.18);
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(0, 0, 0, 0.04);
+  --glass-shadow-hover: 0 12px 40px rgba(0, 0, 0, 0.12), 0 4px 12px rgba(0, 0, 0, 0.06);
+  --glass-inset-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+[data-theme="light"] body {
+  background-color: var(--bg-primary);
+  background-image:
+    radial-gradient(ellipse at 20% 20%, rgba(176, 125, 79, 0.08) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 80%, rgba(176, 125, 79, 0.05) 0%, transparent 50%);
+}

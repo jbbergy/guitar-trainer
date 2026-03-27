@@ -165,13 +165,17 @@ const handleZoom = (e: Event) => {
   min-width: 0;
 }
 
-/* ── Small label ── */
 .bottombar__small-label {
   font-size: 0.7rem;
   font-weight: 600;
   color: var(--text-primary);
   white-space: nowrap;
   min-width: 52px;
+}
+.bottombar__section--center {
+  flex: 1;
+  justify-content: center;
+  min-width: 0;
 }
 
 /* ── Zoom row ── */
@@ -192,26 +196,6 @@ const handleZoom = (e: Event) => {
   cursor: pointer;
 }
 
-.bottombar__zoom-slider::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  width: 12px;
-  height: 12px;
-  background: var(--accent-primary);
-  border: 1px solid var(--text-primary);
-  border-radius: 50%;
-  cursor: pointer;
-}
-
-.bottombar__zoom-slider::-moz-range-thumb {
-  width: 12px;
-  height: 12px;
-  background: var(--accent-primary);
-  border: 1px solid var(--text-primary);
-  border-radius: 50%;
-  cursor: pointer;
-}
-
-/* ── Generic button ── */
 .bottombar__btn {
   background: rgba(255, 255, 255, 0.06);
   color: var(--text-primary);
@@ -229,9 +213,10 @@ const handleZoom = (e: Event) => {
   padding: 0;
 }
 
-.bottombar__btn:hover {
-  background: var(--accent-primary);
-  border-color: var(--accent-primary);
+/* ── Generic button ── */
+
+.bottombar__btn {
+  /* styles above already define this class */
 }
 
 .bottombar__btn--pill {
@@ -244,6 +229,12 @@ const handleZoom = (e: Event) => {
   white-space: nowrap;
 }
 
+.bottombar__btn:hover {
+  background: var(--accent-primary);
+  border-color: var(--accent-primary);
+}
+
+/* Duplicate and broken block removed. The correct .bottombar__btn--pill block is above. */
 /* ── VU meter ── */
 .bottombar__vu {
   width: 80px;
@@ -251,11 +242,11 @@ const handleZoom = (e: Event) => {
   background: rgba(255, 255, 255, 0.1);
   border-radius: 999px;
   overflow: hidden;
-  flex-shrink: 0;
+.bottombar__listening {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  animation: bar-pulse 1.5s ease-in-out infinite;
 }
-
-.bottombar__vu-bar {
-  height: 100%;
   border-radius: 999px;
   transition: width 0.08s ease;
 }
