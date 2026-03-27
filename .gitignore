@@ -21,6 +21,9 @@ out/
 # TypeScript
 *.tsbuild
 
+# Compiled JS artifacts alongside TS/Vue sources
+src/**/*.js
+
 # Logs
 logs/
 *.log
