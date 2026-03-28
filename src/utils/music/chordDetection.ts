@@ -30,6 +30,11 @@ export interface DetectedChord {
     confidence: number
 }
 
+export interface FFTDetectionOptions {
+    minFrequency?: number
+    maxFrequency?: number
+}
+
 const A4_FREQ = 440
 
 export function frequencyToMidi(freq: number): number {
@@ -104,14 +109,20 @@ export function detectChordFromPitchClasses(
 export function detectPitchesFromFFT(
     frequencyData: Float32Array,
     sampleRate: number,
-    fftSize: number
+    fftSize: number,
+    options: FFTDetectionOptions = {}
 ): number[] {
     const binCount = frequencyData.length
     const binWidth = sampleRate / fftSize
 
+    const minFrequency = Math.max(20, options.minFrequency ?? 70)
+    const maxFrequency = Math.max(minFrequency + 10, options.maxFrequency ?? 1500)
+
     // Frequency range: ~70 Hz (low D on guitar) to ~1500 Hz (covers ukulele + guitar harmonics)
-    const minBin = Math.ceil(70 / binWidth)
-    const maxBin = Math.min(Math.floor(1500 / binWidth), binCount - 2)
+    const minBin = Math.ceil(minFrequency / binWidth)
+    const maxBin = Math.min(Math.floor(maxFrequency / binWidth), binCount - 2)
+
+    if (minBin >= maxBin) return []
 
     // Find the noise floor (median of the spectrum in range)
     const valuesInRange: number[] = []

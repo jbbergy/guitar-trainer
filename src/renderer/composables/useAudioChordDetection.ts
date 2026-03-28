@@ -1,4 +1,4 @@
-import { ref, shallowRef, onUnmounted } from 'vue'
+import { ref, shallowRef, onUnmounted, watch } from 'vue'
 import type { Ref } from 'vue'
 import type { PitchClass } from '@/utils/music/pitchClass'
 import type { DetectedChord } from '@/utils/music/chordDetection'
@@ -11,6 +11,124 @@ export interface AudioDevice {
     label: string
 }
 
+export type AudioDetectionProfileId =
+    | 'guitar-classical'
+    | 'guitar-folk'
+    | 'ukulele-soprano'
+    | 'ukulele-concert'
+    | 'ukulele-tenor'
+    | 'custom'
+
+export interface AudioDetectionProfile {
+    id: AudioDetectionProfileId
+    label: string
+    instrument: Instrument
+    rmsThreshold: number
+    minFrequency: number
+    maxFrequency: number
+}
+
+export interface AudioDetectionSettings {
+    profileId: AudioDetectionProfileId
+    rmsThreshold: number
+    minFrequency: number
+    maxFrequency: number
+}
+
+const STORAGE_KEY_AUDIO_DEVICE = 'listen-selected-device-id-v1'
+const STORAGE_KEY_AUDIO_SETTINGS = 'listen-detection-settings-v1'
+
+const DEFAULT_AUDIO_SETTINGS: AudioDetectionSettings = {
+    profileId: 'guitar-folk',
+    rmsThreshold: 0.002,
+    minFrequency: 70,
+    maxFrequency: 1500,
+}
+
+export const AUDIO_DETECTION_PROFILES: AudioDetectionProfile[] = [
+    {
+        id: 'guitar-classical',
+        label: 'Guitar - Classical',
+        instrument: 'guitar',
+        rmsThreshold: 0.0018,
+        minFrequency: 70,
+        maxFrequency: 1300,
+    },
+    {
+        id: 'guitar-folk',
+        label: 'Guitar - Folk',
+        instrument: 'guitar',
+        rmsThreshold: 0.002,
+        minFrequency: 70,
+        maxFrequency: 1500,
+    },
+    {
+        id: 'ukulele-soprano',
+        label: 'Ukulele - Soprano',
+        instrument: 'ukulele',
+        rmsThreshold: 0.0017,
+        minFrequency: 180,
+        maxFrequency: 1800,
+    },
+    {
+        id: 'ukulele-concert',
+        label: 'Ukulele - Concert',
+        instrument: 'ukulele',
+        rmsThreshold: 0.0017,
+        minFrequency: 160,
+        maxFrequency: 1700,
+    },
+    {
+        id: 'ukulele-tenor',
+        label: 'Ukulele - Tenor',
+        instrument: 'ukulele',
+        rmsThreshold: 0.0018,
+        minFrequency: 130,
+        maxFrequency: 1650,
+    },
+]
+
+function clamp(value: number, min: number, max: number): number {
+    return Math.min(max, Math.max(min, value))
+}
+
+function getProfileById(profileId: AudioDetectionProfileId): AudioDetectionProfile | null {
+    return AUDIO_DETECTION_PROFILES.find((p) => p.id === profileId) ?? null
+}
+
+function sanitizeDetectionSettings(input: Partial<AudioDetectionSettings>): AudioDetectionSettings {
+    const rawProfile = input.profileId
+    const profileId: AudioDetectionProfileId =
+        rawProfile === 'guitar-classical' ||
+            rawProfile === 'guitar-folk' ||
+            rawProfile === 'ukulele-soprano' ||
+            rawProfile === 'ukulele-concert' ||
+            rawProfile === 'ukulele-tenor' ||
+            rawProfile === 'custom'
+            ? rawProfile
+            : DEFAULT_AUDIO_SETTINGS.profileId
+
+    const rmsThreshold = clamp(input.rmsThreshold ?? DEFAULT_AUDIO_SETTINGS.rmsThreshold, 0.0005, 0.02)
+    const minFrequency = clamp(input.minFrequency ?? DEFAULT_AUDIO_SETTINGS.minFrequency, 20, 3000)
+    const maxFrequency = clamp(input.maxFrequency ?? DEFAULT_AUDIO_SETTINGS.maxFrequency, 40, 4000)
+
+    if (maxFrequency <= minFrequency + 10) {
+        return {
+            profileId,
+            rmsThreshold,
+            minFrequency,
+            maxFrequency: minFrequency + 10,
+        }
+    }
+
+    return {
+        profileId,
+        rmsThreshold,
+        minFrequency,
+        maxFrequency,
+    }
+}
+
 export interface UseAudioChordDetection {
     isListening: Ref<boolean>
     detectedChord: Ref<DetectedChord | null>
@@ -20,6 +138,14 @@ export interface UseAudioChordDetection {
     error: Ref<string | null>
     signalLevel: Ref<number>
     instrument: Ref<Instrument>
+    detectionProfileId: Ref<AudioDetectionProfileId>
+    rmsThreshold: Ref<number>
+    minFrequency: Ref<number>
+    maxFrequency: Ref<number>
+    detectionProfiles: ReadonlyArray<AudioDetectionProfile>
+    applyDetectionProfile: (profileId: AudioDetectionProfileId) => void
+    setRmsThreshold: (nextThreshold: number) => void
+    setFrequencyRange: (minFrequency: number, maxFrequency: number) => void
     start: () => Promise<void>
     stop: () => void
     refreshDevices: () => Promise<void>
@@ -36,6 +162,11 @@ export function useAudioChordDetection(
     const error = ref<string | null>(null)
     const signalLevel = ref(0)
 
+    const detectionProfileId = ref<AudioDetectionProfileId>(DEFAULT_AUDIO_SETTINGS.profileId)
+    const rmsThreshold = ref(DEFAULT_AUDIO_SETTINGS.rmsThreshold)
+    const minFrequency = ref(DEFAULT_AUDIO_SETTINGS.minFrequency)
+    const maxFrequency = ref(DEFAULT_AUDIO_SETTINGS.maxFrequency)
+
     const audioContextRef = shallowRef<AudioContext | null>(null)
     const streamRef = shallowRef<MediaStream | null>(null)
     const analyserRef = shallowRef<AnalyserNode | null>(null)
@@ -49,6 +180,89 @@ export function useAudioChordDetection(
     let timeBuffer: Float32Array<ArrayBuffer> | null = null
     let frequencyBuffer: Float32Array<ArrayBuffer> | null = null
     let frameSkip = false
+
+    function persistSettings(): void {
+        const settings: AudioDetectionSettings = {
+            profileId: detectionProfileId.value,
+            rmsThreshold: rmsThreshold.value,
+            minFrequency: minFrequency.value,
+            maxFrequency: maxFrequency.value,
+        }
+        globalThis.localStorage.setItem(STORAGE_KEY_AUDIO_SETTINGS, JSON.stringify(settings))
+    }
+
+    function loadPersistedState(): void {
+        const savedDeviceId = globalThis.localStorage.getItem(STORAGE_KEY_AUDIO_DEVICE)
+        if (savedDeviceId) {
+            selectedDeviceId.value = savedDeviceId
+        }
+
+        const rawSettings = globalThis.localStorage.getItem(STORAGE_KEY_AUDIO_SETTINGS)
+        if (!rawSettings) return
+
+        try {
+            const parsed = JSON.parse(rawSettings) as Partial<AudioDetectionSettings>
+            const normalized = sanitizeDetectionSettings(parsed)
+            detectionProfileId.value = normalized.profileId
+            rmsThreshold.value = normalized.rmsThreshold
+            minFrequency.value = normalized.minFrequency
+            maxFrequency.value = normalized.maxFrequency
+        } catch (_e) {
+            // Ignore invalid persisted values and use defaults.
+        }
+    }
+
+    function applyDetectionProfile(profileId: AudioDetectionProfileId): void {
+        if (profileId === 'custom') {
+            detectionProfileId.value = 'custom'
+            persistSettings()
+            return
+        }
+
+        const profile = getProfileById(profileId)
+        if (!profile) return
+
+        detectionProfileId.value = profile.id
+        rmsThreshold.value = profile.rmsThreshold
+        minFrequency.value = profile.minFrequency
+        maxFrequency.value = profile.maxFrequency
+        persistSettings()
+    }
+
+    function setRmsThreshold(nextThreshold: number): void {
+        if (!Number.isFinite(nextThreshold)) return
+        rmsThreshold.value = clamp(nextThreshold, 0.0005, 0.02)
+        detectionProfileId.value = 'custom'
+        persistSettings()
+    }
+
+    function setFrequencyRange(nextMinFrequency: number, nextMaxFrequency: number): void {
+        if (!Number.isFinite(nextMinFrequency) || !Number.isFinite(nextMaxFrequency)) return
+
+        let normalizedMin = clamp(nextMinFrequency, 20, 3000)
+        let normalizedMax = clamp(nextMaxFrequency, 40, 4000)
+
+        if (normalizedMax <= normalizedMin + 10) {
+            normalizedMax = normalizedMin + 10
+        }
+
+        if (normalizedMax > 4000) {
+            normalizedMax = 4000
+            normalizedMin = Math.min(normalizedMin, normalizedMax - 10)
+        }
+
+        minFrequency.value = normalizedMin
+        maxFrequency.value = normalizedMax
+        detectionProfileId.value = 'custom'
+        persistSettings()
+    }
+
+    loadPersistedState()
+
+    watch(selectedDeviceId, (deviceId) => {
+        if (!deviceId) return
+        globalThis.localStorage.setItem(STORAGE_KEY_AUDIO_DEVICE, deviceId)
+    })
 
     async function refreshDevices(): Promise<void> {
         try {
@@ -93,6 +307,7 @@ export function useAudioChordDetection(
 
     async function start(): Promise<void> {
         error.value = null
+        loadPersistedState()
 
         try {
             const constraints: MediaStreamConstraints = {
@@ -188,8 +403,11 @@ export function useAudioChordDetection(
         const now = Date.now()
 
         // Only process if there's enough signal
-        if (rms > 0.002) {
-            const frequencies = detectPitchesFromFFT(frequencyData, sampleRate, fftSize)
+        if (rms > rmsThreshold.value) {
+            const frequencies = detectPitchesFromFFT(frequencyData, sampleRate, fftSize, {
+                minFrequency: minFrequency.value,
+                maxFrequency: maxFrequency.value,
+            })
 
             for (const freq of frequencies) {
                 const pc = frequencyToPitchClass(freq)
@@ -233,6 +451,14 @@ export function useAudioChordDetection(
         error,
         signalLevel,
         instrument: instrumentRef,
+        detectionProfileId,
+        rmsThreshold,
+        minFrequency,
+        maxFrequency,
+        detectionProfiles: AUDIO_DETECTION_PROFILES,
+        applyDetectionProfile,
+        setRmsThreshold,
+        setFrequencyRange,
         start,
         stop,
         refreshDevices,

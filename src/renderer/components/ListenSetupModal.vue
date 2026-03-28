@@ -121,6 +121,103 @@
                 </div>
               </div>
             </div>
+
+            <details
+              class="listen-setup__advanced"
+              :open="isAdvancedOpen"
+              @toggle="handleAdvancedToggle"
+            >
+              <summary class="listen-setup__advanced-summary">
+                Advanced options
+              </summary>
+
+              <div class="listen-setup__advanced-content">
+                <div class="listen-setup__field">
+                  <label
+                    for="listen-profile-select"
+                    class="listen-setup__label"
+                  >
+                    Preset profile
+                  </label>
+                  <select
+                    id="listen-profile-select"
+                    class="listen-setup__select"
+                    :value="detectionProfileId"
+                    @change="handleProfileChange"
+                  >
+                    <option
+                      v-for="profile in detectionProfiles"
+                      :key="profile.id"
+                      :value="profile.id"
+                    >
+                      {{ profile.label }}
+                    </option>
+                    <option value="custom">
+                      Custom
+                    </option>
+                  </select>
+                </div>
+
+                <div class="listen-setup__field">
+                  <label
+                    for="listen-rms-threshold"
+                    class="listen-setup__label"
+                  >
+                    RMS threshold
+                  </label>
+                  <div class="listen-setup__number-input-row">
+                    <input
+                      id="listen-rms-threshold"
+                      class="listen-setup__number-input"
+                      type="number"
+                      min="0.0005"
+                      max="0.02"
+                      step="0.0001"
+                      :value="rmsThreshold"
+                      @input="handleRmsThresholdChange"
+                    >
+                    <span class="listen-setup__hint">
+                      Current: {{ rmsThreshold.toFixed(4) }}
+                    </span>
+                  </div>
+                </div>
+
+                <div class="listen-setup__field">
+                  <label class="listen-setup__label">
+                    Useful frequency range (Hz)
+                  </label>
+                  <div class="listen-setup__frequency-grid">
+                    <div class="listen-setup__frequency-col">
+                      <span class="listen-setup__sub-label">Min</span>
+                      <input
+                        class="listen-setup__number-input"
+                        type="number"
+                        min="20"
+                        max="3000"
+                        step="1"
+                        :value="minFrequency"
+                        @input="handleMinFrequencyChange"
+                      >
+                    </div>
+                    <div class="listen-setup__frequency-col">
+                      <span class="listen-setup__sub-label">Max</span>
+                      <input
+                        class="listen-setup__number-input"
+                        type="number"
+                        min="40"
+                        max="4000"
+                        step="1"
+                        :value="maxFrequency"
+                        @input="handleMaxFrequencyChange"
+                      >
+                    </div>
+                  </div>
+                  <span class="listen-setup__hint">
+                    Active range: {{ Math.round(minFrequency) }}-{{ Math.round(maxFrequency) }} Hz
+                  </span>
+                </div>
+              </div>
+            </details>
           </div>
 
           <div class="listen-setup__footer">
@@ -145,9 +242,12 @@
 </template>
 
 <script setup lang="ts">
-import { watch, toRef } from 'vue'
+import { ref, watch, toRef } from 'vue'
 import type { Instrument } from '@/types/chord'
+import type { AudioDetectionProfileId } from '../composables/useAudioChordDetection'
 import { useAudioChordDetection } from '../composables/useAudioChordDetection'
+
+const STORAGE_KEY_ADVANCED_OPEN = 'listen-advanced-options-open-v1'
 
 const props = defineProps<{
   modelValue: boolean
@@ -167,10 +267,20 @@ const {
   selectedDeviceId,
   error,
   signalLevel,
+  detectionProfileId,
+  rmsThreshold,
+  minFrequency,
+  maxFrequency,
+  detectionProfiles,
+  applyDetectionProfile,
+  setRmsThreshold,
+  setFrequencyRange,
   start,
   stop,
   refreshDevices,
 } = useAudioChordDetection(toRef(props, 'instrument'))
+
+const isAdvancedOpen = ref(globalThis.localStorage.getItem(STORAGE_KEY_ADVANCED_OPEN) === '1')
 
 function close(): void {
   stop()
@@ -189,6 +299,39 @@ function handleDeviceChange(event: Event): void {
   const target = event.target as HTMLSelectElement
   stop()
   selectedDeviceId.value = target.value
+}
+
+function handleProfileChange(event: Event): void {
+  const target = event.target as HTMLSelectElement
+  const profileId = target.value as AudioDetectionProfileId
+  applyDetectionProfile(profileId)
+}
+
+function handleRmsThresholdChange(event: Event): void {
+  const target = event.target as HTMLInputElement
+  const nextThreshold = Number(target.value)
+  if (!Number.isFinite(nextThreshold)) return
+  setRmsThreshold(nextThreshold)
+}
+
+function handleMinFrequencyChange(event: Event): void {
+  const target = event.target as HTMLInputElement
+  const nextMinFrequency = Number(target.value)
+  if (!Number.isFinite(nextMinFrequency)) return
+  setFrequencyRange(nextMinFrequency, maxFrequency.value)
+}
+
+function handleMaxFrequencyChange(event: Event): void {
+  const target = event.target as HTMLInputElement
+  const nextMaxFrequency = Number(target.value)
+  if (!Number.isFinite(nextMaxFrequency)) return
+  setFrequencyRange(minFrequency.value, nextMaxFrequency)
+}
+
+function handleAdvancedToggle(event: Event): void {
+  const target = event.target as HTMLDetailsElement
+  isAdvancedOpen.value = target.open
+  globalThis.localStorage.setItem(STORAGE_KEY_ADVANCED_OPEN, target.open ? '1' : '0')
 }
 
 function validate(): void {
@@ -339,6 +482,85 @@ watch(
   flex-direction: column;
   gap: 1rem;
   align-items: flex-start;
+}
+
+.listen-setup__advanced {
+  width: 100%;
+  border: 1px solid var(--glass-border);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.03);
+  overflow: hidden;
+}
+
+.listen-setup__advanced-summary {
+  cursor: pointer;
+  list-style: none;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  padding: 0.75rem 0.9rem;
+  border-bottom: 1px solid transparent;
+}
+
+.listen-setup__advanced[open] .listen-setup__advanced-summary {
+  border-bottom-color: var(--glass-border);
+}
+
+.listen-setup__advanced-summary::-webkit-details-marker {
+  display: none;
+}
+
+.listen-setup__advanced-content {
+  padding: 0.9rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.95rem;
+}
+
+.listen-setup__field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.listen-setup__number-input-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.listen-setup__number-input {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-primary);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--glass-radius-sm);
+  padding: 0.5rem 0.55rem;
+  font-size: 0.92rem;
+  font-weight: 600;
+  width: 130px;
+}
+
+.listen-setup__frequency-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.listen-setup__frequency-col {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.listen-setup__sub-label {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+.listen-setup__hint {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
 }
 
 .listen-setup__test-btn {
