@@ -134,16 +134,38 @@
       </button>
     </div>
 
-    <!-- Section 5: Settings -->
+    <!-- Section 5: Mode switch -->
     <div class="toolbar__section toolbar__section--end">
-      <SettingsMenu />
+      <div
+        class="toolbar__view-switch"
+        role="group"
+        aria-label="Main view"
+      >
+        <button
+          class="toolbar__view-switch-btn"
+          :class="{ 'toolbar__view-switch-btn--active': currentView === 'trainer' }"
+          :aria-pressed="currentView === 'trainer'"
+          @click="emit('switchView', 'trainer')"
+        >
+          Trainer
+        </button>
+        <button
+          class="toolbar__view-switch-btn"
+          :class="{ 'toolbar__view-switch-btn--active': currentView === 'compose' }"
+          :aria-pressed="currentView === 'compose'"
+          @click="emit('switchView', 'compose')"
+        >
+          Compose
+        </button>
+      </div>
     </div>
   </nav>
 </template>
 
 <script setup lang="ts">
 import type { DifficultyFilter } from '@/types/chord'
-import SettingsMenu from './SettingsMenu.vue'
+
+type AppView = 'trainer' | 'compose'
 
 const props = withDefaults(defineProps<{
   isEnabled: boolean
@@ -151,10 +173,12 @@ const props = withDefaults(defineProps<{
   isMemoryMode?: boolean
   difficultyLevel?: DifficultyFilter
   isListenMode?: boolean
+  currentView?: AppView
 }>(), {
   isMemoryMode: false,
   difficultyLevel: 'advanced',
-  isListenMode: false
+  isListenMode: false,
+  currentView: 'trainer',
 })
 
 const emit = defineEmits<{
@@ -165,6 +189,7 @@ const emit = defineEmits<{
   toggleListenMode: []
   showLibrary: []
   showScales: []
+  switchView: [value: AppView]
 }>()
 
 const incrementBpm = () => {
@@ -248,6 +273,33 @@ const handleDifficultyChange = (event: Event) => {
   margin-left: auto;
   border-left: none !important;
   padding-right: 0;
+  gap: 0.6rem;
+}
+
+.toolbar__view-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.22rem;
+  border-radius: 999px;
+  border: 1px solid var(--glass-border);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.toolbar__view-switch-btn {
+  border: 1px solid var(--glass-border);
+  background: transparent;
+  color: var(--text-primary);
+  border-radius: 999px;
+  padding: 0.22rem 0.6rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.toolbar__view-switch-btn--active {
+  background: var(--accent-primary);
+  border-color: var(--accent-primary);
 }
 
 /* ── Generic button ── */
@@ -512,6 +564,11 @@ const handleDifficultyChange = (event: Event) => {
 
   .toolbar__section + .toolbar__section {
     border-left: none;
+  }
+
+  .toolbar__section--end {
+    width: 100%;
+    justify-content: flex-end;
   }
 
   .toolbar__label {

@@ -108,6 +108,11 @@
         ⌨ Shortcuts
       </button>
     </div>
+
+    <!-- Section 5: Settings -->
+    <div class="bottombar__section">
+      <SettingsMenu panel-position="above" />
+    </div>
   </footer>
 </template>
 
@@ -115,6 +120,7 @@
 import { computed } from 'vue'
 import type { Instrument } from '@/types/chord'
 import type { DetectedChord } from '@/utils/music/chordDetection'
+import SettingsMenu from './SettingsMenu.vue'
 
 const props = withDefaults(defineProps<{
   zoomLevel: number

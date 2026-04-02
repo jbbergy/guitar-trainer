@@ -1,5 +1,17 @@
 # Release Notes
 
+## [1.2.0] - 2026-04-02
+
+### Added
+- New Compose tab with chord progression tooling and related tablature typing support.
+
+### Changed
+- Updated cycle controls and settings flows to support the Compose workflow.
+- Refined keyboard help and bottom bar interactions for better navigation.
+
+### Tests
+- Added and updated unit tests for the Compose tab and chord cycle behavior.
+
 ## [1.1.1] - 2026-03-27
 
 ### Changed
@@ -30,4 +42,4 @@
 - Updated unit tests around Auto Cycle controls and related UI.
 
 ## Scope
-These notes cover changes between **v1.0.5** and **v1.1.1**.
+These notes cover changes between **v1.0.5** and **v1.2.0**.

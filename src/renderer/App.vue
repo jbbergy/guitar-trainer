@@ -6,11 +6,13 @@
     aria-label="Guitar Chord Trainer - Press spacebar to cycle through chords"
   >
     <AutoCycleControls 
+      v-if="currentView === 'trainer'"
       :is-enabled="isAutoCycleEnabled"
       :bpm="bpm"
       :is-memory-mode="isMemoryMode"
       :difficulty-level="difficultyLevel"
       :is-listen-mode="isListenModeEnabled"
+      :current-view="currentView"
       @toggle="toggleAutoCycle"
       @update-bpm="setBpm"
       @update-difficulty="setDifficultyLevel"
@@ -18,14 +20,24 @@
       @toggle-listen-mode="handleListenToggle"
       @show-library="showLibrary = true"
       @show-scales="showScaleTrainer = true"
+      @switch-view="currentView = $event"
     />
-    
+
     <ChordDisplay 
+      v-if="currentView === 'trainer'"
       :chord="currentChord"
       :instrument="instrument"
       :memory-mode="isMemoryMode" 
       :zoom-level="zoomLevel"
       :show-success="showSuccessFlash"
+    />
+
+    <ComposeView
+      v-if="currentView === 'compose'"
+      :instrument="instrument"
+      :current-view="currentView"
+      @update-instrument="setInstrument"
+      @switch-view="currentView = $event"
     />
     
     <BottomBar
@@ -52,12 +64,15 @@
       :instrument="instrument"
       @validate="handleListenValidate"
     />
-    <KeyboardHelp v-model="showKeyboardHelp" />
+    <KeyboardHelp
+      v-model="showKeyboardHelp"
+      :current-view="currentView"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, ref, onMounted, onUnmounted } from 'vue'
+import { computed, ref, onMounted, onUnmounted, watch } from 'vue'
 import { useChordCycle } from './composables/useChordCycle'
 import ChordDisplay from './components/ChordDisplay.vue'
 import ChordLibrary from './components/ChordLibrary.vue'
@@ -66,6 +81,10 @@ import BottomBar from './components/BottomBar.vue'
 import KeyboardHelp from './components/KeyboardHelp.vue'
 import ScaleTrainer from './components/ScaleTrainer.vue'
 import ListenSetupModal from './components/ListenSetupModal.vue'
+import ComposeView from './components/ComposeView.vue'
+
+const STORAGE_KEY_VIEW_MODE = 'app-view-mode'
+type AppView = 'trainer' | 'compose'
 
 const { 
   currentChord, 
@@ -76,6 +95,7 @@ const {
   isMemoryMode, 
   toggleMemoryMode, 
   instrument,
+  setInstrument,
   toggleInstrument,
   difficultyLevel,
   setDifficultyLevel,
@@ -85,13 +105,34 @@ const {
   stopListenMode,
   detectedChord,
   listenModeSignalLevel,
-  chordMatchSuccess
+  chordMatchSuccess,
+  setKeyboardEnabled,
 } = useChordCycle()
+
+const getInitialView = (): AppView => {
+  try {
+    const saved = globalThis.localStorage.getItem(STORAGE_KEY_VIEW_MODE)
+    return saved === 'compose' ? 'compose' : 'trainer'
+  } catch {
+    return 'trainer'
+  }
+}
+
+const currentView = ref<AppView>(getInitialView())
 const showLibrary = ref(false)
 const showKeyboardHelp = ref(false)
 const showScaleTrainer = ref(false)
 const showListenSetup = ref(false)
 const zoomLevel = ref(100)
+
+const isEditableTarget = (target: EventTarget | null): boolean => {
+  if (!(target instanceof HTMLElement)) {
+    return false
+  }
+
+  const tag = target.tagName.toLowerCase()
+  return tag === 'input' || tag === 'textarea' || target.isContentEditable
+}
 
 const isDetectedChordMatch = computed(() => {
   if (!detectedChord.value) return false
@@ -114,17 +155,43 @@ const handleListenValidate = (deviceId: string) => {
 const showSuccessFlash = chordMatchSuccess
 
 const handleKeyPress = (event: globalThis.KeyboardEvent): void => {
-  // Toggle chord library with 'L' key
-  if (event.key === 'l' || event.key === 'L') {
-    event.preventDefault()
-    showLibrary.value = !showLibrary.value
+  const hasPrimaryModifier = event.ctrlKey || event.metaKey
+
+  if (hasPrimaryModifier && (event.key === 'c' || event.key === 'C')) {
+    // Keep standard copy behavior when editing or selecting text.
+    const selectedText = globalThis.getSelection?.()?.toString() ?? ''
+    if (!isEditableTarget(event.target) && selectedText.length === 0) {
+      event.preventDefault()
+      currentView.value = currentView.value === 'trainer' ? 'compose' : 'trainer'
+      return
+    }
   }
 
   if (event.key === '?') {
     event.preventDefault()
     showKeyboardHelp.value = !showKeyboardHelp.value
+    return
   }
 
+  if (event.key === 'Escape' && showKeyboardHelp.value) {
+    event.preventDefault()
+    showKeyboardHelp.value = false
+    return
+  }
+
+  if (currentView.value !== 'trainer') {
+    return
+  }
+
+  if (!hasPrimaryModifier && isEditableTarget(event.target)) {
+    return
+  }
+
+  // Toggle chord library with 'L' key
+  if (event.key === 'l' || event.key === 'L') {
+    event.preventDefault()
+    showLibrary.value = !showLibrary.value
+  }
   // Toggle scale trainer with 'S' key
   if (event.key === 's' || event.key === 'S') {
     event.preventDefault()
@@ -165,19 +232,19 @@ const handleKeyPress = (event: globalThis.KeyboardEvent): void => {
   }
   
   // Zoom in with Ctrl/Cmd + Plus or Equal
-  if ((event.ctrlKey || event.metaKey) && (event.key === '+' || event.key === '=')) {
+  if (hasPrimaryModifier && (event.key === '+' || event.key === '=')) {
     event.preventDefault()
     zoomLevel.value = Math.min(200, zoomLevel.value + 10)
   }
   
   // Zoom out with Ctrl/Cmd + Minus
-  if ((event.ctrlKey || event.metaKey) && event.key === '-') {
+  if (hasPrimaryModifier && event.key === '-') {
     event.preventDefault()
     zoomLevel.value = Math.max(50, zoomLevel.value - 10)
   }
   
   // Reset zoom with Ctrl/Cmd + 0
-  if ((event.ctrlKey || event.metaKey) && event.key === '0') {
+  if (hasPrimaryModifier && event.key === '0') {
     event.preventDefault()
     zoomLevel.value = 100
   }
@@ -195,8 +262,33 @@ const handleWheel = (event: globalThis.WheelEvent): void => {
 }
 
 onMounted(() => {
+  setKeyboardEnabled(currentView.value === 'trainer')
   globalThis.window.addEventListener('keydown', handleKeyPress)
   globalThis.window.addEventListener('wheel', handleWheel, { passive: false })
+})
+
+watch(currentView, (view) => {
+  setKeyboardEnabled(view === 'trainer')
+
+  try {
+    globalThis.localStorage.setItem(STORAGE_KEY_VIEW_MODE, view)
+  } catch {
+    // Ignore storage failures and keep UI responsive.
+  }
+
+  if (view === 'compose') {
+    if (isAutoCycleEnabled.value) {
+      toggleAutoCycle()
+    }
+
+    if (isListenModeEnabled.value) {
+      stopListenMode()
+    }
+
+    showLibrary.value = false
+    showScaleTrainer.value = false
+    showListenSetup.value = false
+  }
 })
 
 onUnmounted(() => {
@@ -210,9 +302,6 @@ onUnmounted(() => {
   width: 100%;
   height: 100vh;
   position: relative;
-}
-
-@media (max-width: 640px) {
 }
 </style>
 

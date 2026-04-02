@@ -7,7 +7,9 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': resolve(__dirname, './src')
-    }
+    },
+    // Prefer TS sources when both .ts and .js files exist side-by-side.
+    extensions: ['.mjs', '.mts', '.ts', '.js', '.jsx', '.tsx', '.json']
   },
   root: './src/renderer',
   publicDir: resolve(__dirname, './public'),

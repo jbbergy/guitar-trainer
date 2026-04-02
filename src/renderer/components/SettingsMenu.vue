@@ -19,6 +19,10 @@
       v-if="isOpen"
       id="settings-panel"
       class="settings-menu__panel glass-panel"
+			:class="{
+				'settings-menu__panel--above': panelPosition === 'above',
+				'settings-menu__panel--below': panelPosition === 'below',
+			}"
       role="dialog"
       aria-label="Settings"
     >
@@ -64,6 +68,12 @@
 import { onMounted, onUnmounted, ref } from 'vue'
 
 type Theme = 'dark' | 'light'
+
+withDefaults(defineProps<{
+	panelPosition?: 'above' | 'below'
+}>(), {
+	panelPosition: 'below',
+})
 
 const STORAGE_KEY_THEME = 'a11y-theme'
 
@@ -143,13 +153,20 @@ onUnmounted(() => {
 
 .settings-menu__panel {
 	position: absolute;
-	top: calc(100% + 12px);
 	right: 0;
 	width: 260px;
 	padding: 1rem;
 	display: flex;
 	flex-direction: column;
 	gap: 0.85rem;
+}
+
+.settings-menu__panel--below {
+	top: calc(100% + 12px);
+}
+
+.settings-menu__panel--above {
+	bottom: calc(100% + 12px);
 }
 
 .settings-menu__title {

@@ -15,13 +15,48 @@ import type { DifficultyFilter } from '@/types/chord'
 import { useAudioChordDetection } from './useAudioChordDetection'
 
 const DIFFICULTY_ORDER: DifficultyFilter[] = ['beginner', 'intermediate', 'advanced']
+const STORAGE_KEY_INSTRUMENT = 'app-selected-instrument'
+const STORAGE_KEY_COMPOSE_DOCUMENT = 'compose-document-v1'
+const LEGACY_STORAGE_KEY_INSTRUMENT = 'selectedInstrument'
+
+const toInstrument = (value: unknown): Instrument | null => {
+  return value === 'guitar' || value === 'ukulele' ? value : null
+}
+
+const getInitialInstrument = (): Instrument => {
+  try {
+    const savedInstrument = toInstrument(globalThis.localStorage.getItem(STORAGE_KEY_INSTRUMENT))
+    if (savedInstrument) {
+      return savedInstrument
+    }
+
+    const legacyInstrument = toInstrument(globalThis.localStorage.getItem(LEGACY_STORAGE_KEY_INSTRUMENT))
+    if (legacyInstrument) {
+      return legacyInstrument
+    }
+
+    const rawComposeDocument = globalThis.localStorage.getItem(STORAGE_KEY_COMPOSE_DOCUMENT)
+    if (rawComposeDocument) {
+      const parsed = JSON.parse(rawComposeDocument) as { instrument?: unknown }
+      const composeInstrument = toInstrument(parsed.instrument)
+      if (composeInstrument) {
+        return composeInstrument
+      }
+    }
+
+    return 'guitar'
+  } catch {
+    return 'guitar'
+  }
+}
 
 export function useChordCycle() {
-  const instrument = ref<Instrument>('guitar')
+  const instrument = ref<Instrument>(getInitialInstrument())
   const difficultyLevel = ref<DifficultyFilter>('advanced')
   const currentChord = ref<Chord>(getRandomChord(undefined, instrument.value, difficultyLevel.value))
   const responseStartTime = ref<number>(0)
   const { width, height } = useWindowSize()
+  const isKeyboardEnabled = ref<boolean>(true)
 
   // Chord history for previous chord navigation
   const chordHistory = ref<Chord[]>([])
@@ -101,6 +136,13 @@ export function useChordCycle() {
     }
 
     instrument.value = newInstrument
+
+    try {
+      globalThis.localStorage.setItem(STORAGE_KEY_INSTRUMENT, newInstrument)
+    } catch {
+      // Ignore storage failures and keep user flow uninterrupted.
+    }
+
     chordHistory.value = []
     historyIndex.value = -1
     currentChord.value = getNextChord()
@@ -230,6 +272,10 @@ export function useChordCycle() {
   })
 
   const handleKeyPress = (event: KeyboardEvent) => {
+    if (!isKeyboardEnabled.value) {
+      return
+    }
+
     // Spacebar cycles to next chord (manual mode only)
     if (event.code === 'Space' || event.key === ' ') {
       event.preventDefault() // Prevent page scroll
@@ -289,6 +335,18 @@ export function useChordCycle() {
     if (successTimeout) clearTimeout(successTimeout)
   })
 
+  watch(instrument, (nextInstrument) => {
+    try {
+      globalThis.localStorage.setItem(STORAGE_KEY_INSTRUMENT, nextInstrument)
+    } catch {
+      // Ignore storage failures and keep user flow uninterrupted.
+    }
+  })
+
+  const setKeyboardEnabled = (enabled: boolean) => {
+    isKeyboardEnabled.value = enabled
+  }
+
   return {
     instrument,
     setInstrument,
@@ -321,6 +379,7 @@ export function useChordCycle() {
     listenModeSignalLevel,
     detectedChord,
     chordMatchSuccess,
+    setKeyboardEnabled,
     canGoBack: computed(() => historyIndex.value > 0),
     canGoForward: computed(() => historyIndex.value < chordHistory.value.length - 1)
   }
