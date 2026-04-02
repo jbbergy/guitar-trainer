@@ -114,6 +114,8 @@ const ariaLabel = computed(() => {
 
 <style scoped>
 .fretboard {
+  --fretboard-cell-gap: 0.35rem;
+  --nut-width: 2.4px;
   width: min(1100px, 100%);
   display: flex;
   flex-direction: column;
@@ -121,19 +123,39 @@ const ariaLabel = computed(() => {
 }
 
 .fretboard__grid {
+  --fretboard-padding: 1rem;
+  position: relative;
   display: grid;
   gap: 0.4rem;
-  padding: 1rem;
+  padding: var(--fretboard-padding);
   border-radius: 12px;
   background: var(--bg-secondary);
   border: 2px solid var(--text-secondary);
   box-shadow: 0 14px 40px rgba(0, 0, 0, 0.35);
 }
 
+.fretboard__grid::before {
+  content: '';
+  position: absolute;
+  top: calc(var(--fretboard-padding) - 2px);
+  bottom: calc(var(--fretboard-padding) - 2px);
+  left: calc(
+    var(--fretboard-padding) +
+    ((100% - (2 * var(--fretboard-padding)) - ((var(--fret-count) - 1) * var(--fretboard-cell-gap))) / var(--fret-count)) +
+    (var(--fretboard-cell-gap) / 2)
+  );
+  transform: translateX(-50%);
+  width: var(--nut-width);
+  border-radius: 999px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.9) 0%, rgba(208, 208, 208, 0.95) 100%);
+  box-shadow: 0 8px 14px rgba(0, 0, 0, 0.25);
+  pointer-events: none;
+}
+
 .fretboard__string {
   display: grid;
   grid-template-columns: repeat(var(--fret-count), minmax(42px, 1fr));
-  gap: 0.35rem;
+  gap: var(--fretboard-cell-gap);
 }
 
 .fretboard__cell {
@@ -220,13 +242,17 @@ const ariaLabel = computed(() => {
 }
 
 @media (max-width: 640px) {
+  .fretboard {
+    --fretboard-cell-gap: 0.25rem;
+  }
+
   .fretboard__grid {
-    padding: 0.75rem;
+    --fretboard-padding: 0.75rem;
   }
 
   .fretboard__string {
     grid-template-columns: repeat(var(--fret-count), minmax(34px, 1fr));
-    gap: 0.25rem;
+    gap: var(--fretboard-cell-gap);
   }
 
   .fretboard__cell {
