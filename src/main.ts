@@ -3,15 +3,26 @@
  * Manages application lifecycle, window creation, and IPC
  */
 
-import { app, BrowserWindow, systemPreferences } from 'electron'
+import { app, BrowserWindow, systemPreferences, screen } from 'electron'
 import { join } from 'path'
 import { WINDOW_CONFIG } from './constants/ui'
 
 let mainWindow: BrowserWindow | null = null
 
 function createWindow(): void {
+  // Get primary display size
+  const primaryDisplay = screen.getPrimaryDisplay()
+  const { width, height } = primaryDisplay.workAreaSize
+  
+  // Calculate window size as 80% of screen size
+  const windowWidth = Math.round(width * 0.8)
+  const windowHeight = Math.round(height * 0.8)
+  
   mainWindow = new BrowserWindow({
-    ...WINDOW_CONFIG,
+    width: windowWidth,
+    height: windowHeight,
+    minWidth: WINDOW_CONFIG.minWidth,
+    minHeight: WINDOW_CONFIG.minHeight,
     webPreferences: {
       preload: process.env.VITE_DEV_SERVER_URL
         ? join(__dirname, 'preload.cjs')

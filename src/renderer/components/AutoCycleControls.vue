@@ -64,7 +64,7 @@
         </select>
       </div>
 
-      <label v-if="instrument !== 'tinWhistle'" class="toolbar__toggle-row">
+      <label class="toolbar__toggle-row">
         <div class="toggle-switch">
           <input type="checkbox" :checked="isMemoryMode" aria-label="Toggle no schema mode"
             @change="$emit('toggleMemoryMode')">
