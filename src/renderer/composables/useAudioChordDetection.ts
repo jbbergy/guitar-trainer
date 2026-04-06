@@ -17,6 +17,7 @@ export type AudioDetectionProfileId =
     | 'ukulele-soprano'
     | 'ukulele-concert'
     | 'ukulele-tenor'
+    | 'tin-whistle-d'
     | 'custom'
 
 export interface AudioDetectionProfile {
@@ -86,6 +87,14 @@ export const AUDIO_DETECTION_PROFILES: AudioDetectionProfile[] = [
         minFrequency: 130,
         maxFrequency: 1650,
     },
+    {
+        id: 'tin-whistle-d',
+        label: 'Tin Whistle - D',
+        instrument: 'tinWhistle',
+        rmsThreshold: 0.0015,
+        minFrequency: 280,
+        maxFrequency: 1200,
+    },
 ]
 
 function clamp(value: number, min: number, max: number): number {
@@ -104,6 +113,7 @@ function sanitizeDetectionSettings(input: Partial<AudioDetectionSettings>): Audi
             rawProfile === 'ukulele-soprano' ||
             rawProfile === 'ukulele-concert' ||
             rawProfile === 'ukulele-tenor' ||
+            rawProfile === 'tin-whistle-d' ||
             rawProfile === 'custom'
             ? rawProfile
             : DEFAULT_AUDIO_SETTINGS.profileId

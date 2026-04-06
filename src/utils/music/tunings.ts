@@ -32,6 +32,19 @@ export const TUNINGS: Record<Instrument, Tuning> = {
       noteNameToPitchClass('E'),
       noteNameToPitchClass('A')
     ]
+  },
+  tinWhistle: {
+    instrument: 'tinWhistle',
+    label: 'D',
+    // Standard D tin whistle tuning (6 holes, but only 6 notes for simplicity)
+    openStringPitchClasses: [
+      noteNameToPitchClass('D'),
+      noteNameToPitchClass('E'),
+      noteNameToPitchClass('F#'),
+      noteNameToPitchClass('G'),
+      noteNameToPitchClass('A'),
+      noteNameToPitchClass('B')
+    ]
   }
 }
 

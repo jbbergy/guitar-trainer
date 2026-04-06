@@ -1,119 +1,69 @@
 <template>
   <Teleport to="body">
     <Transition name="modal">
-      <div
-        v-if="modelValue"
-        class="listen-setup-overlay"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="listen-setup-title"
-        @click.self="close"
-      >
+      <div v-if="modelValue" class="listen-setup-overlay" role="dialog" aria-modal="true"
+        aria-labelledby="listen-setup-title" @click.self="close">
         <div class="listen-setup">
           <div class="listen-setup__header">
             <div class="listen-setup__header-left">
-              <h2
-                id="listen-setup-title"
-                class="listen-setup__title"
-              >
+              <h2 id="listen-setup-title" class="listen-setup__title">
                 Listen Mode Setup
               </h2>
               <p class="listen-setup__subtitle">
                 Select your audio input and verify it captures sound before starting.
               </p>
             </div>
-            <button
-              class="listen-setup__close"
-              aria-label="Close"
-              title="Close (Esc)"
-              @click="close"
-            >
+            <button class="listen-setup__close" aria-label="Close" title="Close (Esc)" @click="close">
               ✕
             </button>
           </div>
 
           <div class="listen-setup__body">
-            <div
-              v-if="error"
-              class="listen-setup__error"
-              role="alert"
-            >
+            <div v-if="error" class="listen-setup__error" role="alert">
               {{ error }}
             </div>
 
             <div class="listen-setup__device">
-              <label
-                for="listen-device-select"
-                class="listen-setup__label"
-              >
+              <label for="listen-device-select" class="listen-setup__label">
                 Audio Input
               </label>
-              <select
-                id="listen-device-select"
-                class="listen-setup__select"
-                :value="selectedDeviceId"
-                :disabled="isListening"
-                aria-label="Select audio input device"
-                @change="handleDeviceChange"
-              >
-                <option
-                  v-for="device in availableDevices"
-                  :key="device.deviceId"
-                  :value="device.deviceId"
-                >
+              <select id="listen-device-select" class="listen-setup__select" :value="selectedDeviceId"
+                :disabled="isListening" aria-label="Select audio input device" @change="handleDeviceChange">
+                <option v-for="device in availableDevices" :key="device.deviceId" :value="device.deviceId">
                   {{ device.label }}
                 </option>
               </select>
             </div>
 
             <div class="listen-setup__preview">
-              <button
-                class="listen-setup__test-btn"
-                :class="{ 'listen-setup__test-btn--active': isListening }"
-                @click="toggleTest"
-              >
+              <button class="listen-setup__test-btn" :class="{ 'listen-setup__test-btn--active': isListening }"
+                @click="toggleTest">
                 <span class="listen-setup__test-icon">
                   {{ isListening ? '⏹' : '🎤' }}
                 </span>
                 {{ isListening ? 'Stop Test' : 'Test Input' }}
               </button>
 
-              <div
-                v-if="isListening"
-                class="listen-setup__vu"
-              >
+              <div v-if="isListening" class="listen-setup__vu">
                 <label class="listen-setup__label">
                   Signal Level
                 </label>
                 <div class="listen-setup__vu-track">
-                  <div
-                    class="listen-setup__vu-bar"
-                    :style="{ width: signalLevel + '%' }"
-                    :class="{
-                      'listen-setup__vu-bar--low': signalLevel < 20,
-                      'listen-setup__vu-bar--mid': signalLevel >= 20 && signalLevel < 60,
-                      'listen-setup__vu-bar--hot': signalLevel >= 60
-                    }"
-                  />
+                  <div class="listen-setup__vu-bar" :style="{ width: signalLevel + '%' }" :class="{
+                    'listen-setup__vu-bar--low': signalLevel < 20,
+                    'listen-setup__vu-bar--mid': signalLevel >= 20 && signalLevel < 60,
+                    'listen-setup__vu-bar--hot': signalLevel >= 60
+                  }" />
                 </div>
                 <div class="listen-setup__vu-notes">
-                  <span
-                    v-if="detectedNotes.length > 0"
-                    class="listen-setup__detected-notes"
-                  >
+                  <span v-if="detectedNotes.length > 0" class="listen-setup__detected-notes">
                     Detected: {{ detectedNotes.join(', ') }}
                   </span>
-                  <span
-                    v-else
-                    class="listen-setup__no-signal"
-                  >
+                  <span v-else class="listen-setup__no-signal">
                     Play something…
                   </span>
                 </div>
-                <div
-                  v-if="detectedChord"
-                  class="listen-setup__detected-chord"
-                >
+                <div v-if="detectedChord" class="listen-setup__detected-chord">
                   {{ detectedChord.fullName }}
                   <span class="listen-setup__confidence">
                     {{ detectedChord.confidence }}%
@@ -122,34 +72,19 @@
               </div>
             </div>
 
-            <details
-              class="listen-setup__advanced"
-              :open="isAdvancedOpen"
-              @toggle="handleAdvancedToggle"
-            >
+            <details class="listen-setup__advanced" :open="isAdvancedOpen" @toggle="handleAdvancedToggle">
               <summary class="listen-setup__advanced-summary">
                 Advanced options
               </summary>
 
               <div class="listen-setup__advanced-content">
                 <div class="listen-setup__field">
-                  <label
-                    for="listen-profile-select"
-                    class="listen-setup__label"
-                  >
+                  <label for="listen-profile-select" class="listen-setup__label">
                     Preset profile
                   </label>
-                  <select
-                    id="listen-profile-select"
-                    class="listen-setup__select"
-                    :value="detectionProfileId"
-                    @change="handleProfileChange"
-                  >
-                    <option
-                      v-for="profile in detectionProfiles"
-                      :key="profile.id"
-                      :value="profile.id"
-                    >
+                  <select id="listen-profile-select" class="listen-setup__select" :value="detectionProfileId"
+                    @change="handleProfileChange">
+                    <option v-for="profile in detectionProfiles" :key="profile.id" :value="profile.id">
                       {{ profile.label }}
                     </option>
                     <option value="custom">
@@ -159,23 +94,12 @@
                 </div>
 
                 <div class="listen-setup__field">
-                  <label
-                    for="listen-rms-threshold"
-                    class="listen-setup__label"
-                  >
+                  <label for="listen-rms-threshold" class="listen-setup__label">
                     RMS threshold
                   </label>
                   <div class="listen-setup__number-input-row">
-                    <input
-                      id="listen-rms-threshold"
-                      class="listen-setup__number-input"
-                      type="number"
-                      min="0.0005"
-                      max="0.02"
-                      step="0.0001"
-                      :value="rmsThreshold"
-                      @input="handleRmsThresholdChange"
-                    >
+                    <input id="listen-rms-threshold" class="listen-setup__number-input" type="number" min="0.0005"
+                      max="0.02" step="0.0001" :value="rmsThreshold" @input="handleRmsThresholdChange">
                     <span class="listen-setup__hint">
                       Current: {{ rmsThreshold.toFixed(4) }}
                     </span>
@@ -189,27 +113,13 @@
                   <div class="listen-setup__frequency-grid">
                     <div class="listen-setup__frequency-col">
                       <span class="listen-setup__sub-label">Min</span>
-                      <input
-                        class="listen-setup__number-input"
-                        type="number"
-                        min="20"
-                        max="3000"
-                        step="1"
-                        :value="minFrequency"
-                        @input="handleMinFrequencyChange"
-                      >
+                      <input class="listen-setup__number-input" type="number" min="20" max="3000" step="1"
+                        :value="minFrequency" @input="handleMinFrequencyChange">
                     </div>
                     <div class="listen-setup__frequency-col">
                       <span class="listen-setup__sub-label">Max</span>
-                      <input
-                        class="listen-setup__number-input"
-                        type="number"
-                        min="40"
-                        max="4000"
-                        step="1"
-                        :value="maxFrequency"
-                        @input="handleMaxFrequencyChange"
-                      >
+                      <input class="listen-setup__number-input" type="number" min="40" max="4000" step="1"
+                        :value="maxFrequency" @input="handleMaxFrequencyChange">
                     </div>
                   </div>
                   <span class="listen-setup__hint">
@@ -221,17 +131,10 @@
           </div>
 
           <div class="listen-setup__footer">
-            <button
-              class="listen-setup__cancel-btn"
-              @click="close"
-            >
+            <button class="listen-setup__cancel-btn" @click="close">
               Cancel
             </button>
-            <button
-              class="listen-setup__validate-btn"
-              :disabled="availableDevices.length === 0"
-              @click="validate"
-            >
+            <button class="listen-setup__validate-btn" :disabled="availableDevices.length === 0" @click="validate">
               ✓ Start Listen Mode
             </button>
           </div>
@@ -346,6 +249,9 @@ watch(
   (open) => {
     if (open) {
       refreshDevices()
+      if (props.instrument === 'tinWhistle' && detectionProfileId.value !== 'tin-whistle-d') {
+        applyDetectionProfile('tin-whistle-d')
+      }
     } else {
       stop()
     }
@@ -648,8 +554,15 @@ watch(
 }
 
 @keyframes pulse-text {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.4; }
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.4;
+  }
 }
 
 .listen-setup__detected-chord {

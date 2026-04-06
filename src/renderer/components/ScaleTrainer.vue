@@ -1,21 +1,12 @@
 <template>
   <Teleport to="body">
     <Transition name="modal">
-      <div
-        v-if="modelValue"
-        class="scale-trainer-overlay"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="scale-trainer-title"
-        @click.self="close"
-      >
+      <div v-if="modelValue" class="scale-trainer-overlay" role="dialog" aria-modal="true"
+        aria-labelledby="scale-trainer-title" @click.self="close">
         <div class="scale-trainer">
           <div class="scale-trainer__header">
             <div class="scale-trainer__header-left">
-              <h2
-                id="scale-trainer-title"
-                class="scale-trainer__title"
-              >
+              <h2 id="scale-trainer-title" class="scale-trainer__title">
                 Scale trainer
               </h2>
               <p class="scale-trainer__subtitle">
@@ -23,74 +14,34 @@
               </p>
             </div>
 
-            <button
-              class="scale-trainer__close"
-              aria-label="Close scale trainer"
-              title="Close (Esc)"
-              @click="close"
-            >
+            <button class="scale-trainer__close" aria-label="Close scale trainer" title="Close (Esc)" @click="close">
               ✕
             </button>
           </div>
 
-          <div
-            class="scale-trainer__controls"
-            role="region"
-            aria-label="Scale settings"
-          >
+          <div class="scale-trainer__controls" role="region" aria-label="Scale settings">
             <div class="scale-trainer__control">
-              <label
-                for="scale-root"
-                class="scale-trainer__label"
-              >Root</label>
-              <select
-                id="scale-root"
-                v-model="root"
-                class="scale-trainer__select"
-                aria-label="Scale root note"
-              >
-                <option
-                  v-for="note in NOTE_NAME_OPTIONS"
-                  :key="note"
-                  :value="note"
-                >
+              <label for="scale-root" class="scale-trainer__label">Root</label>
+              <select id="scale-root" v-model="root" class="scale-trainer__select" aria-label="Scale root note">
+                <option v-for="note in NOTE_NAME_OPTIONS" :key="note" :value="note">
                   {{ note }}
                 </option>
               </select>
             </div>
 
             <div class="scale-trainer__control">
-              <label
-                for="scale-mode"
-                class="scale-trainer__label"
-              >Mode</label>
-              <select
-                id="scale-mode"
-                v-model="scaleId"
-                class="scale-trainer__select"
-                aria-label="Scale mode"
-              >
-                <option
-                  v-for="def in SCALE_DEFINITIONS"
-                  :key="def.id"
-                  :value="def.id"
-                >
+              <label for="scale-mode" class="scale-trainer__label">Mode</label>
+              <select id="scale-mode" v-model="scaleId" class="scale-trainer__select" aria-label="Scale mode">
+                <option v-for="def in SCALE_DEFINITIONS" :key="def.id" :value="def.id">
                   {{ def.label }}
                 </option>
               </select>
             </div>
 
             <div class="scale-trainer__control">
-              <label
-                for="accidental-pref"
-                class="scale-trainer__label"
-              >Accidentals</label>
-              <select
-                id="accidental-pref"
-                v-model="preference"
-                class="scale-trainer__select"
-                aria-label="Accidental preference"
-              >
+              <label for="accidental-pref" class="scale-trainer__label">Accidentals</label>
+              <select id="accidental-pref" v-model="preference" class="scale-trainer__select"
+                aria-label="Accidental preference">
                 <option value="sharps">
                   Sharps (#)
                 </option>
@@ -101,16 +52,9 @@
             </div>
 
             <div class="scale-trainer__control">
-              <label
-                for="max-fret"
-                class="scale-trainer__label"
-              >Frets</label>
-              <select
-                id="max-fret"
-                v-model.number="maxFret"
-                class="scale-trainer__select"
-                aria-label="Maximum fret to display"
-              >
+              <label for="max-fret" class="scale-trainer__label">Frets</label>
+              <select id="max-fret" v-model.number="maxFret" class="scale-trainer__select"
+                aria-label="Maximum fret to display">
                 <option :value="12">
                   0–12
                 </option>
@@ -125,31 +69,17 @@
           </div>
 
           <div class="scale-trainer__content">
-            <div
-              class="scale-trainer__chips"
-              aria-label="Scale notes"
-            >
-              <button
-                v-for="pc in scalePitchClasses"
-                :key="pc"
-                type="button"
-                class="scale-trainer__chip"
+            <div class="scale-trainer__chips" aria-label="Scale notes">
+              <button v-for="pc in scalePitchClasses" :key="pc" type="button" class="scale-trainer__chip"
                 :class="{ 'scale-trainer__chip--root': pc === rootPitchClass }"
                 :aria-label="`Transpose: set root to ${pitchClassToNoteName(pc, preference)}`"
-                :title="`Set root to ${pitchClassToNoteName(pc, preference)}`"
-                @click="setRootFromPitchClass(pc)"
-              >
+                :title="`Set root to ${pitchClassToNoteName(pc, preference)}`" @click="setRootFromPitchClass(pc)">
                 {{ pitchClassToNoteName(pc, preference) }}
               </button>
             </div>
 
-            <FretboardDiagram
-              :instrument="instrument"
-              :root="root"
-              :preference="preference"
-              :scale-pitch-classes="scalePitchClasses"
-              :max-fret="maxFret"
-            />
+            <FretboardDiagram :instrument="instrument" :root="root" :preference="preference"
+              :scale-pitch-classes="scalePitchClasses" :max-fret="maxFret" />
           </div>
 
           <p class="scale-trainer__footer">
@@ -187,7 +117,13 @@ const maxFret = ref<number>(12)
 
 const close = () => emit('update:modelValue', false)
 
-const instrumentTitle = computed(() => (props.instrument === 'ukulele' ? 'Ukulele' : 'Guitar'))
+const instrumentTitle = computed(() => {
+  switch (props.instrument) {
+    case 'ukulele': return 'Ukulele'
+    case 'tinWhistle': return 'Tin Whistle'
+    default: return 'Guitar'
+  }
+})
 const tuningLabel = computed(() => getTuning(props.instrument).label)
 
 const scalePitchClasses = computed<PitchClass[]>(() => getScalePitchClasses(root.value, scaleId.value))
@@ -454,4 +390,3 @@ watch(preference, pref => {
   }
 }
 </style>
-

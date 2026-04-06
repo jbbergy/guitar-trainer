@@ -1,42 +1,34 @@
 <template>
-  <div 
-    class="chord-card"
-    :class="{ 'chord-card--memory-mode': memoryMode }"
-    :style="{
-      transform: `scale(${zoomScale})`,
-      transformOrigin: 'center center'
-    }"
-  >
+  <!-- Tin Whistle: render directly without card wrapper or external scale -->
+  <TinWhistleNoteDisplay v-if="isTinWhistle" :note="(chord as TinWhistleNote)" :memory-mode="memoryMode"
+    :zoom-level="zoomLevel" />
+
+  <!-- Guitar / Ukulele: styled card with scale transform -->
+  <div v-else class="chord-card" :class="{ 'chord-card--memory-mode': memoryMode }" :style="{
+    transform: `scale(${zoomScale})`,
+    transformOrigin: 'center center'
+  }">
     <div class="chord-card__name">
       {{ chord.name }}
     </div>
-    <span
-      class="chord-card__difficulty"
-      :class="difficultyClass"
-    >
+    <span class="chord-card__difficulty" :class="difficultyClass">
       {{ difficultyLabel }}
     </span>
-    <div
-      v-if="!memoryMode"
-      class="chord-card__diagram"
-    >
-      <ChordDiagram
-        :chord="chord"
-        :instrument="instrument"
-        :size="size"
-      />
+    <div v-if="!memoryMode" class="chord-card__diagram">
+      <ChordDiagram :chord="(chord as Chord)" :instrument="instrument" :size="size" />
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import type { Chord } from '@/types/chord'
+import type { Chord, NoteOrChord, TinWhistleNote } from '@/types/chord'
 import type { Instrument } from '@/types/chord'
 import ChordDiagram from './ChordDiagram.vue'
+import TinWhistleNoteDisplay from './TinWhistleNoteDisplay.vue'
 
 const props = withDefaults(defineProps<{
-  chord: Chord
+  chord: NoteOrChord
   instrument?: Instrument
   size?: number
   memoryMode?: boolean
@@ -62,6 +54,7 @@ const difficultyLabel = computed(() => {
 })
 
 const difficultyClass = computed(() => `chord-card__difficulty--${props.chord.difficulty}`)
+const isTinWhistle = computed(() => props.instrument === 'tinWhistle')
 </script>
 
 <style scoped>

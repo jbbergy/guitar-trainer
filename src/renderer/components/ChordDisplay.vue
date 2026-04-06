@@ -26,12 +26,12 @@
 </template>
 
 <script setup lang="ts">
-import type { Chord } from '@/types/chord'
+import type { NoteOrChord } from '@/types/chord'
 import type { Instrument } from '@/types/chord'
 import ChordCard from './ChordCard.vue'
 
 withDefaults(defineProps<{
-  chord: Chord
+  chord: NoteOrChord
   instrument?: Instrument
   memoryMode?: boolean
   zoomLevel?: number

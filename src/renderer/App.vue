@@ -1,73 +1,28 @@
 <template>
-  <div 
-    id="app" 
-    class="app"
-    role="application"
-    aria-label="Guitar Chord Trainer - Press spacebar to cycle through chords"
-  >
-    <AutoCycleControls 
-      v-if="currentView === 'trainer'"
-      :is-enabled="isAutoCycleEnabled"
-      :bpm="bpm"
-      :is-memory-mode="isMemoryMode"
-      :difficulty-level="difficultyLevel"
-      :is-listen-mode="isListenModeEnabled"
-      :current-view="currentView"
-      @toggle="toggleAutoCycle"
-      @update-bpm="setBpm"
-      @update-difficulty="setDifficultyLevel"
-      @toggle-memory-mode="toggleMemoryMode"
-      @toggle-listen-mode="handleListenToggle"
-      @show-library="showLibrary = true"
-      @show-scales="showScaleTrainer = true"
-      @switch-view="currentView = $event"
-    />
+  <div id="app" class="app" role="application"
+    aria-label="Guitar Chord Trainer - Press spacebar to cycle through chords">
+    <AutoCycleControls v-if="currentView === 'trainer'" :is-enabled="isAutoCycleEnabled" :bpm="bpm"
+      :is-memory-mode="isMemoryMode" :difficulty-level="difficultyLevel" :is-listen-mode="isListenModeEnabled"
+      :current-view="currentView" :instrument="instrument" :whistle-key="whistleKey" @toggle="toggleAutoCycle"
+      @update-bpm="setBpm" @update-difficulty="setDifficultyLevel" @toggle-memory-mode="toggleMemoryMode"
+      @toggle-listen-mode="handleListenToggle" @show-library="showLibrary = true" @show-scales="showScaleTrainer = true"
+      @switch-view="currentView = $event" @update-whistle-key="setWhistleKey" />
 
-    <ChordDisplay 
-      v-if="currentView === 'trainer'"
-      :chord="currentChord"
-      :instrument="instrument"
-      :memory-mode="isMemoryMode" 
-      :zoom-level="zoomLevel"
-      :show-success="showSuccessFlash"
-    />
+    <ChordDisplay v-if="currentView === 'trainer'" :chord="currentChord" :instrument="instrument"
+      :memory-mode="isMemoryMode" :zoom-level="zoomLevel" :show-success="showSuccessFlash" />
 
-    <ComposeView
-      v-if="currentView === 'compose'"
-      :instrument="instrument"
-      :current-view="currentView"
-      @update-instrument="setInstrument"
-      @switch-view="currentView = $event"
-    />
-    
-    <BottomBar
-      v-model:zoom-level="zoomLevel"
-      :is-listen-mode="isListenModeEnabled"
-      :detected-chord="detectedChord"
-      :signal-level="listenModeSignalLevel"
-      :is-match="isDetectedChordMatch"
-      :instrument="instrument"
-      @toggle-instrument="toggleInstrument"
-      @show-shortcuts="showKeyboardHelp = true"
-    />
+    <ComposeView v-if="currentView === 'compose'" :instrument="instrument" :current-view="currentView"
+      @update-instrument="setInstrument" @switch-view="currentView = $event" />
 
-    <ChordLibrary
-      v-model="showLibrary"
-      :instrument="instrument"
-    />
-    <ScaleTrainer
-      v-model="showScaleTrainer"
-      :instrument="instrument"
-    />
-    <ListenSetupModal
-      v-model="showListenSetup"
-      :instrument="instrument"
-      @validate="handleListenValidate"
-    />
-    <KeyboardHelp
-      v-model="showKeyboardHelp"
-      :current-view="currentView"
-    />
+    <BottomBar v-model:zoom-level="zoomLevel" :is-listen-mode="isListenModeEnabled" :detected-chord="detectedChord"
+      :signal-level="listenModeSignalLevel" :is-match="isDetectedChordMatch" :instrument="instrument"
+      @toggle-instrument="toggleInstrument" @select-instrument="setInstrument"
+      @show-shortcuts="showKeyboardHelp = true" />
+
+    <ChordLibrary v-model="showLibrary" :instrument="instrument" />
+    <ScaleTrainer v-model="showScaleTrainer" :instrument="instrument" />
+    <ListenSetupModal v-model="showListenSetup" :instrument="instrument" @validate="handleListenValidate" />
+    <KeyboardHelp v-model="showKeyboardHelp" :current-view="currentView" />
   </div>
 </template>
 
@@ -86,17 +41,19 @@ import ComposeView from './components/ComposeView.vue'
 const STORAGE_KEY_VIEW_MODE = 'app-view-mode'
 type AppView = 'trainer' | 'compose'
 
-const { 
-  currentChord, 
-  isAutoCycleEnabled, 
-  bpm, 
-  toggleAutoCycle, 
-  setBpm, 
-  isMemoryMode, 
-  toggleMemoryMode, 
+const {
+  currentChord,
+  isAutoCycleEnabled,
+  bpm,
+  toggleAutoCycle,
+  setBpm,
+  isMemoryMode,
+  toggleMemoryMode,
   instrument,
   setInstrument,
   toggleInstrument,
+  whistleKey,
+  setWhistleKey,
   difficultyLevel,
   setDifficultyLevel,
   cycleDifficultyLevel,
@@ -162,7 +119,9 @@ const handleKeyPress = (event: globalThis.KeyboardEvent): void => {
     const selectedText = globalThis.getSelection?.()?.toString() ?? ''
     if (!isEditableTarget(event.target) && selectedText.length === 0) {
       event.preventDefault()
-      currentView.value = currentView.value === 'trainer' ? 'compose' : 'trainer'
+      if (instrument.value !== 'tinWhistle') {
+        currentView.value = currentView.value === 'trainer' ? 'compose' : 'trainer'
+      }
       return
     }
   }
@@ -192,10 +151,12 @@ const handleKeyPress = (event: globalThis.KeyboardEvent): void => {
     event.preventDefault()
     showLibrary.value = !showLibrary.value
   }
-  // Toggle scale trainer with 'S' key
+  // Toggle scale trainer with 'S' key (not available in tin whistle mode)
   if (event.key === 's' || event.key === 'S') {
     event.preventDefault()
-    showScaleTrainer.value = !showScaleTrainer.value
+    if (instrument.value !== 'tinWhistle') {
+      showScaleTrainer.value = !showScaleTrainer.value
+    }
   }
 
   // Toggle instrument with 'I' key
@@ -209,7 +170,7 @@ const handleKeyPress = (event: globalThis.KeyboardEvent): void => {
     event.preventDefault()
     cycleDifficultyLevel()
   }
-  
+
   // Close library with Escape key
   if (event.key === 'Escape' && showLibrary.value) {
     event.preventDefault()
@@ -230,19 +191,19 @@ const handleKeyPress = (event: globalThis.KeyboardEvent): void => {
     event.preventDefault()
     showKeyboardHelp.value = false
   }
-  
+
   // Zoom in with Ctrl/Cmd + Plus or Equal
   if (hasPrimaryModifier && (event.key === '+' || event.key === '=')) {
     event.preventDefault()
     zoomLevel.value = Math.min(200, zoomLevel.value + 10)
   }
-  
+
   // Zoom out with Ctrl/Cmd + Minus
   if (hasPrimaryModifier && event.key === '-') {
     event.preventDefault()
     zoomLevel.value = Math.max(50, zoomLevel.value - 10)
   }
-  
+
   // Reset zoom with Ctrl/Cmd + 0
   if (hasPrimaryModifier && event.key === '0') {
     event.preventDefault()
@@ -254,7 +215,7 @@ const handleWheel = (event: globalThis.WheelEvent): void => {
   // Zoom with mouse wheel when Ctrl/Cmd is pressed
   if (event.ctrlKey || event.metaKey) {
     event.preventDefault()
-    
+
     // deltaY is positive when scrolling down (zoom out), negative when scrolling up (zoom in)
     const delta = event.deltaY < 0 ? 10 : -10
     zoomLevel.value = Math.max(50, Math.min(200, zoomLevel.value + delta))
@@ -291,6 +252,15 @@ watch(currentView, (view) => {
   }
 })
 
+watch(instrument, (newInstrument) => {
+  if (newInstrument === 'tinWhistle') {
+    if (currentView.value === 'compose') {
+      currentView.value = 'trainer'
+    }
+    showScaleTrainer.value = false
+  }
+})
+
 onUnmounted(() => {
   globalThis.window.removeEventListener('keydown', handleKeyPress)
   globalThis.window.removeEventListener('wheel', handleWheel)
@@ -304,4 +274,3 @@ onUnmounted(() => {
   position: relative;
 }
 </style>
-

@@ -9,18 +9,32 @@
 import { ref, onMounted, onUnmounted, watch, computed } from 'vue'
 import { useWindowSize } from '@vueuse/core'
 import { getRandomChord } from '@/utils/randomChord'
-import type { Chord } from '@/types/chord'
+import type { NoteOrChord, WhistleKey } from '@/types/chord'
 import type { Instrument } from '@/types/chord'
 import type { DifficultyFilter } from '@/types/chord'
 import { useAudioChordDetection } from './useAudioChordDetection'
 
 const DIFFICULTY_ORDER: DifficultyFilter[] = ['beginner', 'intermediate', 'advanced']
 const STORAGE_KEY_INSTRUMENT = 'app-selected-instrument'
+const STORAGE_KEY_WHISTLE_KEY = 'app-whistle-key'
 const STORAGE_KEY_COMPOSE_DOCUMENT = 'compose-document-v1'
 const LEGACY_STORAGE_KEY_INSTRUMENT = 'selectedInstrument'
 
+const VALID_WHISTLE_KEYS: WhistleKey[] = ['D', 'C', 'Bb', 'G', 'F', 'E', 'Eb']
+
+const toWhistleKey = (value: unknown): WhistleKey | null =>
+  VALID_WHISTLE_KEYS.includes(value as WhistleKey) ? (value as WhistleKey) : null
+
+const getInitialWhistleKey = (): WhistleKey => {
+  try {
+    return toWhistleKey(globalThis.localStorage.getItem(STORAGE_KEY_WHISTLE_KEY)) ?? 'D'
+  } catch {
+    return 'D'
+  }
+}
+
 const toInstrument = (value: unknown): Instrument | null => {
-  return value === 'guitar' || value === 'ukulele' ? value : null
+  return value === 'guitar' || value === 'ukulele' || value === 'tinWhistle' ? value : null
 }
 
 const getInitialInstrument = (): Instrument => {
@@ -52,14 +66,15 @@ const getInitialInstrument = (): Instrument => {
 
 export function useChordCycle() {
   const instrument = ref<Instrument>(getInitialInstrument())
+  const whistleKey = ref<WhistleKey>(getInitialWhistleKey())
   const difficultyLevel = ref<DifficultyFilter>('advanced')
-  const currentChord = ref<Chord>(getRandomChord(undefined, instrument.value, difficultyLevel.value))
+  const currentChord = ref<NoteOrChord>(getRandomChord(undefined, instrument.value, difficultyLevel.value, whistleKey.value))
   const responseStartTime = ref<number>(0)
   const { width, height } = useWindowSize()
   const isKeyboardEnabled = ref<boolean>(true)
 
   // Chord history for previous chord navigation
-  const chordHistory = ref<Chord[]>([])
+  const chordHistory = ref<NoteOrChord[]>([])
   const historyIndex = ref<number>(-1)
 
   // Memory training mode toggle
@@ -83,8 +98,8 @@ export function useChordCycle() {
     stop: stopAudioDetection,
   } = useAudioChordDetection(instrument)
 
-  const getNextChord = (excludeChord?: Chord) => {
-    return getRandomChord(excludeChord, instrument.value, difficultyLevel.value)
+  const getNextChord = (excludeChord?: NoteOrChord) => {
+    return getRandomChord(excludeChord, instrument.value, difficultyLevel.value, whistleKey.value)
   }
 
   const nextChord = () => {
@@ -159,6 +174,19 @@ export function useChordCycle() {
     currentChord.value = getNextChord()
   }
 
+  const setWhistleKey = (key: WhistleKey) => {
+    if (whistleKey.value === key) return
+    whistleKey.value = key
+    try {
+      globalThis.localStorage.setItem(STORAGE_KEY_WHISTLE_KEY, key)
+    } catch {
+      // Ignore storage failures.
+    }
+    chordHistory.value = []
+    historyIndex.value = -1
+    currentChord.value = getNextChord()
+  }
+
   const cycleDifficultyLevel = () => {
     const currentIndex = DIFFICULTY_ORDER.indexOf(difficultyLevel.value)
     const nextIndex = (currentIndex + 1) % DIFFICULTY_ORDER.length
@@ -166,7 +194,10 @@ export function useChordCycle() {
   }
 
   const toggleInstrument = () => {
-    setInstrument(instrument.value === 'guitar' ? 'ukulele' : 'guitar')
+    const instruments: Instrument[] = ['guitar', 'ukulele', 'tinWhistle']
+    const currentIndex = instruments.indexOf(instrument.value)
+    const nextIndex = (currentIndex + 1) % instruments.length
+    setInstrument(instruments[nextIndex])
   }
 
   const startAutoCycle = () => {
@@ -351,6 +382,8 @@ export function useChordCycle() {
     instrument,
     setInstrument,
     toggleInstrument,
+    whistleKey,
+    setWhistleKey,
     difficultyLevel,
     setDifficultyLevel,
     cycleDifficultyLevel,

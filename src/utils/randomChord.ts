@@ -1,9 +1,4 @@
-/**
- * Random chord selection utility
- * Provides uniform random distribution across all available chords
- */
-
-import type { Chord } from '@/types/chord'
+import type { NoteOrChord, WhistleKey } from '@/types/chord'
 import type { Instrument } from '@/types/chord'
 import type { DifficultyFilter } from '@/types/chord'
 import { getChordsByInstrument } from '@/data/chords'
@@ -14,44 +9,42 @@ const DIFFICULTY_RANK: Record<DifficultyFilter, number> = {
   advanced: 3
 }
 
-const filterByDifficulty = (chords: Chord[], difficulty: DifficultyFilter): Chord[] => {
+const filterByDifficulty = (items: NoteOrChord[], difficulty: DifficultyFilter): NoteOrChord[] => {
   const selectedRank = DIFFICULTY_RANK[difficulty]
-  return chords.filter(chord => DIFFICULTY_RANK[chord.difficulty] <= selectedRank)
+  return items.filter(item => DIFFICULTY_RANK[item.difficulty] <= selectedRank)
 }
 
 /**
- * Select a random chord from the available chord list
+ * Select a random chord/note from the available list
  * Uses uniform random distribution
- * @param excludeChord Optional chord to exclude from selection (avoid repeating same chord)
- * @returns A randomly selected Chord object
+ * @param excludeItem Optional item to exclude from selection (avoid repeating same item)
+ * @returns A randomly selected Chord or TinWhistleNote
  */
 export function getRandomChord(
-  excludeChord?: Chord,
+  excludeItem?: NoteOrChord,
   instrument: Instrument = 'guitar',
-  difficulty: DifficultyFilter = 'advanced'
-): Chord {
-  const chords = filterByDifficulty(getChordsByInstrument(instrument), difficulty)
-  const availableChordPool = chords.length > 0 ? chords : getChordsByInstrument(instrument)
+  difficulty: DifficultyFilter = 'advanced',
+  whistleKey: WhistleKey = 'D'
+): NoteOrChord {
+  const items = filterByDifficulty(getChordsByInstrument(instrument, whistleKey), difficulty)
+  const availablePool = items.length > 0 ? items : getChordsByInstrument(instrument, whistleKey)
 
-  // If we need to exclude a chord and there are multiple chords available
-  if (excludeChord && availableChordPool.length > 1) {
-    const availableChords = availableChordPool.filter(
-      chord => chord.name !== excludeChord.name
-    )
-    const randomIndex = Math.floor(Math.random() * availableChords.length)
-    return availableChords[randomIndex]
+  // If we need to exclude an item and there are multiple available
+  if (excludeItem && availablePool.length > 1) {
+    const available = availablePool.filter(item => item.name !== excludeItem.name)
+    const randomIndex = Math.floor(Math.random() * available.length)
+    return available[randomIndex]
   }
 
-  const randomIndex = Math.floor(Math.random() * availableChordPool.length)
-  return availableChordPool[randomIndex]
+  const randomIndex = Math.floor(Math.random() * availablePool.length)
+  return availablePool[randomIndex]
 }
 
 /**
- * Get all available chords
- * @returns Array of all Chord objects
+ * Get all available chords/notes for an instrument
  */
-export function getAllChords(instrument: Instrument = 'guitar', difficulty: DifficultyFilter = 'advanced'): Chord[] {
-  return filterByDifficulty(getChordsByInstrument(instrument), difficulty)
+export function getAllChords(instrument: Instrument = 'guitar', difficulty: DifficultyFilter = 'advanced', whistleKey: WhistleKey = 'D'): NoteOrChord[] {
+  return filterByDifficulty(getChordsByInstrument(instrument, whistleKey), difficulty)
 }
 
 export default {

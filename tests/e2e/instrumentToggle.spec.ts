@@ -16,16 +16,22 @@ test.describe('Instrument Toggle', () => {
 
         const toggle = window.locator('[data-testid="instrument-toggle"]')
         await expect(toggle).toBeVisible()
-        await expect(toggle).toContainText('Guitar (EADGBE)')
 
+        const guitarBtn = toggle.locator('button').nth(0)
+        const ukuleleBtn = toggle.locator('button').nth(1)
+
+        // Guitar active by default
+        await expect(guitarBtn).toHaveAttribute('aria-pressed', 'true')
         await expect(window.locator('.chord-diagram .string')).toHaveCount(6)
 
-        await toggle.click()
-        await expect(toggle).toContainText('Ukulele (GCEA)')
+        // Switch to Ukulele
+        await ukuleleBtn.click()
+        await expect(ukuleleBtn).toHaveAttribute('aria-pressed', 'true')
         await expect(window.locator('.chord-diagram .string')).toHaveCount(4)
 
-        await toggle.click()
-        await expect(toggle).toContainText('Guitar (EADGBE)')
+        // Switch back to Guitar
+        await guitarBtn.click()
+        await expect(guitarBtn).toHaveAttribute('aria-pressed', 'true')
         await expect(window.locator('.chord-diagram .string')).toHaveCount(6)
 
         await electronApp.close()
@@ -41,7 +47,8 @@ test.describe('Instrument Toggle', () => {
         await window.waitForLoadState('domcontentloaded')
 
         const toggle = window.locator('[data-testid="instrument-toggle"]')
-        await toggle.click()
+        // Click the Ukulele button directly
+        await toggle.locator('button').nth(1).click()
 
         const libraryButton = window.locator('.app__library-button')
         await libraryButton.click()
@@ -65,13 +72,13 @@ test.describe('Instrument Toggle', () => {
         await window.waitForLoadState('domcontentloaded')
 
         const toggle = window.locator('[data-testid="instrument-toggle"]')
-        await expect(toggle).toContainText('Guitar')
+        await expect(toggle.locator('button').nth(0)).toHaveAttribute('aria-pressed', 'true')
 
         await window.keyboard.press('i')
-        await expect(toggle).toContainText('Ukulele')
+        await expect(toggle.locator('button').nth(1)).toHaveAttribute('aria-pressed', 'true')
 
         await window.keyboard.press('i')
-        await expect(toggle).toContainText('Guitar')
+        await expect(toggle.locator('button').nth(2)).toHaveAttribute('aria-pressed', 'true')
 
         await electronApp.close()
     })

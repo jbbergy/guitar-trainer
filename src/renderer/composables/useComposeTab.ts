@@ -17,6 +17,7 @@ const getStorageKeyForInstrument = (instrument: Instrument): string => {
 const STRING_COUNT_BY_INSTRUMENT: Record<Instrument, number> = {
     guitar: 6,
     ukulele: 4,
+    tinWhistle: 6,
 }
 
 const sanitizeCell = (value: string): string => {

@@ -1,56 +1,21 @@
 <template>
-  <nav
-    class="toolbar"
-    role="region"
-    aria-label="Toolbar"
-  >
+  <nav class="toolbar" role="region" aria-label="Toolbar">
     <!-- Section 1: Auto-cycle -->
     <div class="toolbar__section">
-      <button 
-        class="toolbar__button"
-        :aria-pressed="isEnabled"
-        :class="{ 'toolbar__button--active': isEnabled }"
-        :title="isEnabled ? 'Stop auto-cycle' : 'Start auto-cycle'"
-        @click="$emit('toggle')"
-      >
+      <button class="toolbar__button" :aria-pressed="isEnabled" :class="{ 'toolbar__button--active': isEnabled }"
+        :title="isEnabled ? 'Stop auto-cycle' : 'Start auto-cycle'" @click="$emit('toggle')">
         <span class="toolbar__icon">{{ isEnabled ? '⏸' : '▶' }}</span>
         <span class="toolbar__label">{{ isEnabled ? 'Stop' : 'Auto' }}</span>
       </button>
-      <div 
-        class="toolbar__bpm"
-        :class="{ 'toolbar__bpm--disabled': !isEnabled }"
-      >
-        <label
-          for="bpm-input"
-          class="toolbar__bpm-label"
-        >BPM</label>
+      <div class="toolbar__bpm" :class="{ 'toolbar__bpm--disabled': !isEnabled }">
+        <label for="bpm-input" class="toolbar__bpm-label">BPM</label>
         <div class="toolbar__bpm-control">
-          <button 
-            class="toolbar__bpm-btn"
-            aria-label="Decrease BPM"
-            :disabled="bpm <= 20"
-            @click="decrementBpm"
-          >
+          <button class="toolbar__bpm-btn" aria-label="Decrease BPM" :disabled="bpm <= 20" @click="decrementBpm">
             −
           </button>
-          <input 
-            id="bpm-input"
-            type="number"
-            class="toolbar__bpm-input"
-            :value="bpm"
-            min="20"
-            max="240"
-            step="5"
-            aria-label="Beats per minute"
-            @input="handleBpmInput"
-            @change="handleBpmChange"
-          >
-          <button 
-            class="toolbar__bpm-btn"
-            aria-label="Increase BPM"
-            :disabled="bpm >= 240"
-            @click="incrementBpm"
-          >
+          <input id="bpm-input" type="number" class="toolbar__bpm-input" :value="bpm" min="20" max="240" step="5"
+            aria-label="Beats per minute" @input="handleBpmInput" @change="handleBpmChange">
+          <button class="toolbar__bpm-btn" aria-label="Increase BPM" :disabled="bpm >= 240" @click="incrementBpm">
             +
           </button>
         </div>
@@ -59,33 +24,20 @@
 
     <!-- Section 2: Listen mode -->
     <div class="toolbar__section">
-      <button
-        class="toolbar__button toolbar__button--listen"
-        :class="{ 'toolbar__button--listen-active': isListenMode }"
-        :aria-pressed="isListenMode"
-        :title="isListenMode ? 'Stop listen mode' : 'Start listen mode'"
-        @click="$emit('toggleListenMode')"
-      >
+      <button class="toolbar__button toolbar__button--listen"
+        :class="{ 'toolbar__button--listen-active': isListenMode }" :aria-pressed="isListenMode"
+        :title="isListenMode ? 'Stop listen mode' : 'Start listen mode'" @click="$emit('toggleListenMode')">
         <span class="toolbar__icon">{{ isListenMode ? '👂' : '🎧' }}</span>
         <span class="toolbar__label">{{ isListenMode ? 'Listening' : 'Listen' }}</span>
       </button>
     </div>
 
-    <!-- Section 3: Level + Schema -->
+    <!-- Section 3: Level + Schema + Whistle Key -->
     <div class="toolbar__section">
       <div class="toolbar__difficulty">
-        <label
-          for="difficulty-select"
-          class="toolbar__small-label"
-        >Level</label>
-        <select
-          id="difficulty-select"
-          class="toolbar__select"
-          :value="difficultyLevel"
-          aria-label="Chord difficulty level"
-          data-testid="difficulty-select"
-          @change="handleDifficultyChange"
-        >
+        <label for="difficulty-select" class="toolbar__small-label">Level</label>
+        <select id="difficulty-select" class="toolbar__select" :value="difficultyLevel"
+          aria-label="Chord difficulty level" data-testid="difficulty-select" @change="handleDifficultyChange">
           <option value="beginner">
             Beginner
           </option>
@@ -98,14 +50,24 @@
         </select>
       </div>
 
-      <label class="toolbar__toggle-row">
+      <div v-if="instrument === 'tinWhistle'" class="toolbar__difficulty">
+        <label for="whistle-key-select" class="toolbar__small-label">Key</label>
+        <select id="whistle-key-select" class="toolbar__select" :value="whistleKey" aria-label="Tin whistle key"
+          @change="handleWhistleKeyChange">
+          <option value="D">D</option>
+          <option value="C">C</option>
+          <option value="Bb">B♭</option>
+          <option value="G">G</option>
+          <option value="F">F</option>
+          <option value="E">E</option>
+          <option value="Eb">E♭</option>
+        </select>
+      </div>
+
+      <label v-if="instrument !== 'tinWhistle'" class="toolbar__toggle-row">
         <div class="toggle-switch">
-          <input
-            type="checkbox"
-            :checked="isMemoryMode"
-            aria-label="Toggle no schema mode"
-            @change="$emit('toggleMemoryMode')"
-          >
+          <input type="checkbox" :checked="isMemoryMode" aria-label="Toggle no schema mode"
+            @change="$emit('toggleMemoryMode')">
           <span class="toggle-slider" />
         </div>
         <span class="toolbar__toggle-text">No Schéma</span>
@@ -114,21 +76,13 @@
 
     <!-- Section 4: Library + Scales -->
     <div class="toolbar__section">
-      <button
-        class="toolbar__button"
-        aria-label="Show chord library"
-        title="Show all chords"
-        @click="$emit('showLibrary')"
-      >
+      <button class="toolbar__button" aria-label="Show chord library" title="Show all chords"
+        @click="$emit('showLibrary')">
         <span class="toolbar__icon">📚</span>
         <span class="toolbar__label">All Chords</span>
       </button>
-      <button
-        class="toolbar__button"
-        aria-label="Show scale trainer"
-        title="Show scale trainer"
-        @click="$emit('showScales')"
-      >
+      <button v-if="instrument !== 'tinWhistle'" class="toolbar__button" aria-label="Show scale trainer"
+        title="Show scale trainer" @click="$emit('showScales')">
         <span class="toolbar__icon">🎼</span>
         <span class="toolbar__label">Scales</span>
       </button>
@@ -136,25 +90,17 @@
 
     <!-- Section 5: Mode switch -->
     <div class="toolbar__section toolbar__section--end">
-      <div
-        class="toolbar__view-switch"
-        role="group"
-        aria-label="Main view"
-      >
-        <button
-          class="toolbar__view-switch-btn"
+      <div class="toolbar__view-switch" role="group" aria-label="Main view">
+        <button class="toolbar__view-switch-btn"
           :class="{ 'toolbar__view-switch-btn--active': currentView === 'trainer' }"
-          :aria-pressed="currentView === 'trainer'"
-          @click="emit('switchView', 'trainer')"
-        >
+          :aria-pressed="currentView === 'trainer'" @click="emit('switchView', 'trainer')">
           Trainer
         </button>
-        <button
-          class="toolbar__view-switch-btn"
+        <button class="toolbar__view-switch-btn"
           :class="{ 'toolbar__view-switch-btn--active': currentView === 'compose' }"
-          :aria-pressed="currentView === 'compose'"
-          @click="emit('switchView', 'compose')"
-        >
+          :aria-pressed="currentView === 'compose'" :disabled="props.instrument === 'tinWhistle'"
+          :title="props.instrument === 'tinWhistle' ? 'Compose mode is not available for Tin Whistle' : undefined"
+          @click="emit('switchView', 'compose')">
           Compose
         </button>
       </div>
@@ -163,7 +109,7 @@
 </template>
 
 <script setup lang="ts">
-import type { DifficultyFilter } from '@/types/chord'
+import type { DifficultyFilter, Instrument, WhistleKey } from '@/types/chord'
 
 type AppView = 'trainer' | 'compose'
 
@@ -174,11 +120,15 @@ const props = withDefaults(defineProps<{
   difficultyLevel?: DifficultyFilter
   isListenMode?: boolean
   currentView?: AppView
+  instrument?: Instrument
+  whistleKey?: WhistleKey
 }>(), {
   isMemoryMode: false,
   difficultyLevel: 'advanced',
   isListenMode: false,
   currentView: 'trainer',
+  instrument: 'guitar',
+  whistleKey: 'D',
 })
 
 const emit = defineEmits<{
@@ -190,6 +140,7 @@ const emit = defineEmits<{
   showLibrary: []
   showScales: []
   switchView: [value: AppView]
+  updateWhistleKey: [value: WhistleKey]
 }>()
 
 const incrementBpm = () => {
@@ -211,13 +162,13 @@ const handleBpmInput = (event: Event) => {
 const handleBpmChange = (event: Event) => {
   const target = event.target as HTMLInputElement
   let value = parseInt(target.value)
-  
+
   if (isNaN(value)) {
     value = 60
   } else {
     value = Math.max(20, Math.min(240, value))
   }
-  
+
   target.value = value.toString()
   emit('updateBpm', value)
 }
@@ -225,6 +176,11 @@ const handleBpmChange = (event: Event) => {
 const handleDifficultyChange = (event: Event) => {
   const target = event.target as HTMLSelectElement
   emit('updateDifficulty', target.value as DifficultyFilter)
+}
+
+const handleWhistleKeyChange = (event: Event) => {
+  const target = event.target as HTMLSelectElement
+  emit('updateWhistleKey', target.value as WhistleKey)
 }
 </script>
 
@@ -265,7 +221,7 @@ const handleDifficultyChange = (event: Event) => {
   padding-left: 0;
 }
 
-.toolbar__section + .toolbar__section {
+.toolbar__section+.toolbar__section {
   border-left: 1px solid var(--glass-border);
 }
 
@@ -302,6 +258,11 @@ const handleDifficultyChange = (event: Event) => {
   border-color: var(--accent-primary);
 }
 
+.toolbar__view-switch-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
 /* ── Generic button ── */
 .toolbar__button {
   display: flex;
@@ -333,8 +294,15 @@ const handleDifficultyChange = (event: Event) => {
 }
 
 @keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.7; }
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.7;
+  }
 }
 
 /* ── Listen button variant ── */
@@ -347,8 +315,15 @@ const handleDifficultyChange = (event: Event) => {
 }
 
 @keyframes listen-pulse {
-  0%, 100% { box-shadow: 0 0 12px rgba(46, 204, 113, 0.5); }
-  50% { box-shadow: 0 0 20px rgba(46, 204, 113, 0.8); }
+
+  0%,
+  100% {
+    box-shadow: 0 0 12px rgba(46, 204, 113, 0.5);
+  }
+
+  50% {
+    box-shadow: 0 0 20px rgba(46, 204, 113, 0.8);
+  }
 }
 
 /* ── Icon + label ── */
@@ -532,17 +507,17 @@ const handleDifficultyChange = (event: Event) => {
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
 }
 
-.toggle-switch input:checked + .toggle-slider {
+.toggle-switch input:checked+.toggle-slider {
   background-color: var(--accent-primary);
   border-color: var(--accent-primary);
 }
 
-.toggle-switch input:checked + .toggle-slider:before {
+.toggle-switch input:checked+.toggle-slider:before {
   transform: translateX(18px);
   background-color: var(--bg-primary);
 }
 
-.toggle-switch input:focus + .toggle-slider {
+.toggle-switch input:focus+.toggle-slider {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
@@ -562,7 +537,7 @@ const handleDifficultyChange = (event: Event) => {
     padding: 0.25rem 0.5rem;
   }
 
-  .toolbar__section + .toolbar__section {
+  .toolbar__section+.toolbar__section {
     border-left: none;
   }
 

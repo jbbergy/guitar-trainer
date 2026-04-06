@@ -14,19 +14,23 @@
       '--max-height': `${size * 0.875}px`
     }"
   >
-    <!-- Open/Muted string markers (X/O) -->
-    <g class="string-markers">
-      <text
-        v-for="(fret, stringIndex) in chord.frets"
-        :key="`marker-${stringIndex}`"
-        :x="stringSpacing + stringIndex * stringSpacing"
-        :y="topMargin - 10 * scale"
-        class="string-marker"
-        text-anchor="middle"
-      >
-        {{ fret === 'X' ? 'X' : fret === 0 ? 'O' : '' }}
-      </text>
-    </g>
+    <!-- Tin Whistle uses a different diagram -->
+    <TinWhistleDiagram v-if="isTinWhistle" :note="(chord as any)" />
+    
+    <template v-else>
+      <!-- Open/Muted string markers (X/O) -->
+      <g class="string-markers">
+        <text
+          v-for="(fret, stringIndex) in chord.frets"
+          :key="`marker-${stringIndex}`"
+          :x="stringSpacing + stringIndex * stringSpacing"
+          :y="topMargin - 10 * scale"
+          class="string-marker"
+          text-anchor="middle"
+        >
+          {{ fret === 'X' ? 'X' : fret === 0 ? 'O' : '' }}
+        </text>
+      </g>
 
     <!-- Fret position indicator (e.g., "3fr" for barre chords) -->
     <text
@@ -90,6 +94,7 @@
         </template>
       </g>
     </g>
+    </template>
   </svg>
 </template>
 
@@ -97,6 +102,7 @@
 import { computed } from 'vue'
 import type { Chord } from '@/types/chord'
 import type { Instrument } from '@/types/chord'
+import TinWhistleDiagram from './TinWhistleDiagram.vue'
 
 const props = withDefaults(defineProps<{
   chord: Chord
@@ -115,10 +121,12 @@ const topMargin = computed(() => 40 * scale.value)
 const dotRadius = computed(() => 15 * scale.value)
 const numFrets = 5
 const stringCount = computed(() => props.chord.frets.length)
-const instrumentLabel = computed(() => props.instrument === 'ukulele' ? 'Ukulele' : 'Guitar')
+const instrumentLabel = computed(() => props.instrument === 'ukulele' ? 'Ukulele' : props.instrument === 'tinWhistle' ? 'Tin Whistle' : 'Guitar')
 
 const width = computed(() => stringSpacing.value * (stringCount.value + 1))
 const height = computed(() => topMargin.value + numFrets * fretHeight.value + 20 * scale.value)
+
+const isTinWhistle = computed(() => props.instrument === 'tinWhistle')
 </script>
 
 <style scoped>
