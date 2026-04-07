@@ -1,5 +1,11 @@
 # Release Notes
 
+## [1.3.1] - 2026-04-07
+
+### Fixed
+- Listen mode now correctly detects notes played on tin whistle (monophonic single-note detection).
+- Pitch comparison for tin whistle uses pitch class matching to avoid sharp/flat name mismatches (e.g. A# vs Bb).
+
 ## [1.2.0] - 2026-04-02
 
 ### Added
