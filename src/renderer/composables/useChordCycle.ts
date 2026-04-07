@@ -13,6 +13,8 @@ import type { NoteOrChord, WhistleKey } from '@/types/chord'
 import type { Instrument } from '@/types/chord'
 import type { DifficultyFilter } from '@/types/chord'
 import { useAudioChordDetection } from './useAudioChordDetection'
+import { noteNameToPitchClass } from '@/utils/music/pitchClass'
+import type { NoteName } from '@/utils/music/pitchClass'
 
 const DIFFICULTY_ORDER: DifficultyFilter[] = ['beginner', 'intermediate', 'advanced']
 const STORAGE_KEY_INSTRUMENT = 'app-selected-instrument'
@@ -277,7 +279,17 @@ export function useChordCycle() {
     if (!isListenModeEnabled.value || !detected || chordMatchSuccess.value) return
 
     const currentName = currentChord.value.name
-    if (detected.fullName === currentName && detected.confidence >= 50) {
+    let isMatch: boolean
+    if (instrument.value === 'tinWhistle') {
+      // Compare by pitch class to avoid sharp/flat name mismatches (e.g. A# vs Bb)
+      const currentPc = noteNameToPitchClass(currentName as NoteName)
+      const detectedPc = noteNameToPitchClass(detected.root as NoteName)
+      isMatch = currentPc === detectedPc
+    } else {
+      isMatch = detected.fullName === currentName
+    }
+
+    if (isMatch && detected.confidence >= 50) {
       chordMatchSuccess.value = true
       successTimeout = setTimeout(() => {
         chordMatchSuccess.value = false

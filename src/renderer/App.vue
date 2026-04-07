@@ -29,6 +29,8 @@
 <script setup lang="ts">
 import { computed, ref, onMounted, onUnmounted, watch } from 'vue'
 import { useChordCycle } from './composables/useChordCycle'
+import { noteNameToPitchClass } from '@/utils/music/pitchClass'
+import type { NoteName } from '@/utils/music/pitchClass'
 import ChordDisplay from './components/ChordDisplay.vue'
 import ChordLibrary from './components/ChordLibrary.vue'
 import AutoCycleControls from './components/AutoCycleControls.vue'
@@ -93,6 +95,12 @@ const isEditableTarget = (target: EventTarget | null): boolean => {
 
 const isDetectedChordMatch = computed(() => {
   if (!detectedChord.value) return false
+  if (instrument.value === 'tinWhistle') {
+    // Compare by pitch class to avoid sharp/flat name mismatches (e.g. A# vs Bb)
+    const currentPc = noteNameToPitchClass(currentChord.value.name as NoteName)
+    const detectedPc = noteNameToPitchClass(detectedChord.value.root as NoteName)
+    return currentPc === detectedPc
+  }
   return detectedChord.value.fullName === currentChord.value.name
 })
 

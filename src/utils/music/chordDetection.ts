@@ -102,6 +102,24 @@ export function detectChordFromPitchClasses(
 }
 
 /**
+ * Detect a single note from pitch classes (for monophonic instruments like tin whistle).
+ * Returns the provided pitch class as a note — no chord quality required.
+ */
+export function detectNoteFromPitchClasses(
+    pitchClasses: Set<PitchClass>
+): DetectedChord | null {
+    if (pitchClasses.size === 0) return null
+    const pc = Array.from(pitchClasses)[0]
+    const noteName = pitchClassToNoteName(pc)
+    return {
+        root: noteName,
+        quality: '',
+        fullName: noteName,
+        confidence: 80,
+    }
+}
+
+/**
  * Detect multiple pitches from FFT frequency data.
  * Uses spectral peak-picking on the magnitude spectrum to find
  * prominent frequency components — works for chords (multiple simultaneous notes).

@@ -3,7 +3,7 @@ import type { Ref } from 'vue'
 import type { PitchClass } from '@/utils/music/pitchClass'
 import type { DetectedChord } from '@/utils/music/chordDetection'
 import type { Instrument } from '@/types/chord'
-import { detectPitchesFromFFT, frequencyToPitchClass, detectChordFromPitchClasses, computeRMS } from '@/utils/music/chordDetection'
+import { detectPitchesFromFFT, frequencyToPitchClass, detectChordFromPitchClasses, detectNoteFromPitchClasses, computeRMS } from '@/utils/music/chordDetection'
 import { pitchClassToNoteName } from '@/utils/music/pitchClass'
 
 export interface AudioDevice {
@@ -435,7 +435,24 @@ export function useAudioChordDetection(
         // Use all recent pitch classes for chord detection
         const allRecentPCs = new Set<PitchClass>(recentPitchClasses.keys())
 
-        const chord = detectChordFromPitchClasses(allRecentPCs, instrumentRef.value)
+        let chord: DetectedChord | null
+        if (instrumentRef.value === 'tinWhistle') {
+            // Tin whistle is monophonic: pick the most recently detected pitch class
+            let latestPc: PitchClass | null = null
+            let latestTimestamp = 0
+            for (const [pc, timestamp] of recentPitchClasses) {
+                if (timestamp > latestTimestamp) {
+                    latestTimestamp = timestamp
+                    latestPc = pc
+                }
+            }
+            const singlePCSet = latestPc !== null
+                ? new Set<PitchClass>([latestPc])
+                : new Set<PitchClass>()
+            chord = detectNoteFromPitchClasses(singlePCSet)
+        } else {
+            chord = detectChordFromPitchClasses(allRecentPCs, instrumentRef.value)
+        }
         detectedChord.value = chord
 
         // Update visible note names
