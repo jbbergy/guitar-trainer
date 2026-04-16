@@ -70,7 +70,7 @@
             @change="$emit('toggleMemoryMode')">
           <span class="toggle-slider" />
         </div>
-        <span class="toolbar__toggle-text">No Schéma</span>
+        <span class="toolbar__toggle-text">No Diagram</span>
       </label>
     </div>
 

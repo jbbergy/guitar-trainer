@@ -160,3 +160,68 @@ describe('useComposeTab', () => {
         expect(compose.getCell(0, 0)).toBe('5')
     })
 })
+
+describe('useComposeTab — bpm & quantization', () => {
+    beforeEach(() => {
+        globalThis.localStorage.clear()
+    })
+
+    it('createEmptyTablature includes default bpm and quantization', () => {
+        const doc = createEmptyTablature('guitar')
+        expect(doc.bpm).toBe(120)
+        expect(doc.quantization).toBe(4)
+    })
+
+    it('setBpm updates the bpm field', () => {
+        const instrument = ref<Instrument>('guitar')
+        const compose = useComposeTab(instrument)
+
+        compose.setBpm(180)
+        expect(compose.document.value.bpm).toBe(180)
+    })
+
+    it('setBpm clamps to [20, 300]', () => {
+        const instrument = ref<Instrument>('guitar')
+        const compose = useComposeTab(instrument)
+
+        compose.setBpm(5)
+        expect(compose.document.value.bpm).toBe(20)
+
+        compose.setBpm(999)
+        expect(compose.document.value.bpm).toBe(300)
+    })
+
+    it('setQuantization updates the quantization field', () => {
+        const instrument = ref<Instrument>('guitar')
+        const compose = useComposeTab(instrument)
+
+        compose.setQuantization(8)
+        expect(compose.document.value.quantization).toBe(8)
+
+        compose.setQuantization(32)
+        expect(compose.document.value.quantization).toBe(32)
+    })
+
+    it('setQuantization ignores invalid values', () => {
+        const instrument = ref<Instrument>('guitar')
+        const compose = useComposeTab(instrument)
+
+        compose.setQuantization(4)
+        // @ts-expect-error — intentionally testing invalid runtime value
+        compose.setQuantization(7)
+        expect(compose.document.value.quantization).toBe(4)
+    })
+
+    it('persists and restores bpm and quantization from localStorage', async () => {
+        const instrument = ref<Instrument>('guitar')
+        const compose = useComposeTab(instrument)
+
+        compose.setBpm(140)
+        compose.setQuantization(16)
+        await nextTick()
+
+        const restored = useComposeTab(instrument)
+        expect(restored.document.value.bpm).toBe(140)
+        expect(restored.document.value.quantization).toBe(16)
+    })
+})

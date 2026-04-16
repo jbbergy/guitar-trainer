@@ -17,6 +17,8 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': resolve(__dirname, './src')
-    }
+    },
+    // Prefer TypeScript sources over pre-compiled JS companions when resolving imports
+    extensions: ['.mts', '.ts', '.tsx', '.mjs', '.js', '.jsx', '.json', '.vue']
   }
 })

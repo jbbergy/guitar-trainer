@@ -1,9 +1,12 @@
 import { computed, ref, watch, type Ref } from 'vue'
 import type { Instrument } from '@/types/chord'
 import {
+    DEFAULT_TAB_BPM,
     DEFAULT_TAB_COLUMNS_PER_MEASURE,
     DEFAULT_TAB_MEASURE_COUNT,
     DEFAULT_TAB_MEASURES_PER_LINE,
+    DEFAULT_TAB_QUANTIZATION,
+    type Quantization,
     type TabMeasure,
     type TablatureDocument,
 } from '@/types/tablature'
@@ -12,6 +15,18 @@ const STORAGE_KEY_COMPOSE_DOCUMENT_PREFIX = 'compose-document-v1'
 
 const getStorageKeyForInstrument = (instrument: Instrument): string => {
     return `${STORAGE_KEY_COMPOSE_DOCUMENT_PREFIX}:${instrument}`
+}
+
+const VALID_QUANTIZATIONS = new Set<Quantization>([1, 2, 4, 8, 16, 32])
+
+const toSafeBpm = (value: unknown): number => {
+    const n = Number(value)
+    return Number.isFinite(n) && n >= 20 && n <= 300 ? Math.round(n) : DEFAULT_TAB_BPM
+}
+
+const toSafeQuantization = (value: unknown): Quantization => {
+    const n = Number(value)
+    return VALID_QUANTIZATIONS.has(n as Quantization) ? (n as Quantization) : DEFAULT_TAB_QUANTIZATION
 }
 
 const STRING_COUNT_BY_INSTRUMENT: Record<Instrument, number> = {
@@ -58,6 +73,8 @@ export const createEmptyTablature = (instrument: Instrument): TablatureDocument 
         instrument,
         columnsPerMeasure,
         measuresPerLine: DEFAULT_TAB_MEASURES_PER_LINE,
+        bpm: DEFAULT_TAB_BPM,
+        quantization: DEFAULT_TAB_QUANTIZATION,
         measures: Array.from({ length: DEFAULT_TAB_MEASURE_COUNT }, () =>
             createEmptyMeasure(stringCount, columnsPerMeasure)
         ),
@@ -124,6 +141,8 @@ const toSafeDocument = (raw: unknown, instrument: Instrument): TablatureDocument
         instrument,
         columnsPerMeasure,
         measuresPerLine,
+        bpm: toSafeBpm(record?.bpm),
+        quantization: toSafeQuantization(record?.quantization),
         measures,
     }
 }
@@ -262,6 +281,17 @@ export function useComposeTab(activeInstrument: Ref<Instrument>) {
         document.value = { ...document.value, measuresPerLine: clamped }
     }
 
+    const setBpm = (value: number) => {
+        const clamped = Math.max(20, Math.min(300, Math.round(value)))
+        document.value = { ...document.value, bpm: clamped }
+    }
+
+    const setQuantization = (value: Quantization) => {
+        if (VALID_QUANTIZATIONS.has(value)) {
+            document.value = { ...document.value, quantization: value }
+        }
+    }
+
     const setColumnsPerMeasure = (value: number) => {
         const clamped = Math.max(1, Math.min(16, Math.floor(value)))
 
@@ -351,6 +381,8 @@ export function useComposeTab(activeInstrument: Ref<Instrument>) {
         removeMeasureAt,
         setMeasuresPerLine,
         setColumnsPerMeasure,
+        setBpm,
+        setQuantization,
         newTablature,
         asText,
         copyToClipboard,

@@ -1,99 +1,76 @@
 <template>
   <!-- Top bar -->
-  <nav
-    class="compose-toolbar"
-    role="region"
-    aria-label="Compose toolbar"
-  >
+  <nav class="compose-toolbar" role="region" aria-label="Compose toolbar">
     <!-- Section 1: New + Title -->
     <div class="compose-toolbar__section compose-toolbar__section--title">
-      <button
-        class="compose-toolbar__btn"
-        type="button"
-        @click="handleNewTablature"
-      >
+      <button class="compose-toolbar__btn" type="button" @click="handleNewTablature">
         New Tab
       </button>
-      <label
-        for="compose-title"
-        class="compose-toolbar__label"
-      >Title</label>
-      <input
-        id="compose-title"
-        class="compose-toolbar__title-input"
-        :value="document.title"
-        maxlength="80"
-        aria-label="Tablature title"
-        @input="onTitleInput"
-      >
+      <label for="compose-title" class="compose-toolbar__label">Title</label>
+      <input id="compose-title" class="compose-toolbar__title-input" :value="document.title" maxlength="80"
+        aria-label="Tablature title" @input="onTitleInput">
     </div>
 
     <!-- Section 2: Document controls -->
     <div class="compose-toolbar__section">
       <span class="compose-toolbar__label">Per line</span>
-      <button
-        class="compose-toolbar__btn compose-toolbar__btn--stepper"
-        type="button"
-        :disabled="document.measuresPerLine <= 1"
-        aria-label="Fewer measures per line"
-        @click="setMeasuresPerLine(document.measuresPerLine - 1)"
-      >−</button>
+      <button class="compose-toolbar__btn compose-toolbar__btn--stepper" type="button"
+        :disabled="document.measuresPerLine <= 1" aria-label="Fewer measures per line"
+        @click="setMeasuresPerLine(document.measuresPerLine - 1)">−</button>
       <span class="compose-toolbar__stepper-val">{{ document.measuresPerLine }}</span>
-      <button
-        class="compose-toolbar__btn compose-toolbar__btn--stepper"
-        type="button"
-        :disabled="document.measuresPerLine >= 16"
-        aria-label="More measures per line"
-        @click="setMeasuresPerLine(document.measuresPerLine + 1)"
-      >+</button>
+      <button class="compose-toolbar__btn compose-toolbar__btn--stepper" type="button"
+        :disabled="document.measuresPerLine >= 16" aria-label="More measures per line"
+        @click="setMeasuresPerLine(document.measuresPerLine + 1)">+</button>
 
       <span class="compose-toolbar__label">Notes/bar</span>
-      <button
-        class="compose-toolbar__btn compose-toolbar__btn--stepper"
-        type="button"
-        :disabled="document.columnsPerMeasure <= 1"
-        aria-label="Fewer notes per measure"
-        @click="setColumnsPerMeasure(document.columnsPerMeasure - 1)"
-      >−</button>
+      <button class="compose-toolbar__btn compose-toolbar__btn--stepper" type="button"
+        :disabled="document.columnsPerMeasure <= 1" aria-label="Fewer notes per measure"
+        @click="setColumnsPerMeasure(document.columnsPerMeasure - 1)">−</button>
       <span class="compose-toolbar__stepper-val">{{ document.columnsPerMeasure }}</span>
-      <button
-        class="compose-toolbar__btn compose-toolbar__btn--stepper"
-        type="button"
-        :disabled="document.columnsPerMeasure >= 16"
-        aria-label="More notes per measure"
-        @click="setColumnsPerMeasure(document.columnsPerMeasure + 1)"
-      >+</button>
+      <button class="compose-toolbar__btn compose-toolbar__btn--stepper" type="button"
+        :disabled="document.columnsPerMeasure >= 16" aria-label="More notes per measure"
+        @click="setColumnsPerMeasure(document.columnsPerMeasure + 1)">+</button>
+    </div>
+
+    <!-- Section 3: Playback controls -->
+    <div class="compose-toolbar__section">
+      <span class="compose-toolbar__label">BPM</span>
+      <input id="compose-bpm" type="number" class="compose-toolbar__bpm-input" :value="document.bpm" min="20" max="300"
+        aria-label="Tempo in BPM" @change="onBpmChange">
+
+      <span class="compose-toolbar__label">Grid</span>
+      <select id="compose-quant" class="compose-toolbar__select" :value="document.quantization"
+        aria-label="Rhythmic value of the grid" @change="onQuantizationChange">
+        <option value="1">Whole</option>
+        <option value="2">Half</option>
+        <option value="4">Quarter</option>
+        <option value="8">Eighth</option>
+        <option value="16">16th</option>
+        <option value="32">32nd</option>
+      </select>
+
+      <button class="compose-toolbar__btn compose-toolbar__btn--play"
+        :class="{ 'compose-toolbar__btn--playing': isPlaying }" type="button"
+        :aria-label="isPlaying ? 'Stop playback' : 'Play tablature'"
+        :title="isPlaying ? 'Stop (Space)' : 'Play (Space)'" @click="handlePlayStop">{{ isPlaying ? '■' : '▶'
+        }}</button>
     </div>
 
     <!-- Section 3: Preview + Mode switch -->
     <div class="compose-toolbar__section compose-toolbar__section--end">
-      <button
-        class="compose-toolbar__btn compose-toolbar__btn--primary"
-        type="button"
-        @click="openPreviewModal"
-      >
+      <button class="compose-toolbar__btn compose-toolbar__btn--primary" type="button" @click="openPreviewModal">
         Preview
       </button>
 
-      <div
-        class="compose-toolbar__view-switch"
-        role="group"
-        aria-label="Main view"
-      >
-        <button
-          class="compose-toolbar__view-switch-btn"
+      <div class="compose-toolbar__view-switch" role="group" aria-label="Main view">
+        <button class="compose-toolbar__view-switch-btn"
           :class="{ 'compose-toolbar__view-switch-btn--active': currentView === 'trainer' }"
-          :aria-pressed="currentView === 'trainer'"
-          @click="emit('switchView', 'trainer')"
-        >
+          :aria-pressed="currentView === 'trainer'" @click="emit('switchView', 'trainer')">
           Trainer
         </button>
-        <button
-          class="compose-toolbar__view-switch-btn"
+        <button class="compose-toolbar__view-switch-btn"
           :class="{ 'compose-toolbar__view-switch-btn--active': currentView === 'compose' }"
-          :aria-pressed="currentView === 'compose'"
-          @click="emit('switchView', 'compose')"
-        >
+          :aria-pressed="currentView === 'compose'" @click="emit('switchView', 'compose')">
           Compose
         </button>
       </div>
@@ -101,31 +78,18 @@
   </nav>
 
   <!-- Main content area -->
-  <main
-    class="compose-content"
-    role="region"
-    aria-label="Tablature editor"
-  >
+  <main class="compose-content" role="region" aria-label="Tablature editor">
     <p class="compose-content__hint">
       Arrow keys to navigate · 0–24 for frets · X for muted
     </p>
 
     <div class="compose-content__lines">
-      <div
-        v-for="(line, lineIdx) in tabLines"
-        :key="lineIdx"
-        class="compose-content__line"
-        role="grid"
-        :aria-label="`Tablature line ${lineIdx + 1}`"
-      >
+      <div v-for="(line, lineIdx) in tabLines" :key="lineIdx" class="compose-content__line" role="grid"
+        :aria-label="`Tablature line ${lineIdx + 1}`">
         <!-- String labels column -->
         <div class="compose-content__labels-col" aria-hidden="true">
           <div class="compose-content__row-spacer" />
-          <div
-            v-for="row in displayRows"
-            :key="row.label"
-            class="compose-content__label"
-          >{{ row.label }}|</div>
+          <div v-for="row in displayRows" :key="row.label" class="compose-content__label">{{ row.label }}|</div>
         </div>
 
         <!-- One column per measure in this line + trailing separator -->
@@ -133,80 +97,47 @@
           <div class="compose-content__measure-col">
             <!-- Measure header: delete button -->
             <div class="compose-content__measure-hd">
-              <button
-                class="compose-content__del"
-                :aria-label="`Delete measure ${line.startIdx + mLocalIdx + 1}`"
-                :title="`Delete measure ${line.startIdx + mLocalIdx + 1}`"
-                :disabled="document.measures.length <= 1"
-                @click="removeMeasureAt(line.startIdx + mLocalIdx)"
-              >×</button>
+              <button class="compose-content__del" :aria-label="`Delete measure ${line.startIdx + mLocalIdx + 1}`"
+                :title="`Delete measure ${line.startIdx + mLocalIdx + 1}`" :disabled="document.measures.length <= 1"
+                @click="removeMeasureAt(line.startIdx + mLocalIdx)">×</button>
             </div>
             <!-- Cell rows: one per string -->
-            <div
-              v-for="(row, rIdx) in displayRows"
-              :key="row.label"
-              class="compose-content__cells-row"
-            >
-              <input
-                v-for="lc in document.columnsPerMeasure"
-                :key="lc"
-                :data-row="rIdx"
+            <div v-for="(row, rIdx) in displayRows" :key="row.label" class="compose-content__cells-row">
+              <input v-for="lc in document.columnsPerMeasure" :key="lc" :data-row="rIdx"
                 :data-col="(line.startIdx + mLocalIdx) * document.columnsPerMeasure + lc - 1"
                 class="compose-content__cell"
+                :class="{ 'compose-content__cell--active': playingColumn === (line.startIdx + mLocalIdx) * document.columnsPerMeasure + lc - 1 }"
                 :value="getCell(row.dataIndex, (line.startIdx + mLocalIdx) * document.columnsPerMeasure + lc - 1)"
-                inputmode="numeric"
-                maxlength="2"
+                inputmode="numeric" maxlength="2"
                 :aria-label="`String ${row.label}, measure ${line.startIdx + mLocalIdx + 1}, beat ${lc}`"
                 @input="onCellInput(row.dataIndex, (line.startIdx + mLocalIdx) * document.columnsPerMeasure + lc - 1, $event)"
-                @keydown="onCellKeydown($event, rIdx, (line.startIdx + mLocalIdx) * document.columnsPerMeasure + lc - 1)"
-              >
+                @keydown="onCellKeydown($event, rIdx, (line.startIdx + mLocalIdx) * document.columnsPerMeasure + lc - 1)">
             </div>
           </div>
           <!-- Measure separator -->
           <div class="compose-content__sep-col" aria-hidden="true">
             <div class="compose-content__row-spacer" />
-            <div
-              v-for="row in displayRows"
-              :key="row.label"
-              class="compose-content__sep-cell"
-            >|</div>
+            <div v-for="row in displayRows" :key="row.label" class="compose-content__sep-cell">|</div>
           </div>
         </template>
 
         <!-- Append measure button: only on last line -->
-        <div
-          v-if="lineIdx === tabLines.length - 1"
-          class="compose-content__add-col"
-        >
-          <button
-            class="compose-content__add"
-            aria-label="Add measure"
-            title="Add measure"
-            @click="addMeasure"
-          >+</button>
+        <div v-if="lineIdx === tabLines.length - 1" class="compose-content__add-col">
+          <button class="compose-content__add" aria-label="Add measure" title="Add measure"
+            @click="addMeasure">+</button>
         </div>
       </div>
     </div>
 
   </main>
 
-  <div
-    v-if="isPreviewModalOpen"
-    class="compose-preview-modal"
-    role="dialog"
-    aria-modal="true"
-    aria-label="Tablature text preview"
-    @click.self="closePreviewModal"
-  >
+  <div v-if="isPreviewModalOpen" class="compose-preview-modal" role="dialog" aria-modal="true"
+    aria-label="Tablature text preview" @click.self="closePreviewModal">
     <div class="compose-preview-modal__panel">
       <header class="compose-preview-modal__header">
         <h2 class="compose-preview-modal__title">Text preview</h2>
-        <button
-          class="compose-preview-modal__close"
-          type="button"
-          aria-label="Close preview"
-          @click="closePreviewModal"
-        >
+        <button class="compose-preview-modal__close" type="button" aria-label="Close preview"
+          @click="closePreviewModal">
           ×
         </button>
       </header>
@@ -214,11 +145,7 @@
       <pre class="compose-preview-modal__content">{{ asText }}</pre>
 
       <footer class="compose-preview-modal__footer">
-        <button
-          class="compose-toolbar__btn compose-toolbar__btn--primary"
-          type="button"
-          @click="copyPreviewText"
-        >
+        <button class="compose-toolbar__btn compose-toolbar__btn--primary" type="button" @click="copyPreviewText">
           {{ previewCopyStatus }}
         </button>
       </footer>
@@ -229,7 +156,9 @@
 <script setup lang="ts">
 import { computed, ref, toRef, onMounted, onUnmounted } from 'vue'
 import type { Instrument } from '@/types/chord'
+import type { Quantization } from '@/types/tablature'
 import { useComposeTab } from '@/renderer/composables/useComposeTab'
+import { useTablaturePlayback } from '@/renderer/composables/useTablaturePlayback'
 
 type AppView = 'trainer' | 'compose'
 
@@ -254,10 +183,14 @@ const {
   removeMeasureAt,
   setMeasuresPerLine,
   setColumnsPerMeasure,
+  setBpm,
+  setQuantization,
   newTablature,
   asText,
   copyToClipboard,
 } = useComposeTab(instrumentRef)
+
+const { isPlaying, playingColumn, play, stop } = useTablaturePlayback()
 
 const isPreviewModalOpen = ref(false)
 const previewCopyStatus = ref('Copy text')
@@ -337,6 +270,24 @@ const handleNewTablature = () => {
   previewCopyStatus.value = 'Copy text'
 }
 
+const onBpmChange = (event: Event) => {
+  const target = event.target as HTMLInputElement
+  setBpm(Number(target.value))
+}
+
+const onQuantizationChange = (event: Event) => {
+  const target = event.target as HTMLSelectElement
+  setQuantization(Number(target.value) as Quantization)
+}
+
+const handlePlayStop = () => {
+  if (isPlaying.value) {
+    stop()
+  } else {
+    play(document.value)
+  }
+}
+
 const openPreviewModal = () => {
   isPreviewModalOpen.value = true
 }
@@ -414,6 +365,12 @@ const handleComposeShortcuts = (event: KeyboardEvent) => {
   if (event.key === 'Escape' && isPreviewModalOpen.value) {
     event.preventDefault()
     closePreviewModal()
+    return
+  }
+
+  if (event.key === ' ' && !isPreviewModalOpen.value) {
+    event.preventDefault()
+    handlePlayStop()
   }
 }
 
@@ -463,7 +420,7 @@ onUnmounted(() => {
   padding-left: 0;
 }
 
-.compose-toolbar__section + .compose-toolbar__section {
+.compose-toolbar__section+.compose-toolbar__section {
   border-left: 1px solid var(--glass-border);
 }
 
@@ -746,6 +703,73 @@ onUnmounted(() => {
   outline: none;
 }
 
+.compose-content__cell--active {
+  border-color: var(--accent-primary);
+  background: rgba(212, 165, 116, 0.28);
+  box-shadow: 0 0 0 2px rgba(212, 165, 116, 0.35);
+}
+
+.compose-toolbar__bpm-input {
+  height: 30px;
+  width: 58px;
+  padding: 0 0.4rem;
+  border-radius: var(--glass-radius-sm);
+  border: 1px solid var(--glass-border);
+  background: rgba(255, 255, 255, 0.07);
+  color: var(--text-primary);
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-align: center;
+  /* hide native spin buttons — stepper feel is handled by the number input */
+  -moz-appearance: textfield;
+}
+
+.compose-toolbar__bpm-input::-webkit-outer-spin-button,
+.compose-toolbar__bpm-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+}
+
+.compose-toolbar__bpm-input:focus {
+  outline: none;
+  border-color: var(--accent-primary);
+}
+
+.compose-toolbar__select {
+  height: 30px;
+  padding: 0 0.5rem;
+  border-radius: var(--glass-radius-sm);
+  border: 1px solid var(--glass-border);
+  background: rgba(255, 255, 255, 0.07);
+  color: var(--text-primary);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.compose-toolbar__select:focus {
+  outline: none;
+  border-color: var(--accent-primary);
+}
+
+.compose-toolbar__btn--play {
+  min-width: 36px;
+  font-size: 0.9rem;
+  gap: 0;
+  justify-content: center;
+  padding: 0;
+}
+
+.compose-toolbar__btn--playing {
+  background: rgba(220, 80, 60, 0.22);
+  border-color: rgba(220, 80, 60, 0.5);
+  color: #e05a50;
+}
+
+.compose-toolbar__btn--playing:hover:not(:disabled) {
+  background: rgba(220, 80, 60, 0.4);
+  border-color: rgba(220, 80, 60, 0.7);
+}
+
 .compose-preview-modal {
   position: fixed;
   inset: 0;
@@ -823,7 +847,7 @@ onUnmounted(() => {
     padding: 0.25rem 0.5rem;
   }
 
-  .compose-toolbar__section + .compose-toolbar__section {
+  .compose-toolbar__section+.compose-toolbar__section {
     border-left: none;
   }
 
