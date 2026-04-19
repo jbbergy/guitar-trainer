@@ -97,10 +97,10 @@ export function useTablaturePlayback() {
     }
 
     /**
-     * Starts playback from column 0.
+     * Starts playback from the given column index (defaults to 0).
      * If playback is already running it is stopped first.
      */
-    const play = (doc: TablatureDocument): void => {
+    const play = (doc: TablatureDocument, startColumn = 0): void => {
         if (isPlaying.value) stop()
 
         const ctx = getOrCreateContext()
@@ -111,7 +111,7 @@ export function useTablaturePlayback() {
         documentSnapshot = doc
         totalColumns = doc.measures.length * doc.columnsPerMeasure
         colDuration = columnDurationSeconds(doc.bpm, doc.quantization)
-        currentColumnIndex = 0
+        currentColumnIndex = Math.max(0, Math.min(startColumn, totalColumns - 1))
         nextColumnTime = ctx.currentTime + 0.05  // small lead-in offset
 
         isPlaying.value = true

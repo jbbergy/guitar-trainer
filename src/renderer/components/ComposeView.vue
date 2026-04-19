@@ -97,6 +97,10 @@
           <div class="compose-content__measure-col">
             <!-- Measure header: delete button -->
             <div class="compose-content__measure-hd">
+              <button class="compose-content__play-from"
+                :aria-label="`Play from measure ${line.startIdx + mLocalIdx + 1}`"
+                :title="`Play from measure ${line.startIdx + mLocalIdx + 1}`"
+                @click="handlePlayFromMeasure(line.startIdx + mLocalIdx)">▶</button>
               <button class="compose-content__del" :aria-label="`Delete measure ${line.startIdx + mLocalIdx + 1}`"
                 :title="`Delete measure ${line.startIdx + mLocalIdx + 1}`" :disabled="document.measures.length <= 1"
                 @click="removeMeasureAt(line.startIdx + mLocalIdx)">×</button>
@@ -286,6 +290,11 @@ const handlePlayStop = () => {
   } else {
     play(document.value)
   }
+}
+
+const handlePlayFromMeasure = (measureIndex: number) => {
+  const startColumn = measureIndex * document.value.columnsPerMeasure
+  play(document.value, startColumn)
 }
 
 const openPreviewModal = () => {
@@ -600,6 +609,28 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 4px;
+}
+
+.compose-content__play-from {
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--muted);
+  border-radius: 4px;
+  width: 20px;
+  height: 20px;
+  font-size: 0.6rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.compose-content__play-from:hover {
+  background: rgba(80, 180, 120, 0.18);
+  color: #50c878;
+  border-color: rgba(80, 180, 120, 0.35);
 }
 
 .compose-content__del {
