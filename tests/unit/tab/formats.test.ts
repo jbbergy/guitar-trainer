@@ -268,3 +268,32 @@ describe('repeats and alternate endings', () => {
         expect(noteOns(tablatureToMidi(doc))).toBe(10)
     })
 })
+
+describe('printable score', () => {
+    it('draws one SVG system per line with staff lines, numbers and the title block', async () => {
+        const { tablatureToPrintHtml } = await import('@/utils/tab/printLayout')
+        const doc = createEmptyTablature(tuning('ukulele-baritone'), {
+            title: 'Print <me>', artist: 'Someone', bpm: 96, capo: 2, quantization: 8, measureCount: 12, columnsPerMeasure: 8,
+        })
+        doc.measures[0].rows[3][0] = '12'
+        doc.measures[0].rows[2][2] = '5h'
+        doc.measures[0].repeatStart = true
+        doc.measures[1].repeatEnd = 3
+        doc.measures[2].ending = 1
+        const html = tablatureToPrintHtml(doc)
+
+        expect(html).toContain('<h1>Print &lt;me&gt;</h1>')
+        expect(html).toContain('Baritone ukulele (DGBE) · Capo 2')
+        expect(html).toContain('4/4 · ♩ = 96')
+        const systems = html.match(/<svg class="system"/g) ?? []
+        expect(systems.length).toBeGreaterThan(1)
+        // Four strings per system, the fret numbers, the repeat count and the ending number.
+        expect((html.match(/class="string"/g) ?? []).length).toBe(systems.length * 4)
+        expect(html).toContain('>12</text>')
+        expect(html).toContain('>5h</text>')
+        expect(html).toContain('×3')
+        expect(html).toContain('>1.</text>')
+        // Rhythm: one stem per sounding beat.
+        expect((html.match(/class="stem"/g) ?? []).length).toBe(2)
+    })
+})

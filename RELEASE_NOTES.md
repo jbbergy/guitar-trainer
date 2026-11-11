@@ -1,5 +1,10 @@
 # Release Notes
 
+## [1.5.1] - 2026-11-11
+
+### Changed
+- PDF / Print export redrawn as an engraved score: real tab staff with justified systems, bar lines, repeat signs, alternate endings, measure numbers, and the rhythm (stems, beams, flags, dots) under the numbers. The export window now previews the page.
+
 ## [1.5.0] - 2026-11-11
 
 ### Added

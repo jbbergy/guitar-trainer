@@ -1,6 +1,6 @@
 import type { TablatureDocument } from '@/types/tablature'
-import { tablatureToAscii } from './asciiExport'
 import type { ExportedFile } from './formats'
+import { tablatureToPrintHtml } from './printLayout'
 
 /**
  * Hands a generated file to the user. In Electron this opens the native "Save as"
@@ -30,37 +30,6 @@ export async function copyText(text: string): Promise<boolean> {
         console.warn('Clipboard write failed:', error)
         return false
     }
-}
-
-const escapeHtml = (text: string): string =>
-    text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-
-/** Printable page: title block followed by the text tablature in a fixed-width font. */
-export function tablatureToPrintHtml(doc: TablatureDocument): string {
-    const details = [doc.tuning.name, doc.capo > 0 ? `Capo ${doc.capo}` : '', `${doc.bpm} BPM`].filter(Boolean).join(' · ')
-    const body = tablatureToAscii(doc, { includeHeader: false, lineWidth: 86 })
-
-    return `<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<title>${escapeHtml(doc.title)}</title>
-<style>
-  @page { margin: 16mm 14mm; }
-  body { margin: 0; color: #000; background: #fff; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; }
-  h1 { margin: 0 0 2px; font-size: 20pt; }
-  .artist { margin: 0 0 2px; font-size: 12pt; }
-  .details { margin: 0 0 14px; font-size: 9.5pt; color: #444; }
-  pre { margin: 0; font-family: Menlo, Consolas, "Courier New", monospace; font-size: 9.5pt; line-height: 1.25; white-space: pre; }
-</style>
-</head>
-<body>
-<h1>${escapeHtml(doc.title)}</h1>
-${doc.artist ? `<p class="artist">${escapeHtml(doc.artist)}</p>` : ''}
-<p class="details">${escapeHtml(details)}</p>
-<pre>${escapeHtml(body)}</pre>
-</body>
-</html>`
 }
 
 /**

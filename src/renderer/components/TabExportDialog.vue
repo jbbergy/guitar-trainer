@@ -9,11 +9,18 @@
         <span class="tab-export__format-name">{{ format.label }} <span class="tab-chip">.{{ format.extension }}</span></span>
         <span class="tab-help">{{ format.description }}</span>
       </label>
+      <label class="tab-export__format" :class="{ 'tab-export__format--active': formatId === 'print' }">
+        <input v-model="formatId" class="sr-only" type="radio" name="tab-export-format" value="print">
+        <span class="tab-export__format-name">PDF / Print <span class="tab-chip">.pdf</span></span>
+        <span class="tab-help">Engraved score: tab staff, repeats and rhythm. Choose “Save as PDF” in the print dialog.</span>
+      </label>
     </div>
 
     <p v-if="error" class="tab-error" role="alert">
       {{ error }}
     </p>
+    <iframe v-else-if="formatId === 'print'" class="tab-export__page" :srcdoc="printHtml" title="Preview of the printed score"
+      sandbox="" data-testid="export-print-preview" />
     <pre v-else-if="previewText !== null" class="tab-preview tab-export__preview" aria-label="Preview"
       data-testid="export-preview">{{ previewText }}</pre>
     <p v-else class="tab-help tab-export__binary">
@@ -22,16 +29,18 @@
 
     <template #footer>
       <span class="tab-modal__footer-note" role="status">{{ status }}</span>
-      <button class="tab-btn" type="button" :disabled="!document" title="Print, or save as PDF from the print dialog"
-        @click="print">
-        🖨 Print / PDF
+      <button v-if="formatId === 'print'" class="tab-btn tab-btn--primary" type="button" :disabled="!document"
+        data-testid="export-print" @click="print">
+        🖨 Print / Save as PDF
       </button>
-      <button class="tab-btn" type="button" :disabled="previewText === null" data-testid="export-copy" @click="copy">
-        Copy
-      </button>
-      <button class="tab-btn tab-btn--primary" type="button" :disabled="!file" data-testid="export-download" @click="download">
-        Save file
-      </button>
+      <template v-else>
+        <button class="tab-btn" type="button" :disabled="previewText === null" data-testid="export-copy" @click="copy">
+          Copy
+        </button>
+        <button class="tab-btn tab-btn--primary" type="button" :disabled="!file" data-testid="export-download" @click="download">
+          Save file
+        </button>
+      </template>
     </template>
   </TabModal>
 </template>
@@ -41,6 +50,7 @@ import { computed, ref, watch } from 'vue'
 import type { TablatureDocument } from '@/types/tablature'
 import { copyText, printTablature, saveFile } from '@/utils/tab/files'
 import { exportTablature, TAB_EXPORT_FORMATS, type ExportedFile, type TabFormatId } from '@/utils/tab/formats'
+import { tablatureToPrintHtml } from '@/utils/tab/printLayout'
 import TabModal from './TabModal.vue'
 
 const PREVIEW_LIMIT = 6000
@@ -54,12 +64,14 @@ const emit = defineEmits<{
   'update:modelValue': [value: boolean]
 }>()
 
-const formatId = ref<TabFormatId>('ascii')
+const formatId = ref<TabFormatId | 'print'>('ascii')
 const file = ref<ExportedFile | null>(null)
 const error = ref('')
 const busy = ref(false)
 const status = ref('')
 let generation = 0
+
+const printHtml = computed(() => (props.modelValue && props.document && formatId.value === 'print' ? tablatureToPrintHtml(props.document) : ''))
 
 const previewText = computed<string | null>(() => {
   const data = file.value?.data
@@ -78,11 +90,11 @@ const build = async (): Promise<void> => {
   file.value = null
   error.value = ''
   status.value = ''
-  if (!props.modelValue || !props.document) return
+  if (!props.modelValue || !props.document || formatId.value === 'print') return
 
   busy.value = true
   try {
-    const result = await exportTablature(props.document, formatId.value)
+    const result = await exportTablature(props.document, formatId.value as TabFormatId)
     if (current === generation) file.value = result
   } catch (reason) {
     console.warn('Export failed:', reason)
@@ -149,6 +161,14 @@ const print = (): void => {
   font-size: 0.92rem;
   font-weight: 700;
   color: var(--text-primary);
+}
+
+.tab-export__page {
+  width: 100%;
+  height: 340px;
+  border: 1px solid var(--glass-border);
+  border-radius: var(--glass-radius-sm);
+  background: #fff;
 }
 
 .tab-export__preview {
