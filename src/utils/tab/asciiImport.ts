@@ -10,7 +10,7 @@ import {
     type TabTuning,
     type TablatureDocument,
 } from '@/types/tablature'
-import { createEmptyMeasure, createEmptyTablature, formatCell, isMeasureEmpty } from './model'
+import { createEmptyMeasure, createEmptyTablature, formatCell, isMeasureEmpty, repeatMarks } from './model'
 import { createTuningFromStrings, detectTuningFromLabels, getTuningById, scientificToMidi } from './tunings'
 
 export class TabImportError extends Error {
@@ -37,6 +37,10 @@ export interface AsciiImportResult {
 interface TabLine {
     label: string | null
     body: string
+    /** The line opens with a repeat sign ("|:") */
+    leadRepeat: boolean
+    /** Play count written after the last bar line ("| x3"), null when absent */
+    tailCount: number | null
 }
 
 interface Token {
@@ -57,6 +61,9 @@ interface Segment {
     length: number
     /** tokens[slotIndex] = [stringIndex, token] pairs */
     tokens: [number, Token][][]
+    repeatStart: boolean
+    /** Play count of a repeat ending here, 0 when the measure does not close a repeat */
+    repeatEnd: number
 }
 
 const LABEL_WITH_BAR = /^\s*([A-Ga-g][#b♯♭]?)\d?\s*([|:]+)/
@@ -79,6 +86,7 @@ function parseTabLine(raw: string): TabLine | null {
     const line = raw.replace(/\s+$/, '')
     let label: string | null = null
     let rest: string
+    let tailCount: number | null = null
 
     const labeled = LABEL_WITH_BAR.exec(line)
     const numbered = labeled ? null : NUMBER_WITH_BAR.exec(line)
@@ -99,8 +107,11 @@ function parseTabLine(raw: string): TabLine | null {
     // Drop annotations written after the last bar line ("| x2").
     const lastBar = rest.lastIndexOf('|')
     if (lastBar >= 0 && !rest.slice(lastBar + 1).includes('-')) {
+        const count = /(?:x\s*(\d)|(\d)\s*x)/i.exec(rest.slice(lastBar + 1))
+        if (count) tailCount = Number(count[1] ?? count[2])
         rest = rest.slice(0, lastBar + 1)
     }
+    const leadRepeat = line.slice(0, line.length - rest.length).includes(':') && /[|:]\s*$/.test(line.slice(0, line.length - rest.length))
 
     if (!BODY_ALLOWED.test(rest)) return null
 
@@ -109,7 +120,7 @@ function parseTabLine(raw: string): TabLine | null {
     const structural = (compact.match(/[-0-9|]/g) ?? []).length
     if (dashes < 3 || structural / compact.length < 0.6) return null
 
-    return { label, body: rest }
+    return { label, body: rest, leadRepeat, tailCount }
 }
 
 /** Splits a run of consecutive tab lines into staves of 3 to 8 strings. */
@@ -275,7 +286,14 @@ function parseBlock(block: TabLine[]): { segments: Segment[]; hasBars: boolean }
         // Nothing but a short tail after the last bar line: not a measure.
         if (positions.length === 0 && (isLast || length < 2) && boundaries.length > 2) continue
 
+        // Repeat dots sit right inside the bar lines: "|:" opens a section, ":|" closes it.
+        const isDot = (position: number) => bodies.some((body) => body[position] === ':' || body[position] === '*')
+        const repeatStart = isDot(start) || (b === 0 && block.some((line) => line.leadRepeat))
+        const repeatEnd = end < width && length > 1 && isDot(end - 1) ? 2 : 0
+
         segments.push({
+            repeatStart,
+            repeatEnd,
             offsets: positions.map((position) => position - start),
             widths: positions.map((position) =>
                 (slots.get(position) as [number, Token][]).reduce((max, [, token]) => Math.max(max, token.width), 1)
@@ -283,6 +301,19 @@ function parseBlock(block: TabLine[]): { segments: Segment[]; hasBars: boolean }
             length,
             tokens: positions.map((position) => slots.get(position) as [number, Token][]),
         })
+    }
+
+    // "| x3" after a staff: its last repeat is played that many times; without any
+    // repeat sign the whole staff is the repeated section.
+    const tailCount = block.reduce<number | null>((count, line) => count ?? line.tailCount, null)
+    if (tailCount !== null && tailCount >= 2 && segments.length > 0) {
+        const closing = [...segments].reverse().find((segment) => segment.repeatEnd > 0)
+        if (closing) {
+            closing.repeatEnd = tailCount
+        } else {
+            segments[0].repeatStart = true
+            segments[segments.length - 1].repeatEnd = tailCount
+        }
     }
 
     return { segments, hasBars: boundaries.length > 2 }
@@ -488,7 +519,7 @@ export function parseAsciiTab(text: string, options: AsciiImportOptions = {}): A
                 else dropped++
             })
         })
-        measures.push({ rows })
+        measures.push({ rows, ...repeatMarks({ repeatStart: segment.repeatStart, repeatEnd: segment.repeatEnd }) })
     }
 
     // Wide measures (tabs written without bar lines) are cut into regular chunks.
@@ -503,7 +534,10 @@ export function parseAsciiTab(text: string, options: AsciiImportOptions = {}): A
                 chunks.push({ rows: measure.rows.map((row) => row.slice(start, start + chunkSize)) })
             }
             const last = chunks[chunks.length - 1]
-            return isMeasureEmpty(last) && last.rows[0].length < chunkSize / 2 ? chunks.slice(0, -1) : chunks
+            const kept = isMeasureEmpty(last) && last.rows[0].length < chunkSize / 2 ? chunks.slice(0, -1) : chunks
+            if (measure.repeatStart) kept[0].repeatStart = true
+            if (measure.repeatEnd) kept[kept.length - 1].repeatEnd = measure.repeatEnd
+            return kept
         })
     }
 

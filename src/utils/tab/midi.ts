@@ -1,5 +1,6 @@
 import type { TablatureDocument } from '@/types/tablature'
 import { midiProgramFor, trackNameFor } from './alphaTex'
+import { playbackOrder } from './model'
 import { collectTabEvents, columnTicks, measureTimeSignature, measureToBeats, notePitch, TICKS_PER_QUARTER } from './rhythm'
 
 const VELOCITY_NORMAL = 96
@@ -46,7 +47,10 @@ const buildTrack = (events: TimedEvent[], endTick: number): number[] => {
     return [...textBytes('MTrk'), ...uint32(body.length), ...body]
 }
 
-/** Writes the tablature as a Standard MIDI File (format 1: tempo track + one instrument track). */
+/**
+ * Writes the tablature as a Standard MIDI File (format 1: tempo track + one instrument track).
+ * MIDI has no repeat signs: repeated sections are written out in full.
+ */
 export function tablatureToMidi(doc: TablatureDocument): Uint8Array {
     const grid = columnTicks(doc.quantization)
     const measureEvents = collectTabEvents(doc.measures)
@@ -62,7 +66,7 @@ export function tablatureToMidi(doc: TablatureDocument): Uint8Array {
 
     let measureStart = 0
     let signature = ''
-    for (const events of measureEvents) {
+    for (const events of playbackOrder(doc.measures).map((index) => measureEvents[index])) {
         const [numerator, denominator] = measureTimeSignature(events.columns, doc.quantization, doc.timeSignature)
         if (`${numerator}/${denominator}` !== signature) {
             signature = `${numerator}/${denominator}`

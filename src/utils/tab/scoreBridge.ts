@@ -14,7 +14,7 @@ import { tablatureToAlphaTex } from './alphaTex'
 import type { PitchedMeasure } from './arrange'
 import { TabImportError } from './asciiImport'
 import { layOutPitches } from './convert'
-import { createEmptyMeasure, createEmptyTablature, formatCell } from './model'
+import { createEmptyMeasure, createEmptyTablature, formatCell, repeatMarks } from './model'
 import { createTuningFromStrings, getDefaultTuning } from './tunings'
 
 type AlphaTabModule = typeof AlphaTab
@@ -178,6 +178,16 @@ function staffToDocument(
             (moved > 0 ? ' (some notes were moved by an octave).' : '.')
         )
     }
+
+    // Repeat signs and alternate endings are shared by every track.
+    masterBars.forEach((masterBar, index) => {
+        const ending = masterBar.alternateEndings > 0 ? Math.log2(masterBar.alternateEndings & -masterBar.alternateEndings) + 1 : 0
+        Object.assign(measures[index], repeatMarks({
+            repeatStart: masterBar.isRepeatStart,
+            repeatEnd: masterBar.repeatCount,
+            ending,
+        }))
+    })
 
     if (collisions > 0) warnings.push(`${trackName}: ${collisions} note(s) overlapped another note and were dropped.`)
 

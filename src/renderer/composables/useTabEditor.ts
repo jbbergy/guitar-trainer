@@ -400,6 +400,7 @@ export function useTabEditor(initial: TablatureDocument, onChange?: (doc: Tablat
         pendingDigit = null
         anchor.value = null
         const widened: TabMeasure = {
+            ...measure,
             rows: measure.rows.map((row) => [...row.slice(0, location.localColumn), '', ...row.slice(location.localColumn)]),
         }
         replaceMeasures(document.value.measures.map((item, index) => (index === location.measureIndex ? widened : item)))
@@ -414,7 +415,7 @@ export function useTabEditor(initial: TablatureDocument, onChange?: (doc: Tablat
         if (measureColumns(measure) <= 1) return false
         pendingDigit = null
         anchor.value = null
-        const narrowed: TabMeasure = { rows: measure.rows.map((row) => row.filter((_cell, index) => index !== location.localColumn)) }
+        const narrowed: TabMeasure = { ...measure, rows: measure.rows.map((row) => row.filter((_cell, index) => index !== location.localColumn)) }
         replaceMeasures(document.value.measures.map((item, index) => (index === location.measureIndex ? narrowed : item)))
         return true
     }
@@ -452,6 +453,40 @@ export function useTabEditor(initial: TablatureDocument, onChange?: (doc: Tablat
         replaceMeasures(measures)
         setCursor(string, measureStartColumns(measures)[Math.min(from, measures.length - 1)])
         return true
+    }
+
+    // ── Repeats ─────────────────────────────────────────────────────────────
+
+    const updateMeasure = (index: number, change: Partial<TabMeasure>): void => {
+        replaceMeasures(document.value.measures.map((measure, i) => (i === index ? { ...measure, ...change } : measure)))
+    }
+
+    /** Puts or removes a "|:" in front of the first selected measure. */
+    const toggleRepeatStart = (): boolean => {
+        const index = selectedMeasures.value.from
+        const next = !document.value.measures[index].repeatStart
+        updateMeasure(index, { repeatStart: next || undefined })
+        return next
+    }
+
+    /** Cycles the ":|" after the last selected measure: none → ×2 → ×3 → ×4 → none. Returns the play count (0 = none). */
+    const cycleRepeatEnd = (): number => {
+        const index = selectedMeasures.value.to
+        const current = document.value.measures[index].repeatEnd ?? 0
+        const next = current === 0 ? 2 : current >= 4 ? 0 : current + 1
+        updateMeasure(index, { repeatEnd: next || undefined })
+        return next
+    }
+
+    /** Cycles the alternate ending of the selected measures: none → 1st → 2nd → 3rd → none. */
+    const cycleEnding = (): number => {
+        const { from, to } = selectedMeasures.value
+        const current = document.value.measures[from].ending ?? 0
+        const next = current >= 3 ? 0 : current + 1
+        replaceMeasures(
+            document.value.measures.map((measure, i) => (i >= from && i <= to ? { ...measure, ending: next || undefined } : measure))
+        )
+        return next
     }
 
     // ── Document settings ───────────────────────────────────────────────────
@@ -519,6 +554,7 @@ export function useTabEditor(initial: TablatureDocument, onChange?: (doc: Tablat
         const column = cursor.value.column
         const location = locate(column)
         const measures = document.value.measures.map((measure) => ({
+            ...measure,
             rows: measure.rows.map((row) => row.flatMap((cell) => [cell, ''])),
         }))
         anchor.value = null
@@ -538,6 +574,7 @@ export function useTabEditor(initial: TablatureDocument, onChange?: (doc: Tablat
         if (quantization === null) return false
         const location = locate(cursor.value.column)
         const measures = document.value.measures.map((measure) => ({
+            ...measure,
             rows: measure.rows.map((row) => row.filter((_cell, column) => column % 2 === 0)),
         }))
         anchor.value = null
@@ -592,6 +629,9 @@ export function useTabEditor(initial: TablatureDocument, onChange?: (doc: Tablat
         appendMeasure,
         duplicateMeasures,
         deleteMeasures,
+        toggleRepeatStart,
+        cycleRepeatEnd,
+        cycleEnding,
         setTitle,
         setArtist,
         setBpm,

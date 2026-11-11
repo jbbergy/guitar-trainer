@@ -55,7 +55,7 @@ Desktop app (Electron + Vue) to practice chords and scales on guitar or ukulele,
 
 - **Library**: every tablature is saved automatically on this device; search, duplicate, delete, back up everything in one file.
 - **Import**: text / ASCII tabs (pasted or `.txt`), PDF (text tabs and engraved tabs whose fret numbers are real text — not scans), Guitar Pro (`.gp3` `.gp4` `.gp5` `.gpx` `.gp`), MusicXML (`.musicxml` `.xml` `.mxl`), alphaTex and the app's own JSON. Drop files on the window or use *Import*.
-- **Editor**: keyboard-driven grid — digits for frets, `X` muted, `H` `P` `S` `B` `R` `V` for techniques, selection, copy/paste, undo/redo, insert/duplicate/delete measures, chord stamping, playback with loop.
+- **Editor**: keyboard-driven grid — digits for frets, `X` muted, `H` `P` `S` `B` `R` `V` for techniques, selection, copy/paste, undo/redo, insert/duplicate/delete measures, repeat signs and alternate endings, chord stamping, playback with loop.
 - **Convert**: rewrite a tablature for another instrument or tuning — guitar, ukulele (high or low G), baritone ukulele (DGBE), alternate tunings — keeping either the key or the fingerings.
 - **Export**: text tab, Guitar Pro (`.gp`), MusicXML, MIDI, alphaTex, JSON, and Print / PDF.
 

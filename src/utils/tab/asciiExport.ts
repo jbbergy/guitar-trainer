@@ -35,9 +35,13 @@ export function tablatureToAscii(doc: TablatureDocument, options: AsciiExportOpt
     // Display order: highest tab line first.
     const displayStrings = labels.map((_label, index) => labels.length - 1 - index)
 
+    // Repeat dots take the place of the dashes next to the bar lines, so the grid keeps its alignment.
     const renderMeasure = (measureIndex: number, stringIndex: number): string => {
-        const row = doc.measures[measureIndex].rows[stringIndex] ?? []
-        return `-${row.map((cell) => `${cell.padEnd(cellWidth, '-')}-`).join('')}`
+        const measure = doc.measures[measureIndex]
+        const row = measure.rows[stringIndex] ?? []
+        const body = row.map((cell) => `${cell.padEnd(cellWidth, '-')}-`).join('')
+        const closed = measure.repeatEnd ? `${body.slice(0, -1)}:` : body
+        return `${measure.repeatStart ? ':' : '-'}${closed}`
     }
 
     const measureWidth = (measureIndex: number): number => 1 + (doc.measures[measureIndex].rows[0]?.length ?? 0) * step + 1
@@ -50,14 +54,17 @@ export function tablatureToAscii(doc: TablatureDocument, options: AsciiExportOpt
         while (end < doc.measures.length && (end === start || width + measureWidth(end) <= lineWidth)) {
             width += measureWidth(end)
             end++
+            // "x3" can only be written at the end of a staff: close the staff after such a repeat.
+            if ((doc.measures[end - 1].repeatEnd ?? 0) > 2) break
         }
+        const count = doc.measures[end - 1].repeatEnd ?? 0
 
-        const lines = displayStrings.map((stringIndex) => {
+        const lines = displayStrings.map((stringIndex, lineIndex) => {
             const chunks: string[] = []
             for (let measureIndex = start; measureIndex < end; measureIndex++) {
                 chunks.push(renderMeasure(measureIndex, stringIndex))
             }
-            return `${labels[stringIndex].padEnd(labelWidth, ' ')}|${chunks.join('|')}|`
+            return `${labels[stringIndex].padEnd(labelWidth, ' ')}|${chunks.join('|')}|${lineIndex === 0 && count > 2 ? ` x${count}` : ''}`
         })
         systems.push(lines.join('\n'))
         start = end

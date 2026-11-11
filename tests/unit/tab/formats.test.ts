@@ -234,3 +234,37 @@ describe('MIDI', () => {
         expect(noteOns.length).toBeGreaterThanOrEqual(9)
     })
 })
+
+describe('repeats and alternate endings', () => {
+    const withRepeats = (): TablatureDocument => {
+        const doc = createEmptyTablature(tuning('guitar-standard'), { title: 'Repeats', quantization: 8, measureCount: 5, columnsPerMeasure: 8 })
+        doc.measures.forEach((measure, index) => { measure.rows[5][0] = String(index) })
+        doc.measures[0].repeatStart = true
+        doc.measures[1].ending = 1
+        doc.measures[1].repeatEnd = 2
+        doc.measures[2].ending = 2
+        doc.measures[3].repeatStart = true
+        doc.measures[4].repeatEnd = 3
+        return doc
+    }
+    const marksOf = (doc: TablatureDocument) =>
+        doc.measures.map(({ repeatStart, repeatEnd, ending }) => ({ repeatStart, repeatEnd, ending }))
+
+    it.each(['guitarpro', 'alphatex', 'musicxml', 'json'] as const)('survive a round trip through %s', async (format) => {
+        const doc = withRepeats()
+        const file = await exportTablature(doc, format)
+        const imported = (await importTablatureBytes(asBytes(file.data), file.fileName)).documents[0]
+        expect(marksOf(imported)).toEqual(marksOf(doc))
+        expect(imported.measures.map((measure) => measure.rows[5][0])).toEqual(['0', '1', '2', '3', '4'])
+    })
+
+    it('are written out in full in MIDI files', () => {
+        const doc = withRepeats()
+        const plain = createEmptyTablature(tuning('guitar-standard'), { quantization: 8, measureCount: 5, columnsPerMeasure: 8 })
+        plain.measures.forEach((measure, index) => { measure.rows[5][0] = String(index) })
+        const noteOns = (bytes: Uint8Array) => [...bytes].filter((byte, index) => byte === 0x90 && bytes[index + 2] === 96).length
+        // 0 1 | 0 2 | 3 4 ×3 → 10 notes instead of 5.
+        expect(noteOns(tablatureToMidi(plain))).toBe(5)
+        expect(noteOns(tablatureToMidi(doc))).toBe(10)
+    })
+})

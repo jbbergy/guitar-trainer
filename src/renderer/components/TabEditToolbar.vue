@@ -43,6 +43,24 @@
       </button>
     </div>
 
+    <div class="tab-tools__group" role="group" aria-label="Repeats">
+      <button class="tab-btn tab-btn--mono" type="button" :class="{ 'tab-btn--active': measure.repeatStart }"
+        :aria-pressed="Boolean(measure.repeatStart)" title="Repeat starts at this measure" aria-label="Repeat start"
+        data-testid="repeat-start" @mousedown.prevent @click="toggleRepeatStart">
+        |:
+      </button>
+      <button class="tab-btn tab-btn--mono" type="button" :class="{ 'tab-btn--active': measure.repeatEnd }"
+        title="Repeat ends after this measure — click again to play it 3 or 4 times" aria-label="Repeat end"
+        data-testid="repeat-end" @mousedown.prevent @click="cycleRepeatEnd">
+        :|<span v-if="(measure.repeatEnd ?? 0) > 2">×{{ measure.repeatEnd }}</span>
+      </button>
+      <button class="tab-btn tab-btn--mono" type="button" :class="{ 'tab-btn--active': measure.ending }"
+        title="Alternate ending (1st time, 2nd time…) — click to cycle" aria-label="Alternate ending"
+        data-testid="repeat-ending" @mousedown.prevent @click="cycleEnding">
+        {{ measure.ending ? `${measure.ending}.` : '1./2.' }}
+      </button>
+    </div>
+
     <div v-if="chords.length > 0" class="tab-tools__group">
       <select class="tab-select" aria-label="Insert a chord at the cursor" title="Insert a chord at the cursor"
         data-testid="chord-select" @change="insertChord">
@@ -108,6 +126,23 @@ const position = computed(() => {
   const step = column - props.editor.starts.value[measure] + 1
   return `Measure ${measure + 1} of ${props.editor.document.value.measures.length} · step ${step} · string ${label}`
 })
+
+/** Measure holding the cursor: the repeat buttons show and change its signs. */
+const measure = computed(() => props.editor.document.value.measures[props.editor.cursorMeasure.value] ?? { rows: [] })
+
+const toggleRepeatStart = (): void => {
+  emit('status', props.editor.toggleRepeatStart() ? 'Repeat starts here' : 'Repeat start removed')
+}
+
+const cycleRepeatEnd = (): void => {
+  const count = props.editor.cycleRepeatEnd()
+  emit('status', count ? `Repeat ends here · played ${count} times` : 'Repeat end removed')
+}
+
+const cycleEnding = (): void => {
+  const ending = props.editor.cycleEnding()
+  emit('status', ending ? `Ending ${ending}: played on pass ${ending} only` : 'Alternate ending removed')
+}
 
 const applyTechnique = (technique: TabTechnique): void => {
   if (!props.editor.applyTechnique(technique)) emit('status', 'Put the cursor on a note first')

@@ -1,5 +1,9 @@
 <template>
-  <div class="tab-measure" role="rowgroup" :aria-label="`Measure ${index + 1}`" :data-measure="index">
+  <div class="tab-measure" role="rowgroup" :aria-label="measureLabel" :data-measure="index" :class="{
+    'tab-measure--repeat-start': measure.repeatStart,
+    'tab-measure--repeat-end': measure.repeatEnd,
+    'tab-measure--ending': measure.ending,
+  }">
     <div class="tab-measure__head">
       <button class="tab-measure__number" type="button" tabindex="-1" :title="`Select measure ${index + 1}`"
         :aria-label="`Select measure ${index + 1}`" @mousedown.prevent.stop @click="emit('select', index, $event.shiftKey)">
@@ -9,6 +13,8 @@
         :aria-label="`Play from measure ${index + 1}`" @mousedown.prevent.stop @click="emit('play', index)">
         ▶
       </button>
+      <span v-if="measure.ending" class="tab-measure__ending" aria-hidden="true">{{ measure.ending }}.</span>
+      <span v-if="(measure.repeatEnd ?? 0) > 2" class="tab-measure__count" aria-hidden="true">×{{ measure.repeatEnd }}</span>
     </div>
 
     <div class="tab-measure__ruler" aria-hidden="true">
@@ -70,6 +76,14 @@ const emit = defineEmits<{
 }>()
 
 const columns = computed(() => props.measure.rows[0]?.length ?? 0)
+
+const measureLabel = computed(() => {
+  const parts = [`Measure ${props.index + 1}`]
+  if (props.measure.repeatStart) parts.push('repeat start')
+  if (props.measure.ending) parts.push(`ending ${props.measure.ending}`)
+  if (props.measure.repeatEnd) parts.push(`repeat end, played ${props.measure.repeatEnd} times`)
+  return parts.join(', ')
+})
 
 const isBeat = (column: number): boolean => props.beatEvery >= 1 && column % props.beatEvery === 0
 
@@ -168,8 +182,62 @@ const cellClass = (string: number, column: number) => ({
 }
 
 .tab-measure__rows {
+  position: relative;
   padding: 0 3px;
   border-left: 2px solid var(--tab-bar);
+}
+
+/* Repeat signs: a thick bar and two dots, as on paper. */
+.tab-measure--repeat-start .tab-measure__rows {
+  border-left-width: 4px;
+  padding-left: 9px;
+}
+
+.tab-measure--repeat-end .tab-measure__rows {
+  border-right: 4px solid var(--tab-bar);
+  padding-right: 9px;
+}
+
+.tab-measure--repeat-start .tab-measure__rows::before,
+.tab-measure--repeat-end .tab-measure__rows::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 5px;
+  background:
+    radial-gradient(circle, var(--tab-bar) 0 2.2px, transparent 2.6px) center 36% / 5px 5px no-repeat,
+    radial-gradient(circle, var(--tab-bar) 0 2.2px, transparent 2.6px) center 64% / 5px 5px no-repeat;
+  pointer-events: none;
+}
+
+.tab-measure--repeat-start .tab-measure__rows::before {
+  left: 2px;
+}
+
+.tab-measure--repeat-end .tab-measure__rows::after {
+  right: 2px;
+}
+
+.tab-measure--repeat-start .tab-measure__ruler {
+  padding-left: 13px;
+}
+
+.tab-measure--ending .tab-measure__head {
+  border-top: 2px solid var(--accent-primary);
+  border-left: 2px solid var(--accent-primary);
+}
+
+.tab-measure__ending,
+.tab-measure__count {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--accent-primary);
+}
+
+.tab-measure__count {
+  margin-left: auto;
+  padding-right: 6px;
 }
 
 .tab-measure__row {

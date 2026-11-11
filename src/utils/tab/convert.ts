@@ -1,6 +1,6 @@
 import type { TabMeasure, TabTuning, TablatureDocument } from '@/types/tablature'
 import { arrangePitchedMeasures, type ArrangeReport, type PitchedMeasure, type PitchedNote } from './arrange'
-import { cloneAsNewTablature, measureColumns, parseCell } from './model'
+import { cloneAsNewTablature, measureColumns, parseCell, repeatMarks } from './model'
 
 export interface ConvertOptions {
     /** Transposition in semitones applied before the notes are laid out (default 0 = same key) */
@@ -172,6 +172,9 @@ export function convertTablature(doc: TablatureDocument, target: TabTuning, opti
         report = laidOut.report
         semitones = (options.transpose ?? 0) + laidOut.octave
     }
+
+    // Repeat signs belong to the measures, whatever the instrument.
+    measures = measures.map((measure, index) => ({ ...measure, ...repeatMarks(doc.measures[index] ?? {}) }))
 
     return {
         document: cloneAsNewTablature(doc, { tuning: { ...target, strings: [...target.strings] }, capo, measures }),

@@ -101,7 +101,8 @@ const lines = computed<number[][]>(() => {
   let used = 0
 
   props.editor.document.value.measures.forEach((measure, index) => {
-    const width = measureColumns(measure) * cellWidth.value + MEASURE_CHROME
+    // Repeat signs widen the measure a little.
+    const width = measureColumns(measure) * cellWidth.value + MEASURE_CHROME + (measure.repeatStart ? 8 : 0) + (measure.repeatEnd ? 10 : 0)
     if (current.length > 0 && used + width > available) {
       result.push(current)
       current = []

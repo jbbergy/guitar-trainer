@@ -40,7 +40,15 @@ export type TabTechnique = 'h' | 'p' | '/' | '\\' | 'b' | 'r' | '~'
 export interface TabMeasure {
     /** rows[stringIndex][column] — every row of a measure has the same length */
     rows: TabCell[][]
+    /** A repeated section starts with this measure ("|:") */
+    repeatStart?: boolean
+    /** A repeated section ends with this measure (":|"); the value is how many times it is played (2 or more) */
+    repeatEnd?: number
+    /** Alternate ending this measure belongs to (1 = first time, 2 = second time…) */
+    ending?: number
 }
+
+export const MAX_TAB_REPEAT_COUNT = 9
 
 /**
  * Rhythmic value of one grid column expressed as a subdivision of a whole note.

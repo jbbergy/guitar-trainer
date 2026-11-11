@@ -1,5 +1,12 @@
 # Release Notes
 
+## [1.5.0] - 2026-11-11
+
+### Added
+- Repeat signs (`|:` `:|`, play count) and alternate endings (1st / 2nd time): shown and editable in the Compose editor, followed by playback.
+- Repeats are read from text tabs (`|:`, `:|`, `*` dots, `x2`), Guitar Pro, MusicXML, alphaTex and engraved PDFs, and written to text tabs, Guitar Pro, MusicXML and alphaTex. MIDI files contain the repeated sections written out in full.
+- Engraved PDFs: note lengths are now read from the stems, flags, beams and dots under the tab staff, or from the notation staff above it, together with the time signature and the tempo. Measures that cannot be read fall back to the spacing of the numbers, fitted to the measure length.
+
 ## [1.4.0] - 2026-11-11
 
 ### Added

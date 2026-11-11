@@ -9,6 +9,7 @@ import {
     MAX_TAB_COLUMNS_PER_MEASURE,
     MAX_TAB_FRET,
     MAX_TAB_MEASURES,
+    MAX_TAB_REPEAT_COUNT,
     MIN_TAB_BPM,
     TAB_QUANTIZATIONS,
     type Quantization,
@@ -82,6 +83,66 @@ export function createEmptyMeasure(stringCount: number, columns: number): TabMea
     return { rows: Array.from({ length: stringCount }, () => Array.from({ length: width }, () => '')) }
 }
 
+/** Repeat signs of a measure, without its notes (handy when the notes are rebuilt). */
+export function repeatMarks(measure: Partial<TabMeasure>): Pick<TabMeasure, 'repeatStart' | 'repeatEnd' | 'ending'> {
+    const marks: Pick<TabMeasure, 'repeatStart' | 'repeatEnd' | 'ending'> = {}
+    if (measure.repeatStart === true) marks.repeatStart = true
+    const count = Number(measure.repeatEnd)
+    if (Number.isInteger(count) && count >= 2) marks.repeatEnd = Math.min(MAX_TAB_REPEAT_COUNT, count)
+    const ending = Number(measure.ending)
+    if (Number.isInteger(ending) && ending >= 1) marks.ending = Math.min(MAX_TAB_REPEAT_COUNT, ending)
+    return marks
+}
+
+export function hasRepeats(measures: TabMeasure[]): boolean {
+    return measures.some((measure) => measure.repeatStart || measure.repeatEnd || measure.ending)
+}
+
+/**
+ * Order in which measures are played once repeat signs and alternate endings are followed.
+ * A ":|" without a matching "|:" goes back to the start (or to just after the previous repeat).
+ */
+export function playbackOrder(measures: TabMeasure[]): number[] {
+    const order: number[] = []
+    let index = 0
+    let sectionStart = 0
+    let pass = 1
+    let inEnding = false
+    const limit = measures.length * MAX_TAB_REPEAT_COUNT + 16
+
+    while (index < measures.length && order.length < limit) {
+        const measure = measures[index]
+        if (measure.repeatStart && sectionStart !== index) {
+            sectionStart = index
+            pass = 1
+        } else if (!measure.ending && inEnding && pass > 1) {
+            // The alternate endings are over: what follows is a new section.
+            sectionStart = index
+            pass = 1
+        }
+        inEnding = Boolean(measure.ending)
+
+        if (measure.ending && measure.ending !== pass) {
+            index++
+            continue
+        }
+        order.push(index)
+
+        if (measure.repeatEnd && pass < measure.repeatEnd) {
+            pass++
+            index = sectionStart
+            inEnding = false
+            continue
+        }
+        if (measure.repeatEnd && !measure.ending) {
+            sectionStart = index + 1
+            pass = 1
+        }
+        index++
+    }
+    return order
+}
+
 export function measureColumns(measure: TabMeasure): number {
     return measure.rows[0]?.length ?? 0
 }
@@ -91,13 +152,14 @@ export function isMeasureEmpty(measure: TabMeasure): boolean {
 }
 
 export function cloneMeasure(measure: TabMeasure): TabMeasure {
-    return { rows: measure.rows.map((row) => [...row]) }
+    return { ...measure, rows: measure.rows.map((row) => [...row]) }
 }
 
 /** Pads or truncates a measure to an exact shape, sanitising every cell on the way. */
 export function resizeMeasure(measure: TabMeasure, stringCount: number, columns: number): TabMeasure {
     const width = clampColumns(columns)
     return {
+        ...repeatMarks(measure),
         rows: Array.from({ length: stringCount }, (_unused, rowIndex) => {
             const source = measure.rows[rowIndex] ?? []
             return Array.from({ length: width }, (_unusedCol, colIndex) => sanitizeCell(source[colIndex] ?? ''))
@@ -237,6 +299,10 @@ const toSafeTuning = (raw: unknown, legacyInstrument: unknown): TabTuning => {
 interface StoredMeasure {
     c: number
     n: [number, number, string][]
+    /** Repeat start, repeat end (play count) and alternate ending number */
+    rs?: true
+    re?: number
+    en?: number
 }
 
 const toSafeMeasure = (raw: unknown, stringCount: number, fallbackColumns: number): TabMeasure => {
@@ -246,12 +312,19 @@ const toSafeMeasure = (raw: unknown, stringCount: number, fallbackColumns: numbe
     if (Array.isArray(record?.rows)) {
         const rows = record.rows as unknown[]
         const widest = rows.reduce<number>((max, row) => Math.max(max, Array.isArray(row) ? row.length : 0), 0)
-        return resizeMeasure({ rows: rows.map((row) => (Array.isArray(row) ? (row as string[]) : [])) }, stringCount, widest || fallbackColumns)
+        return resizeMeasure(
+            { ...repeatMarks(record as Partial<TabMeasure>), rows: rows.map((row) => (Array.isArray(row) ? (row as string[]) : [])) },
+            stringCount,
+            widest || fallbackColumns
+        )
     }
 
     // Sparse form: { c, n }
     const columns = clampColumns(Number(record?.c) || fallbackColumns)
-    const measure = createEmptyMeasure(stringCount, columns)
+    const measure: TabMeasure = {
+        ...createEmptyMeasure(stringCount, columns),
+        ...repeatMarks({ repeatStart: record?.rs === true, repeatEnd: Number(record?.re), ending: Number(record?.en) }),
+    }
     if (Array.isArray(record?.n)) {
         for (const entry of record.n as unknown[]) {
             if (!Array.isArray(entry)) continue
@@ -345,7 +418,14 @@ export function serializeTablature(doc: TablatureDocument): StoredTablature {
                     if (cell !== '') notes.push([stringIndex, column, cell])
                 })
             })
-            return { c: measureColumns(measure), n: notes }
+            const marks = repeatMarks(measure)
+            return {
+                c: measureColumns(measure),
+                n: notes,
+                ...(marks.repeatStart ? { rs: true as const } : {}),
+                ...(marks.repeatEnd ? { re: marks.repeatEnd } : {}),
+                ...(marks.ending ? { en: marks.ending } : {}),
+            }
         }),
         createdAt: doc.createdAt,
         updatedAt: doc.updatedAt,

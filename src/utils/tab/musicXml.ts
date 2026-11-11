@@ -115,7 +115,17 @@ export function tablatureToMusicXml(doc: TablatureDocument): string {
             )
         }
 
+        const measure = doc.measures[index]
         const content: string[] = []
+        if (measure.repeatStart || measure.ending) {
+            content.push(
+                '<barline location="left">' +
+                (measure.repeatStart ? '<bar-style>heavy-light</bar-style>' : '') +
+                (measure.ending ? `<ending number="${measure.ending}" type="start">${measure.ending}.</ending>` : '') +
+                (measure.repeatStart ? '<repeat direction="forward"/>' : '') +
+                '</barline>'
+            )
+        }
         if (attributes.length > 0) content.push(`<attributes>${attributes.join('')}</attributes>`)
         if (index === 0) {
             content.push(
@@ -130,6 +140,16 @@ export function tablatureToMusicXml(doc: TablatureDocument): string {
                 continue
             }
             beat.notes.forEach((note, noteIndex) => content.push(noteXml(doc, beat, note, noteIndex > 0, pending)))
+        }
+
+        if (measure.repeatEnd || measure.ending) {
+            content.push(
+                '<barline location="right">' +
+                (measure.repeatEnd ? '<bar-style>light-heavy</bar-style>' : '') +
+                (measure.ending ? `<ending number="${measure.ending}" type="${measure.repeatEnd ? 'stop' : 'discontinue'}"/>` : '') +
+                (measure.repeatEnd ? `<repeat direction="backward" times="${measure.repeatEnd}"/>` : '') +
+                '</barline>'
+            )
         }
 
         return `<measure number="${index + 1}">${content.join('')}</measure>`

@@ -216,3 +216,48 @@ describe('tablatureToAscii', () => {
         expect(document.measures).toEqual(doc.measures)
     })
 })
+
+describe('repeat signs', () => {
+    const marks = (text: string) =>
+        parseAsciiTab(text).document.measures.map((m) => `${m.repeatStart ? '|:' : ''}${m.repeatEnd ?? ''}`)
+
+    it('reads |: and :| around measures', () => {
+        expect(marks([
+            'e|:-0---2---|-3---5---:|-0---0---|',
+            'B|:---------|---------:|---------|',
+            'G|:---------|---------:|---------|',
+        ].join('\n'))).toEqual(['|:', '2', ''])
+    })
+
+    it('reads repeat dots written with stars and a play count', () => {
+        expect(marks([
+            'e||--0---2---|-3---5---||  x3',
+            'B||*---------|--------*||',
+            'G||*---------|--------*||',
+            'D||----------|---------||',
+        ].join('\n'))).toEqual(['|:', '3'])
+    })
+
+    it('repeats the whole staff when only "x2" is written', () => {
+        expect(marks(['e|-0---2---|-3---5---| x2', 'B|---------|---------|', 'G|---------|---------|'].join('\n'))).toEqual(['|:', '2'])
+    })
+
+    it('keeps the notes next to the dots', () => {
+        const { document } = parseAsciiTab(['e|:0---2---|-3---5:|', 'B|:--------|------:|', 'G|:--------|------:|'].join('\n'))
+        expect(document.measures.map((m) => m.rows[2].filter(Boolean))).toEqual([['0', '2'], ['3', '5']])
+    })
+
+    it('round-trips repeats through the text export', () => {
+        const doc = createEmptyTablature(tuning('guitar-standard'), { measureCount: 4, columnsPerMeasure: 4, quantization: 8 })
+        doc.measures[0].rows[5][0] = '3'
+        doc.measures[0].repeatStart = true
+        doc.measures[1].rows[5][3] = '5'
+        doc.measures[1].repeatEnd = 3
+        doc.measures[2].repeatStart = true
+        doc.measures[3].repeatEnd = 2
+
+        const text = tablatureToAscii(doc)
+        expect(text).toContain('|:3-------|-------5:| x3')
+        expect(parseAsciiTab(text).document.measures).toEqual(doc.measures)
+    })
+})

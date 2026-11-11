@@ -1,7 +1,16 @@
 import type { TabInstrumentFamily, TabMeasure, TabTuning, TablatureDocument } from '@/types/tablature'
 import { looksLikeAsciiTab, parseAsciiTab, TabImportError } from './asciiImport'
 import { createEmptyTablature } from './model'
-import { layoutPdfPage, pageTextLines, type PdfPageGeometry, type PdfSegment } from './pdfLayout'
+import {
+    buildPdfMeasures,
+    pageTextLines,
+    readPdfPage,
+    type PdfDot,
+    type PdfPageGeometry,
+    type PdfRawMeasure,
+    type PdfSegment,
+    type PdfShape,
+} from './pdfLayout'
 import { detectTuningFromLabels } from './tunings'
 
 /** Minimal view of pdf.js used here, so that tests can inject the Node build. */
@@ -57,10 +66,15 @@ const multiply = (m: Matrix, n: number[]): Matrix => [
 
 const apply = (m: Matrix, x: number, y: number): [number, number] => [m[0] * x + m[2] * y + m[4], m[1] * x + m[3] * y + m[5]]
 
-/** Straight strokes of a page (staff lines, bar lines), in page coordinates. */
-function extractSegments(pdfjs: PdfJsModule, operators: { fnArray: number[]; argsArray: unknown[] }): PdfSegment[] {
+/** Straight strokes (staff lines, bar lines) and small circles (repeat dots) of a page, in page coordinates. */
+function extractShapes(
+    pdfjs: PdfJsModule,
+    operators: { fnArray: number[]; argsArray: unknown[] }
+): { segments: PdfSegment[]; dots: PdfDot[]; shapes: PdfShape[] } {
     const { OPS } = pdfjs
     const segments: PdfSegment[] = []
+    const dots: PdfDot[] = []
+    const shapes: PdfShape[] = []
     const stack: Matrix[] = []
     let matrix: Matrix = [1, 0, 0, 1, 0, 0]
 
@@ -73,7 +87,30 @@ function extractSegments(pdfjs: PdfJsModule, operators: { fnArray: number[]; arg
             const [subOps, coords] = args as [number[], number[]]
             let k = 0
             let current: [number, number] | null = null
-            const push = (a: [number, number], b: [number, number]) => segments.push({ x1: a[0], y1: a[1], x2: b[0], y2: b[1] })
+            // Bounding box of the curved parts: a tiny round path is a dot.
+            let curves = 0
+            const box = { minX: Infinity, minY: Infinity, maxX: -Infinity, maxY: -Infinity }
+            const grow = (count: number) => {
+                for (let c = k; c < k + count; c += 2) {
+                    const [x, y] = apply(matrix, coords[c], coords[c + 1])
+                    box.minX = Math.min(box.minX, x)
+                    box.maxX = Math.max(box.maxX, x)
+                    box.minY = Math.min(box.minY, y)
+                    box.maxY = Math.max(box.maxY, y)
+                }
+            }
+            const whole = { minX: Infinity, minY: Infinity, maxX: -Infinity, maxY: -Infinity }
+            const cover = (point: [number, number]) => {
+                whole.minX = Math.min(whole.minX, point[0])
+                whole.maxX = Math.max(whole.maxX, point[0])
+                whole.minY = Math.min(whole.minY, point[1])
+                whole.maxY = Math.max(whole.maxY, point[1])
+            }
+            const push = (a: [number, number], b: [number, number]) => {
+                cover(a)
+                cover(b)
+                segments.push({ x1: a[0], y1: a[1], x2: b[0], y2: b[1] })
+            }
 
             for (const op of subOps) {
                 if (op === OPS.moveTo) {
@@ -92,17 +129,38 @@ function extractSegments(pdfjs: PdfJsModule, operators: { fnArray: number[]; arg
                     // Thin filled rectangles are how many engravers draw lines.
                     if (Math.abs(b[1] - a[1]) < 2) push([a[0], (a[1] + b[1]) / 2], [b[0], (a[1] + b[1]) / 2])
                     else if (Math.abs(b[0] - a[0]) < 2) push([(a[0] + b[0]) / 2, a[1]], [(a[0] + b[0]) / 2, b[1]])
+                    cover(a)
+                    cover(b)
                 } else if (op === OPS.curveTo) {
+                    grow(6)
+                    curves++
                     k += 6
                     current = null
                 } else if (op === OPS.curveTo2 || op === OPS.curveTo3) {
+                    grow(4)
+                    curves++
                     k += 4
                     current = null
                 }
             }
+
+            const width = box.maxX - box.minX
+            const height = box.maxY - box.minY
+            if (curves >= 2 && width > 0.8 && width < 5 && Math.abs(width - height) < 1) {
+                dots.push({ x: (box.minX + box.maxX) / 2, y: (box.minY + box.maxY) / 2 })
+            }
+
+            // Small closed shapes: beams (straight edges) and flags drawn as outlines (curved).
+            const all = {
+                minX: Math.min(whole.minX, box.minX), maxX: Math.max(whole.maxX, box.maxX),
+                minY: Math.min(whole.minY, box.minY), maxY: Math.max(whole.maxY, box.maxY),
+            }
+            if (subOps.length >= 4 && all.maxX - all.minX > 1 && all.maxX - all.minX < 150 && all.maxY - all.minY > 1 && all.maxY - all.minY < 60) {
+                shapes.push({ ...all, curved: curves > 0 })
+            }
         }
     })
-    return segments
+    return { segments, dots, shapes }
 }
 
 async function readPage(pdfjs: PdfJsModule, page: PdfJsPage): Promise<PdfPageGeometry> {
@@ -117,7 +175,7 @@ async function readPage(pdfjs: PdfJsModule, page: PdfJsPage): Promise<PdfPageGeo
             width: item.width ?? 0,
             height: item.height ?? 0,
         }))
-    return { width: viewport.width, height: viewport.height, texts, segments: extractSegments(pdfjs, await page.getOperatorList()) }
+    return { width: viewport.width, height: viewport.height, texts, ...extractShapes(pdfjs, await page.getOperatorList()) }
 }
 
 /** Title: the largest text of the first page that is not part of the music. */
@@ -170,21 +228,27 @@ export async function importPdfBytes(
     }
 
     // 2. Engraved tablature: fret numbers placed on staff lines.
-    const measures: TabMeasure[] = []
+    const raw: PdfRawMeasure[] = []
     let stringCount: number | undefined
+    let signature: [number, number] | null = null
+    let bpm: number | null = null
     for (const page of pages) {
-        const layout = layoutPdfPage(page, stringCount)
-        if (!layout) continue
-        stringCount = layout.stringCount
-        measures.push(...layout.measures)
+        const reading = readPdfPage(page, stringCount)
+        if (!reading) continue
+        stringCount = reading.stringCount
+        signature ??= reading.timeSignature
+        bpm ??= reading.bpm
+        raw.push(...reading.measures)
     }
 
-    if (!stringCount || measures.length === 0) {
+    if (!stringCount || raw.length === 0) {
         throw new TabImportError(
             'No tablature could be read in this PDF: its fret numbers are drawings or a scanned image, not text. ' +
             'Scanned tablatures cannot be imported yet.'
         )
     }
+    const built = buildPdfMeasures(raw, stringCount, signature)
+    const measures: TabMeasure[] = built.measures
 
     const tuning =
         options.tuning && options.tuning.strings.length === stringCount
@@ -195,17 +259,23 @@ export async function importPdfBytes(
     const document = createEmptyTablature(tuning, {
         title: title ?? options.fallbackTitle ?? 'Imported tablature',
         artist,
-        quantization: 8,
+        quantization: built.quantization,
         columnsPerMeasure: widths[Math.floor(widths.length / 2)],
+        bpm: bpm ?? undefined,
     })
     document.measures = measures
+    if (built.timeSignature) document.timeSignature = built.timeSignature
+
+    const rhythm =
+        built.readMeasures === measures.length
+            ? null
+            : built.readMeasures === 0
+                ? 'Note lengths are estimated from the spacing of the numbers: check the rhythm.'
+                : `The rhythm was read for ${built.readMeasures} of ${measures.length} measures; the others are estimated from the spacing: check them.`
 
     return {
         kind: 'engraved',
         documents: [document],
-        warnings: [
-            'Note lengths are estimated from the spacing of the numbers: check the rhythm.',
-            `The tuning is not written in the file: ${tuning.name} was assumed.`,
-        ],
+        warnings: [...(rhythm ? [rhythm] : []), `The tuning is not written in the file: ${tuning.name} was assumed.`],
     }
 }

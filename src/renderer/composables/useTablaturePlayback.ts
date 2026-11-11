@@ -1,6 +1,7 @@
 import { ref, onUnmounted } from 'vue'
 import type { TablatureDocument } from '@/types/tablature'
 import { columnDurationSeconds, midiToFrequency, playNote } from '@/utils/music/tabPlayback'
+import { hasRepeats, measureStartColumns, playbackOrder } from '@/utils/tab/model'
 import { collectTabEvents, notePitch, type TabNoteEvent } from '@/utils/tab/rhythm'
 
 /**
@@ -24,6 +25,8 @@ export interface PlaybackRange {
     endColumn?: number
     /** Start again from startColumn when the end is reached */
     loop?: boolean
+    /** Follow repeat signs and alternate endings (default: only when no endColumn is given) */
+    followRepeats?: boolean
 }
 
 interface ScheduledNote {
@@ -43,9 +46,9 @@ export function useTablaturePlayback() {
 
     // Playback cursor — mutated only inside the scheduler loop
     let nextColumnTime = 0
-    let currentColumnIndex = 0
-    let rangeStart = 0
-    let rangeEnd = 0
+    /** Global columns in the order they are played, and the position of the cursor in that list */
+    let sequence: number[] = []
+    let sequenceIndex = 0
     let loop = false
     let colDuration = 0
 
@@ -85,6 +88,22 @@ export function useTablaturePlayback() {
         return offset
     }
 
+    /** Columns to play, in order: straight through a range, or following the repeat signs. */
+    const buildSequence = (doc: TablatureDocument, start: number, end: number, expand: boolean): number[] => {
+        if (!expand) return Array.from({ length: end - start }, (_unused, index) => start + index)
+
+        const starts = measureStartColumns(doc.measures)
+        const order = playbackOrder(doc.measures)
+        const firstMeasure = starts.findIndex((_column, index) => start < starts[index + 1])
+        const from = Math.max(0, order.indexOf(firstMeasure))
+        const columns: number[] = []
+        order.slice(from).forEach((measureIndex, position) => {
+            const first = position === 0 ? Math.max(start, starts[measureIndex]) : starts[measureIndex]
+            for (let column = first; column < starts[measureIndex + 1]; column++) columns.push(column)
+        })
+        return columns.length > 0 ? columns : [start]
+    }
+
     /**
      * Schedules all notes for a given column index at the given audio timestamp.
      * Also queues a setTimeout to update the reactive playingColumn at the right moment.
@@ -121,13 +140,13 @@ export function useTablaturePlayback() {
         if (!ctx || !isPlaying.value) return
 
         while (nextColumnTime < ctx.currentTime + SCHEDULE_AHEAD_TIME) {
-            scheduleColumn(ctx, currentColumnIndex, nextColumnTime)
+            scheduleColumn(ctx, sequence[sequenceIndex], nextColumnTime)
             nextColumnTime += colDuration
-            currentColumnIndex++
+            sequenceIndex++
 
-            if (currentColumnIndex >= rangeEnd) {
+            if (sequenceIndex >= sequence.length) {
                 if (loop) {
-                    currentColumnIndex = rangeStart
+                    sequenceIndex = 0
                     continue
                 }
                 // Wait for the last column to finish, then stop
@@ -163,10 +182,12 @@ export function useTablaturePlayback() {
         openStrings = [...doc.tuning.strings]
         capo = doc.capo
         colDuration = columnDurationSeconds(doc.bpm, doc.quantization)
-        rangeEnd = Math.max(1, Math.min(options.endColumn ?? total, total))
-        rangeStart = Math.max(0, Math.min(options.startColumn ?? 0, rangeEnd - 1))
+        const rangeEnd = Math.max(1, Math.min(options.endColumn ?? total, total))
+        const rangeStart = Math.max(0, Math.min(options.startColumn ?? 0, rangeEnd - 1))
+        const followRepeats = options.followRepeats ?? options.endColumn === undefined
+        sequence = buildSequence(doc, rangeStart, rangeEnd, followRepeats && hasRepeats(doc.measures))
+        sequenceIndex = 0
         loop = options.loop ?? false
-        currentColumnIndex = rangeStart
         nextColumnTime = ctx.currentTime + 0.05  // small lead-in offset
 
         isPlaying.value = true

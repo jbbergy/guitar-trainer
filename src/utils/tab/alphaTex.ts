@@ -64,10 +64,14 @@ export function tablatureToAlphaTex(doc: TablatureDocument): string {
     if (doc.capo > 0) staff.push(`\\capo ${doc.capo}`)
 
     let signature = ''
-    const bars = collectTabEvents(doc.measures).map((events) => {
+    const bars = collectTabEvents(doc.measures).map((events, index) => {
         const [numerator, denominator] = measureTimeSignature(events.columns, doc.quantization, doc.timeSignature)
         const current = `${numerator} ${denominator}`
-        const prefix = current === signature ? '' : `\\ts ${current} `
+        const measure = doc.measures[index]
+        let prefix = current === signature ? '' : `\\ts ${current} `
+        if (measure.repeatStart) prefix += '\\ro '
+        if (measure.repeatEnd) prefix += `\\rc ${measure.repeatEnd} `
+        if (measure.ending) prefix += `\\ae ${measure.ending} `
         signature = current
         return prefix + measureToBeats(events, doc.quantization).map((beat) => beatText(beat, stringCount)).join(' ')
     })

@@ -177,3 +177,26 @@ describe('useTabLibrary', () => {
         expect(globalThis.localStorage.getItem('compose-document-v1:guitar')).not.toBeNull()
     })
 })
+
+describe('playbackOrder', () => {
+    const order = async (marks: Partial<{ repeatStart: boolean; repeatEnd: number; ending: number }>[]) => {
+        const { playbackOrder } = await import('@/utils/tab/model')
+        return playbackOrder(marks.map((mark) => ({ rows: [['']], ...mark })))
+    }
+
+    it('plays measures straight through without repeat signs', async () => {
+        expect(await order([{}, {}, {}])).toEqual([0, 1, 2])
+    })
+
+    it('repeats a section the requested number of times', async () => {
+        expect(await order([{}, { repeatStart: true }, { repeatEnd: 3 }, {}])).toEqual([0, 1, 2, 1, 2, 1, 2, 3])
+    })
+
+    it('goes back to the start when no repeat start is written', async () => {
+        expect(await order([{}, { repeatEnd: 2 }, {}, { repeatEnd: 2 }])).toEqual([0, 1, 0, 1, 2, 3, 2, 3])
+    })
+
+    it('follows first and second endings', async () => {
+        expect(await order([{ repeatStart: true }, { ending: 1, repeatEnd: 2 }, { ending: 2 }, {}])).toEqual([0, 1, 0, 2, 3])
+    })
+})
