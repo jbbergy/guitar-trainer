@@ -102,34 +102,106 @@
                   <kbd>↑</kbd><kbd>↓</kbd><kbd>←</kbd><kbd>→</kbd>
                 </dt>
                 <dd class="keyboard-help__description">
-                  Move in tablature grid
+                  Move in the grid (Shift: select)
                 </dd>
               </div>
 
               <div class="keyboard-help__item">
                 <dt class="keyboard-help__key">
-                  <kbd>⌘</kbd>/<kbd>Ctrl</kbd> + <kbd>N</kbd>
+                  <kbd>0</kbd>–<kbd>9</kbd> / <kbd>X</kbd>
                 </dt>
                 <dd class="keyboard-help__description">
-                  New tablature
+                  Fret number (two digits: 1 then 2) / muted note
                 </dd>
               </div>
 
               <div class="keyboard-help__item">
                 <dt class="keyboard-help__key">
-                  <kbd>⌘</kbd>/<kbd>Ctrl</kbd> + <kbd>P</kbd>
+                  <kbd>H</kbd> <kbd>P</kbd> <kbd>S</kbd> <kbd>B</kbd> <kbd>R</kbd> <kbd>V</kbd>
                 </dt>
                 <dd class="keyboard-help__description">
-                  Open or close text preview
+                  Hammer-on, pull-off, slide (Shift: down), bend, release, vibrato
                 </dd>
               </div>
 
               <div class="keyboard-help__item">
                 <dt class="keyboard-help__key">
-                  <kbd>⌘</kbd>/<kbd>Ctrl</kbd> + <kbd>S</kbd>
+                  <kbd>Del</kbd> / <kbd>BKSP</kbd>
                 </dt>
                 <dd class="keyboard-help__description">
-                  Copy tablature text
+                  Clear the selection
+                </dd>
+              </div>
+
+              <div class="keyboard-help__item">
+                <dt class="keyboard-help__key">
+                  <kbd>SPACE</kbd>
+                </dt>
+                <dd class="keyboard-help__description">
+                  Play from the cursor or stop (Shift: from the start)
+                </dd>
+              </div>
+
+              <div class="keyboard-help__item">
+                <dt class="keyboard-help__key">
+                  <kbd>⌘</kbd>/<kbd>Ctrl</kbd> + <kbd>Z</kbd> / <kbd>⇧Z</kbd>
+                </dt>
+                <dd class="keyboard-help__description">
+                  Undo / redo
+                </dd>
+              </div>
+
+              <div class="keyboard-help__item">
+                <dt class="keyboard-help__key">
+                  <kbd>⌘</kbd>/<kbd>Ctrl</kbd> + <kbd>C</kbd> <kbd>X</kbd> <kbd>V</kbd> <kbd>A</kbd>
+                </dt>
+                <dd class="keyboard-help__description">
+                  Copy, cut, paste, select all (in the grid)
+                </dd>
+              </div>
+
+              <div class="keyboard-help__item">
+                <dt class="keyboard-help__key">
+                  <kbd>⌘</kbd>/<kbd>Ctrl</kbd> + <kbd>←</kbd> <kbd>→</kbd>
+                </dt>
+                <dd class="keyboard-help__description">
+                  Previous / next measure
+                </dd>
+              </div>
+
+              <div class="keyboard-help__item">
+                <dt class="keyboard-help__key">
+                  <kbd>Alt</kbd> + <kbd>→</kbd> / <kbd>←</kbd>
+                </dt>
+                <dd class="keyboard-help__description">
+                  Insert / remove a step
+                </dd>
+              </div>
+
+              <div class="keyboard-help__item">
+                <dt class="keyboard-help__key">
+                  <kbd>⌘</kbd>/<kbd>Ctrl</kbd> + <kbd>↵</kbd> / <kbd>D</kbd> / <kbd>BKSP</kbd>
+                </dt>
+                <dd class="keyboard-help__description">
+                  Insert, duplicate, delete measures
+                </dd>
+              </div>
+
+              <div class="keyboard-help__item">
+                <dt class="keyboard-help__key">
+                  <kbd>⌘</kbd>/<kbd>Ctrl</kbd> + <kbd>N</kbd> / <kbd>O</kbd>
+                </dt>
+                <dd class="keyboard-help__description">
+                  New tablature / open the library
+                </dd>
+              </div>
+
+              <div class="keyboard-help__item">
+                <dt class="keyboard-help__key">
+                  <kbd>⌘</kbd>/<kbd>Ctrl</kbd> + <kbd>I</kbd> / <kbd>E</kbd> / <kbd>P</kbd>
+                </dt>
+                <dd class="keyboard-help__description">
+                  Import / export / print
                 </dd>
               </div>
 
@@ -141,15 +213,6 @@
                   Switch to Trainer mode
                 </dd>
               </div>
-
-              <div class="keyboard-help__item">
-                <dt class="keyboard-help__key">
-                  <kbd>⌘</kbd>/<kbd>Ctrl</kbd> + <kbd>I</kbd>
-                </dt>
-                <dd class="keyboard-help__description">
-                  Switch instrument
-                </dd>
-              </div>
             </template>
 
             <div class="keyboard-help__item">
@@ -157,7 +220,7 @@
                 <kbd>⌘</kbd>/<kbd>Ctrl</kbd> + <kbd>C</kbd>
               </dt>
               <dd class="keyboard-help__description">
-                Toggle Trainer/Compose mode
+                Toggle Trainer/Compose mode (outside the grid)
               </dd>
             </div>
 

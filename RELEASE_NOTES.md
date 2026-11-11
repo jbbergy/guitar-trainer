@@ -1,5 +1,21 @@
 # Release Notes
 
+## [1.4.0] - 2026-11-11
+
+### Added
+- Tablature library: tablatures are stored on the device, saved automatically, searchable, and can be backed up to a single file. Drafts of the previous Compose editor are brought into the library.
+- Import of text / ASCII tabs, PDF (text or engraved with real text; scans are not supported), Guitar Pro 3–8, MusicXML, alphaTex and Guitare Trainer JSON, with tuning detection and a preview.
+- Conversion between guitar, ukulele (high / low G), baritone ukulele (DGBE) and alternate tunings, keeping either the key or the fingerings.
+- Export to text tab, Guitar Pro (.gp), MusicXML, MIDI, alphaTex, JSON and Print / PDF.
+
+### Changed
+- Compose editor rebuilt: cursor-based grid, two-digit frets, techniques (h p / \\ b r ~), muted notes, selection, copy/paste, undo/redo, step and measure editing, chord stamping, triplet grids, capo, loop playback.
+- Compose shortcuts: `⌘/Ctrl + I` now opens Import and `⌘/Ctrl + P` prints; the tablature's instrument is chosen per tablature instead of following the instrument toggle.
+
+### Dependencies
+- Added `@coderline/alphatab` (MPL-2.0) to read and write Guitar Pro / MusicXML files; it is loaded only when such a file is used.
+- Added `pdfjs-dist` (Apache-2.0) to read PDF tablatures, also loaded on demand.
+
 ## [1.3.1] - 2026-04-07
 
 ### Fixed

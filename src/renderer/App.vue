@@ -12,7 +12,7 @@
       :memory-mode="isMemoryMode" :zoom-level="zoomLevel" :show-success="showSuccessFlash" />
 
     <ComposeView v-if="currentView === 'compose'" :instrument="instrument" :current-view="currentView"
-      @update-instrument="setInstrument" @switch-view="currentView = $event" />
+      :zoom-level="zoomLevel" @switch-view="currentView = $event" />
 
     <BottomBar v-model:zoom-level="zoomLevel" :is-listen-mode="isListenModeEnabled" :detected-chord="detectedChord"
       :signal-level="listenModeSignalLevel" :is-match="isDetectedChordMatch" :instrument="instrument"
@@ -120,6 +120,11 @@ const handleListenValidate = (deviceId: string) => {
 const showSuccessFlash = chordMatchSuccess
 
 const handleKeyPress = (event: globalThis.KeyboardEvent): void => {
+  // A focused widget (tablature grid, dialog…) already used this key.
+  if (event.defaultPrevented) {
+    return
+  }
+
   const hasPrimaryModifier = event.ctrlKey || event.metaKey
 
   if (hasPrimaryModifier && (event.key === 'c' || event.key === 'C')) {
@@ -134,7 +139,8 @@ const handleKeyPress = (event: globalThis.KeyboardEvent): void => {
     }
   }
 
-  if (event.key === '?') {
+  // "?" must stay typeable in titles and pasted tablatures.
+  if (event.key === '?' && !isEditableTarget(event.target)) {
     event.preventDefault()
     showKeyboardHelp.value = !showKeyboardHelp.value
     return
@@ -144,6 +150,24 @@ const handleKeyPress = (event: globalThis.KeyboardEvent): void => {
     event.preventDefault()
     showKeyboardHelp.value = false
     return
+  }
+
+  // Zoom in with Ctrl/Cmd + Plus or Equal
+  if (hasPrimaryModifier && (event.key === '+' || event.key === '=')) {
+    event.preventDefault()
+    zoomLevel.value = Math.min(200, zoomLevel.value + 10)
+  }
+
+  // Zoom out with Ctrl/Cmd + Minus
+  if (hasPrimaryModifier && event.key === '-') {
+    event.preventDefault()
+    zoomLevel.value = Math.max(50, zoomLevel.value - 10)
+  }
+
+  // Reset zoom with Ctrl/Cmd + 0
+  if (hasPrimaryModifier && event.key === '0') {
+    event.preventDefault()
+    zoomLevel.value = 100
   }
 
   if (currentView.value !== 'trainer') {
@@ -200,23 +224,6 @@ const handleKeyPress = (event: globalThis.KeyboardEvent): void => {
     showKeyboardHelp.value = false
   }
 
-  // Zoom in with Ctrl/Cmd + Plus or Equal
-  if (hasPrimaryModifier && (event.key === '+' || event.key === '=')) {
-    event.preventDefault()
-    zoomLevel.value = Math.min(200, zoomLevel.value + 10)
-  }
-
-  // Zoom out with Ctrl/Cmd + Minus
-  if (hasPrimaryModifier && event.key === '-') {
-    event.preventDefault()
-    zoomLevel.value = Math.max(50, zoomLevel.value - 10)
-  }
-
-  // Reset zoom with Ctrl/Cmd + 0
-  if (hasPrimaryModifier && event.key === '0') {
-    event.preventDefault()
-    zoomLevel.value = 100
-  }
 }
 
 const handleWheel = (event: globalThis.WheelEvent): void => {

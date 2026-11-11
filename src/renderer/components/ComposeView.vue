@@ -1,385 +1,414 @@
 <template>
-  <!-- Top bar -->
-  <nav class="compose-toolbar" role="region" aria-label="Compose toolbar">
-    <!-- Section 1: New + Title -->
-    <div class="compose-toolbar__section compose-toolbar__section--title">
-      <button class="compose-toolbar__btn" type="button" @click="handleNewTablature">
-        New Tab
-      </button>
-      <label for="compose-title" class="compose-toolbar__label">Title</label>
-      <input id="compose-title" class="compose-toolbar__title-input" :value="document.title" maxlength="80"
-        aria-label="Tablature title" @input="onTitleInput">
-    </div>
-
-    <!-- Section 2: Document controls -->
-    <div class="compose-toolbar__section">
-      <span class="compose-toolbar__label">Per line</span>
-      <button class="compose-toolbar__btn compose-toolbar__btn--stepper" type="button"
-        :disabled="document.measuresPerLine <= 1" aria-label="Fewer measures per line"
-        @click="setMeasuresPerLine(document.measuresPerLine - 1)">−</button>
-      <span class="compose-toolbar__stepper-val">{{ document.measuresPerLine }}</span>
-      <button class="compose-toolbar__btn compose-toolbar__btn--stepper" type="button"
-        :disabled="document.measuresPerLine >= 16" aria-label="More measures per line"
-        @click="setMeasuresPerLine(document.measuresPerLine + 1)">+</button>
-
-      <span class="compose-toolbar__label">Notes/bar</span>
-      <button class="compose-toolbar__btn compose-toolbar__btn--stepper" type="button"
-        :disabled="document.columnsPerMeasure <= 1" aria-label="Fewer notes per measure"
-        @click="setColumnsPerMeasure(document.columnsPerMeasure - 1)">−</button>
-      <span class="compose-toolbar__stepper-val">{{ document.columnsPerMeasure }}</span>
-      <button class="compose-toolbar__btn compose-toolbar__btn--stepper" type="button"
-        :disabled="document.columnsPerMeasure >= 16" aria-label="More notes per measure"
-        @click="setColumnsPerMeasure(document.columnsPerMeasure + 1)">+</button>
-    </div>
-
-    <!-- Section 3: Playback controls -->
-    <div class="compose-toolbar__section">
-      <span class="compose-toolbar__label">BPM</span>
-      <input id="compose-bpm" type="number" class="compose-toolbar__bpm-input" :value="document.bpm" min="20" max="300"
-        aria-label="Tempo in BPM" @change="onBpmChange">
-
-      <span class="compose-toolbar__label">Grid</span>
-      <select id="compose-quant" class="compose-toolbar__select" :value="document.quantization"
-        aria-label="Rhythmic value of the grid" @change="onQuantizationChange">
-        <option value="1">Whole</option>
-        <option value="2">Half</option>
-        <option value="4">Quarter</option>
-        <option value="8">Eighth</option>
-        <option value="16">16th</option>
-        <option value="32">32nd</option>
-      </select>
-
-      <button class="compose-toolbar__btn compose-toolbar__btn--play"
-        :class="{ 'compose-toolbar__btn--playing': isPlaying }" type="button"
-        :aria-label="isPlaying ? 'Stop playback' : 'Play tablature'"
-        :title="isPlaying ? 'Stop (Space)' : 'Play (Space)'" @click="handlePlayStop">{{ isPlaying ? '■' : '▶'
-        }}</button>
-    </div>
-
-    <!-- Section 3: Preview + Mode switch -->
-    <div class="compose-toolbar__section compose-toolbar__section--end">
-      <button class="compose-toolbar__btn compose-toolbar__btn--primary" type="button" @click="openPreviewModal">
-        Preview
-      </button>
-
-      <div class="compose-toolbar__view-switch" role="group" aria-label="Main view">
-        <button class="compose-toolbar__view-switch-btn"
-          :class="{ 'compose-toolbar__view-switch-btn--active': currentView === 'trainer' }"
-          :aria-pressed="currentView === 'trainer'" @click="emit('switchView', 'trainer')">
-          Trainer
+  <section class="compose" aria-label="Tablature workspace" @dragover.prevent @drop.prevent="onDropFiles">
+    <nav class="compose-toolbar" role="region" aria-label="Compose toolbar">
+      <div class="compose-toolbar__section">
+        <button class="tab-btn" type="button" title="Tablature library (⌘/Ctrl + O)" data-testid="open-library"
+          @click="showLibrary = true">
+          📚 Library
         </button>
-        <button class="compose-toolbar__view-switch-btn"
-          :class="{ 'compose-toolbar__view-switch-btn--active': currentView === 'compose' }"
-          :aria-pressed="currentView === 'compose'" @click="emit('switchView', 'compose')">
-          Compose
+        <button class="tab-btn tab-btn--icon" type="button" title="New tablature (⌘/Ctrl + N)" aria-label="New tablature"
+          data-testid="new-tab" @click="createTab()">
+          ＋
         </button>
       </div>
-    </div>
-  </nav>
 
-  <!-- Main content area -->
-  <main class="compose-content" role="region" aria-label="Tablature editor">
-    <p class="compose-content__hint">
-      Arrow keys to navigate · 0–24 for frets · X for muted
-    </p>
+      <div class="compose-toolbar__section compose-toolbar__section--title">
+        <input id="compose-title" class="tab-input compose-toolbar__title" :value="doc.title" maxlength="120"
+          placeholder="Untitled tablature" aria-label="Tablature title" @input="onTitleInput">
+        <button class="tab-btn compose-toolbar__tuning" type="button" title="Tuning, capo and other settings"
+          data-testid="open-settings" @click="showSettings = true">
+          {{ tuningLabel }}
+        </button>
+      </div>
 
-    <div class="compose-content__lines">
-      <div v-for="(line, lineIdx) in tabLines" :key="lineIdx" class="compose-content__line" role="grid"
-        :aria-label="`Tablature line ${lineIdx + 1}`">
-        <!-- String labels column -->
-        <div class="compose-content__labels-col" aria-hidden="true">
-          <div class="compose-content__row-spacer" />
-          <div v-for="row in displayRows" :key="row.label" class="compose-content__label">{{ row.label }}|</div>
-        </div>
+      <div class="compose-toolbar__section">
+        <button class="tab-btn tab-btn--icon" type="button" title="Undo (⌘/Ctrl + Z)" aria-label="Undo"
+          :disabled="!editor.canUndo.value" data-testid="undo" @click="editor.undo()">
+          ↶
+        </button>
+        <button class="tab-btn tab-btn--icon" type="button" title="Redo (⌘/Ctrl + Shift + Z)" aria-label="Redo"
+          :disabled="!editor.canRedo.value" data-testid="redo" @click="editor.redo()">
+          ↷
+        </button>
+      </div>
 
-        <!-- One column per measure in this line + trailing separator -->
-        <template v-for="(_, mLocalIdx) in line.measures" :key="line.startIdx + mLocalIdx">
-          <div class="compose-content__measure-col">
-            <!-- Measure header: delete button -->
-            <div class="compose-content__measure-hd">
-              <button class="compose-content__play-from"
-                :aria-label="`Play from measure ${line.startIdx + mLocalIdx + 1}`"
-                :title="`Play from measure ${line.startIdx + mLocalIdx + 1}`"
-                @click="handlePlayFromMeasure(line.startIdx + mLocalIdx)">▶</button>
-              <button class="compose-content__del" :aria-label="`Delete measure ${line.startIdx + mLocalIdx + 1}`"
-                :title="`Delete measure ${line.startIdx + mLocalIdx + 1}`" :disabled="document.measures.length <= 1"
-                @click="removeMeasureAt(line.startIdx + mLocalIdx)">×</button>
-            </div>
-            <!-- Cell rows: one per string -->
-            <div v-for="(row, rIdx) in displayRows" :key="row.label" class="compose-content__cells-row">
-              <input v-for="lc in document.columnsPerMeasure" :key="lc" :data-row="rIdx"
-                :data-col="(line.startIdx + mLocalIdx) * document.columnsPerMeasure + lc - 1"
-                class="compose-content__cell"
-                :class="{ 'compose-content__cell--active': playingColumn === (line.startIdx + mLocalIdx) * document.columnsPerMeasure + lc - 1 }"
-                :value="getCell(row.dataIndex, (line.startIdx + mLocalIdx) * document.columnsPerMeasure + lc - 1)"
-                inputmode="numeric" maxlength="2"
-                :aria-label="`String ${row.label}, measure ${line.startIdx + mLocalIdx + 1}, beat ${lc}`"
-                @input="onCellInput(row.dataIndex, (line.startIdx + mLocalIdx) * document.columnsPerMeasure + lc - 1, $event)"
-                @keydown="onCellKeydown($event, rIdx, (line.startIdx + mLocalIdx) * document.columnsPerMeasure + lc - 1)">
-            </div>
-          </div>
-          <!-- Measure separator -->
-          <div class="compose-content__sep-col" aria-hidden="true">
-            <div class="compose-content__row-spacer" />
-            <div v-for="row in displayRows" :key="row.label" class="compose-content__sep-cell">|</div>
-          </div>
-        </template>
+      <div class="compose-toolbar__section">
+        <label class="tab-label" for="compose-bpm">BPM</label>
+        <input id="compose-bpm" class="tab-input tab-input--number" type="number" min="20" max="300" :value="doc.bpm"
+          aria-label="Tempo in BPM" @change="onBpmChange">
 
-        <!-- Append measure button: only on last line -->
-        <div v-if="lineIdx === tabLines.length - 1" class="compose-content__add-col">
-          <button class="compose-content__add" aria-label="Add measure" title="Add measure"
-            @click="addMeasure">+</button>
+        <label class="tab-label" for="compose-quant">Step</label>
+        <select id="compose-quant" class="tab-select" :value="doc.quantization" aria-label="Note value of one step"
+          @change="onQuantizationChange">
+          <option v-for="value in TAB_QUANTIZATIONS" :key="value" :value="value">
+            {{ TAB_QUANTIZATION_LABELS[value] }}
+          </option>
+        </select>
+
+        <button class="tab-btn tab-btn--icon compose-toolbar__play" :class="{ 'compose-toolbar__play--on': isPlaying }"
+          type="button" :aria-label="isPlaying ? 'Stop playback' : 'Play from the cursor'"
+          :title="isPlaying ? 'Stop (Space)' : 'Play from the cursor (Space) · from the start (Shift + Space)'"
+          data-testid="play" @click="togglePlay(false)">
+          {{ isPlaying ? '■' : '▶' }}
+        </button>
+        <button class="tab-btn tab-btn--icon" :class="{ 'tab-btn--active': loopEnabled }" type="button"
+          :aria-pressed="loopEnabled" aria-label="Loop playback" title="Loop the selection or the whole tablature"
+          @click="loopEnabled = !loopEnabled">
+          ⟲
+        </button>
+      </div>
+
+      <div class="compose-toolbar__section">
+        <button class="tab-btn" type="button" title="Import tablatures (⌘/Ctrl + I)" data-testid="open-import"
+          @click="showImport = true">
+          ⇩ Import
+        </button>
+        <button class="tab-btn" type="button" title="Rewrite for another instrument or tuning" data-testid="open-convert"
+          @click="openConvert()">
+          ⇄ Convert
+        </button>
+        <button class="tab-btn" type="button" title="Export this tablature (⌘/Ctrl + E)" data-testid="open-export"
+          @click="openExport()">
+          ⇧ Export
+        </button>
+      </div>
+
+      <div class="compose-toolbar__section compose-toolbar__section--end">
+        <div class="compose-toolbar__view-switch" role="group" aria-label="Main view">
+          <button class="compose-toolbar__view-switch-btn"
+            :class="{ 'compose-toolbar__view-switch-btn--active': currentView === 'trainer' }"
+            :aria-pressed="currentView === 'trainer'" @click="emit('switchView', 'trainer')">
+            Trainer
+          </button>
+          <button class="compose-toolbar__view-switch-btn"
+            :class="{ 'compose-toolbar__view-switch-btn--active': currentView === 'compose' }"
+            :aria-pressed="currentView === 'compose'" @click="emit('switchView', 'compose')">
+            Compose
+          </button>
         </div>
       </div>
-    </div>
+    </nav>
 
-  </main>
+    <main class="compose-content" role="region" aria-label="Tablature editor">
+      <TabEditToolbar class="compose-content__tools" :editor="editor" :status="status"
+        :save-failed="library.lastSaveFailed.value" @status="flash" />
 
-  <div v-if="isPreviewModalOpen" class="compose-preview-modal" role="dialog" aria-modal="true"
-    aria-label="Tablature text preview" @click.self="closePreviewModal">
-    <div class="compose-preview-modal__panel">
-      <header class="compose-preview-modal__header">
-        <h2 class="compose-preview-modal__title">Text preview</h2>
-        <button class="compose-preview-modal__close" type="button" aria-label="Close preview"
-          @click="closePreviewModal">
-          ×
-        </button>
-      </header>
+      <div class="compose-content__scroll">
+        <TabEditorGrid ref="grid" :editor="editor" :playing-column="playingColumn" :zoom="zoomLevel"
+          @play-from="playFromMeasure" @status="flash" />
+        <p class="compose-content__hint">
+          Arrows move · 0–9 frets · X muted · H P S B R V techniques · Shift + arrows select · ⌘/Ctrl + C/X/V/Z ·
+          press <kbd>?</kbd> for every shortcut
+        </p>
+      </div>
+    </main>
 
-      <pre class="compose-preview-modal__content">{{ asText }}</pre>
-
-      <footer class="compose-preview-modal__footer">
-        <button class="compose-toolbar__btn compose-toolbar__btn--primary" type="button" @click="copyPreviewText">
-          {{ previewCopyStatus }}
-        </button>
-      </footer>
-    </div>
-  </div>
+    <TabLibraryDialog v-model="showLibrary" :entries="library.entries.value" :current-id="doc.id"
+      :default-tuning-id="defaultTuningId" @open="onOpenFromLibrary" @create="onCreateFromLibrary"
+      @duplicate="duplicateTab" @delete="deleteTab" @convert="openConvert" @export="openExport"
+      @import="showImport = true" @backup="backupLibrary" />
+    <TabImportDialog ref="importDialog" v-model="showImport" :preferred-family="preferredFamily" @imported="onImported" />
+    <TabExportDialog v-model="showExport" :document="dialogDocument" />
+    <TabConvertDialog v-model="showConvert" :document="dialogDocument" @converted="onConverted" />
+    <TabSettingsDialog v-model="showSettings" :editor="editor" @convert="openConvertFromSettings" />
+  </section>
 </template>
 
 <script setup lang="ts">
-import { computed, ref, toRef, onMounted, onUnmounted } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, ref, shallowRef } from 'vue'
 import type { Instrument } from '@/types/chord'
-import type { Quantization } from '@/types/tablature'
-import { useComposeTab } from '@/renderer/composables/useComposeTab'
+import {
+  TAB_QUANTIZATIONS,
+  TAB_QUANTIZATION_LABELS,
+  type Quantization,
+  type TabInstrumentFamily,
+  type TablatureDocument,
+} from '@/types/tablature'
+import { useTabEditor } from '@/renderer/composables/useTabEditor'
+import { useTabLibrary } from '@/renderer/composables/useTabLibrary'
 import { useTablaturePlayback } from '@/renderer/composables/useTablaturePlayback'
+import { printTablature, saveFile } from '@/utils/tab/files'
+import { exportLibraryBackup } from '@/utils/tab/formats'
+import { createEmptyTablature } from '@/utils/tab/model'
+import { getTuningById, getTuningForInstrument } from '@/utils/tab/tunings'
+import TabConvertDialog from './TabConvertDialog.vue'
+import TabEditToolbar from './TabEditToolbar.vue'
+import TabEditorGrid from './TabEditorGrid.vue'
+import TabExportDialog from './TabExportDialog.vue'
+import TabImportDialog from './TabImportDialog.vue'
+import TabLibraryDialog from './TabLibraryDialog.vue'
+import TabSettingsDialog from './TabSettingsDialog.vue'
 
 type AppView = 'trainer' | 'compose'
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
+  /** App-wide instrument: decides the instrument of new tablatures */
   instrument: Instrument
   currentView?: AppView
-}>()
+  zoomLevel?: number
+}>(), {
+  currentView: 'compose',
+  zoomLevel: 100,
+})
 
 const emit = defineEmits<{
-  updateInstrument: [value: Instrument]
   switchView: [value: AppView]
 }>()
 
-const instrumentRef = toRef(props, 'instrument')
-const {
-  document,
-  totalColumns,
-  setTitle,
-  setCell,
-  getCell,
-  addMeasure,
-  removeMeasureAt,
-  setMeasuresPerLine,
-  setColumnsPerMeasure,
-  setBpm,
-  setQuantization,
-  newTablature,
-  asText,
-  copyToClipboard,
-} = useComposeTab(instrumentRef)
+const library = useTabLibrary()
+
+const preferredFamily = computed<TabInstrumentFamily>(() => (props.instrument === 'ukulele' ? 'ukulele' : 'guitar'))
+const defaultTuningId = computed(() => getTuningForInstrument(props.instrument).id)
+
+/** Last opened tablature, else the most recent one, else a new empty tablature. */
+const loadInitialDocument = (): TablatureDocument => {
+  const currentId = library.getCurrentId()
+  const candidates = [currentId, library.entries.value[0]?.id].filter((id): id is string => Boolean(id))
+  for (const id of candidates) {
+    const stored = library.load(id)
+    if (stored) return stored
+  }
+  const fresh = createEmptyTablature(getTuningForInstrument(props.instrument))
+  return library.save(fresh) ?? fresh
+}
+
+// Every change is saved straight away: there is no "save" step to forget.
+const editor = useTabEditor(loadInitialDocument(), (changed) => {
+  library.save(changed)
+})
+library.setCurrentId(editor.document.value.id)
+
+const doc = computed(() => editor.document.value)
+const tuningLabel = computed(() => `${doc.value.tuning.name}${doc.value.capo > 0 ? ` · Capo ${doc.value.capo}` : ''}`)
 
 const { isPlaying, playingColumn, play, stop } = useTablaturePlayback()
+const loopEnabled = ref(false)
 
-const isPreviewModalOpen = ref(false)
-const previewCopyStatus = ref('Copy text')
+const grid = ref<InstanceType<typeof TabEditorGrid> | null>(null)
+const importDialog = ref<InstanceType<typeof TabImportDialog> | null>(null)
 
-const displayRows = computed(() => {
-  const labels = props.instrument === 'ukulele' ? ['A', 'E', 'C', 'G'] : ['e', 'B', 'G', 'D', 'A', 'E']
+const showLibrary = ref(false)
+const showImport = ref(false)
+const showExport = ref(false)
+const showConvert = ref(false)
+const showSettings = ref(false)
+/** Tablature the export / convert dialogs work on (the open one, or one picked in the library). */
+const dialogDocument = shallowRef<TablatureDocument | null>(null)
 
-  return labels.map((label, displayIndex) => ({
-    label,
-    dataIndex: labels.length - 1 - displayIndex,
-  }))
-})
+const anyDialogOpen = computed(
+  () => showLibrary.value || showImport.value || showExport.value || showConvert.value || showSettings.value
+)
 
-const tabLines = computed(() => {
-  const mpl = document.value.measuresPerLine
-  const lines: { startIdx: number; measures: (typeof document.value.measures)[number][] }[] = []
-  for (let i = 0; i < document.value.measures.length; i += mpl) {
-    lines.push({ startIdx: i, measures: document.value.measures.slice(i, i + mpl) })
-  }
-  return lines
-})
+const status = ref('')
+let statusTimer: ReturnType<typeof setTimeout> | null = null
 
-const onTitleInput = (event: Event) => {
-  const target = event.target as HTMLInputElement
-  setTitle(target.value)
+const flash = (message: string): void => {
+  status.value = message
+  if (statusTimer !== null) globalThis.clearTimeout(statusTimer)
+  statusTimer = globalThis.setTimeout(() => {
+    status.value = ''
+  }, 2600)
 }
 
-const onCellInput = (stringIndex: number, columnIndex: number, event: Event) => {
-  const target = event.target as HTMLInputElement
-  setCell(stringIndex, columnIndex, target.value)
+const focusGrid = async (): Promise<void> => {
+  await nextTick()
+  grid.value?.focus()
 }
 
-const focusCell = (rowIndex: number, columnIndex: number) => {
-  if (rowIndex < 0 || rowIndex >= displayRows.value.length) {
-    return
-  }
+// ── Library actions ─────────────────────────────────────────────────────────
 
-  if (columnIndex < 0 || columnIndex >= totalColumns.value) {
-    return
-  }
-
-  const input = globalThis.document.querySelector<HTMLInputElement>(
-    `.compose-content__cell[data-row="${rowIndex}"][data-col="${columnIndex}"]`
-  )
-
-  input?.focus()
-  input?.select()
-}
-
-const onCellKeydown = (event: KeyboardEvent, rowIndex: number, columnIndex: number) => {
-  if (event.key === 'ArrowRight') {
-    event.preventDefault()
-    focusCell(rowIndex, columnIndex + 1)
-    return
-  }
-
-  if (event.key === 'ArrowLeft') {
-    event.preventDefault()
-    focusCell(rowIndex, columnIndex - 1)
-    return
-  }
-
-  if (event.key === 'ArrowDown') {
-    event.preventDefault()
-    focusCell(rowIndex + 1, columnIndex)
-    return
-  }
-
-  if (event.key === 'ArrowUp') {
-    event.preventDefault()
-    focusCell(rowIndex - 1, columnIndex)
-  }
-}
-
-const handleNewTablature = () => {
-  newTablature()
-  previewCopyStatus.value = 'Copy text'
-}
-
-const onBpmChange = (event: Event) => {
-  const target = event.target as HTMLInputElement
-  setBpm(Number(target.value))
-}
-
-const onQuantizationChange = (event: Event) => {
-  const target = event.target as HTMLSelectElement
-  setQuantization(Number(target.value) as Quantization)
-}
-
-const handlePlayStop = () => {
-  if (isPlaying.value) {
-    stop()
-  } else {
-    play(document.value)
-  }
-}
-
-const handlePlayFromMeasure = (measureIndex: number) => {
-  const startColumn = measureIndex * document.value.columnsPerMeasure
-  play(document.value, startColumn)
-}
-
-const openPreviewModal = () => {
-  isPreviewModalOpen.value = true
-}
-
-const closePreviewModal = () => {
-  isPreviewModalOpen.value = false
-  previewCopyStatus.value = 'Copy text'
-}
-
-const copyPreviewText = async () => {
-  const copied = await copyToClipboard()
-  previewCopyStatus.value = copied ? 'Copied' : 'Copy failed'
-
-  globalThis.setTimeout(() => {
-    previewCopyStatus.value = 'Copy text'
-  }, 1200)
-}
-
-const toggleInstrument = () => {
-  emit('updateInstrument', props.instrument === 'guitar' ? 'ukulele' : 'guitar')
-}
-
-const isTextEntryTarget = (target: EventTarget | null): boolean => {
-  if (!(target instanceof HTMLElement)) {
+const openTab = (id: string): boolean => {
+  const stored = library.load(id)
+  if (!stored) {
+    library.refresh()
+    flash('This tablature could not be opened')
     return false
   }
-
-  const tag = target.tagName.toLowerCase()
-  return tag === 'input' || tag === 'textarea' || target.isContentEditable
+  stop()
+  editor.load(stored)
+  library.setCurrentId(id)
+  return true
 }
 
-const handleComposeShortcuts = (event: KeyboardEvent) => {
-  // Keep typing flow natural in editable fields unless a modifier shortcut is used.
-  if (!event.metaKey && !event.ctrlKey && isTextEntryTarget(event.target)) {
+const createTab = (tuningId?: string): void => {
+  const tuning = (tuningId ? getTuningById(tuningId) : null) ?? getTuningForInstrument(props.instrument)
+  const fresh = createEmptyTablature(tuning)
+  const saved = library.save(fresh) ?? fresh
+  stop()
+  editor.load(saved)
+  library.setCurrentId(saved.id)
+  flash(`New tablature · ${tuning.name}`)
+  void focusGrid()
+}
+
+const onOpenFromLibrary = (id: string): void => {
+  if (openTab(id)) {
+    showLibrary.value = false
+    void focusGrid()
+  }
+}
+
+const onCreateFromLibrary = (tuningId: string): void => {
+  showLibrary.value = false
+  createTab(tuningId)
+}
+
+const duplicateTab = (id: string): void => {
+  const copy = library.duplicate(id)
+  flash(copy ? `“${copy.title}” added to the library` : 'The copy could not be saved')
+}
+
+const deleteTab = (id: string): void => {
+  const wasOpen = id === doc.value.id
+  library.remove(id)
+  if (!wasOpen) return
+  const next = library.entries.value[0]
+  if (!next || !openTab(next.id)) createTab()
+}
+
+const backupLibrary = (): void => {
+  saveFile(exportLibraryBackup(library.loadAll()))
+}
+
+const documentFor = (id?: string): TablatureDocument | null =>
+  !id || id === doc.value.id ? doc.value : library.load(id)
+
+const openExport = (id?: string): void => {
+  dialogDocument.value = documentFor(id)
+  showExport.value = dialogDocument.value !== null
+}
+
+const openConvert = (id?: string): void => {
+  dialogDocument.value = documentFor(id)
+  showConvert.value = dialogDocument.value !== null
+}
+
+const openConvertFromSettings = (): void => {
+  showSettings.value = false
+  openConvert()
+}
+
+const onImported = (documents: TablatureDocument[], open: boolean): void => {
+  const saved = documents.map((document) => library.save(document)).filter((item): item is TablatureDocument => item !== null)
+  if (saved.length < documents.length) {
+    flash('Some tablatures could not be saved: the storage is full')
+  } else {
+    flash(`${saved.length} ${saved.length === 1 ? 'tablature' : 'tablatures'} added to the library`)
+  }
+  if (open && saved[0] && openTab(saved[0].id)) {
+    showLibrary.value = false
+    void focusGrid()
+  }
+}
+
+const onConverted = (converted: TablatureDocument): void => {
+  const saved = library.save(converted)
+  if (!saved) {
+    flash('The converted tablature could not be saved')
     return
   }
+  showLibrary.value = false
+  if (openTab(saved.id)) {
+    flash(`Converted to ${saved.tuning.name}`)
+    void focusGrid()
+  }
+}
+
+const onDropFiles = async (event: DragEvent): Promise<void> => {
+  const files = Array.from(event.dataTransfer?.files ?? [])
+  if (files.length === 0 || showImport.value) return
+  showImport.value = true
+  await nextTick()
+  await importDialog.value?.loadFiles(files)
+}
+
+// ── Toolbar ─────────────────────────────────────────────────────────────────
+
+const onTitleInput = (event: Event): void => {
+  editor.setTitle((event.target as HTMLInputElement).value)
+}
+
+const onBpmChange = (event: Event): void => {
+  const input = event.target as HTMLInputElement
+  editor.setBpm(Number(input.value))
+  input.value = String(doc.value.bpm)
+}
+
+const onQuantizationChange = (event: Event): void => {
+  editor.setQuantization(Number((event.target as HTMLSelectElement).value) as Quantization)
+}
+
+// ── Playback ────────────────────────────────────────────────────────────────
+
+/** Plays the selected measures when several steps are selected, else from the cursor to the end. */
+const startPlayback = (fromStart: boolean): void => {
+  const starts = editor.starts.value
+  if (editor.hasRangeSelection.value && !fromStart) {
+    const { from, to } = editor.selectedMeasures.value
+    play(doc.value, { startColumn: starts[from], endColumn: starts[to + 1], loop: loopEnabled.value })
+    return
+  }
+  const startColumn = fromStart ? 0 : starts[editor.cursorMeasure.value]
+  play(doc.value, { startColumn, loop: loopEnabled.value })
+}
+
+const togglePlay = (fromStart: boolean): void => {
+  if (isPlaying.value) stop()
+  else startPlayback(fromStart)
+}
+
+const playFromMeasure = (measureIndex: number): void => {
+  play(doc.value, { startColumn: editor.starts.value[measureIndex], loop: loopEnabled.value })
+}
+
+// ── Keyboard shortcuts ──────────────────────────────────────────────────────
+
+const isTextEntryTarget = (target: EventTarget | null): boolean => {
+  if (!(target instanceof HTMLElement)) return false
+  const tag = target.tagName.toLowerCase()
+  return tag === 'input' || tag === 'textarea' || tag === 'select' || target.isContentEditable
+}
+
+const isButtonTarget = (target: EventTarget | null): boolean =>
+  target instanceof HTMLElement && ['button', 'a', 'summary'].includes(target.tagName.toLowerCase())
+
+const handleComposeShortcuts = (event: KeyboardEvent): void => {
+  // The grid and the dialogs handle their own keys first.
+  if (event.defaultPrevented || anyDialogOpen.value) return
 
   const hasPrimaryModifier = event.metaKey || event.ctrlKey
+  if (!hasPrimaryModifier && isTextEntryTarget(event.target)) return
 
-  if (hasPrimaryModifier && event.key.toLowerCase() === 'n') {
-    event.preventDefault()
-    handleNewTablature()
-    return
-  }
-
-  if (hasPrimaryModifier && event.key.toLowerCase() === 'p') {
-    event.preventDefault()
-
-    if (isPreviewModalOpen.value) {
-      closePreviewModal()
-    } else {
-      openPreviewModal()
+  if (!hasPrimaryModifier) {
+    if (event.key === ' ' && !isButtonTarget(event.target)) {
+      event.preventDefault()
+      togglePlay(event.shiftKey)
     }
     return
   }
 
-  if (hasPrimaryModifier && event.key.toLowerCase() === 's') {
+  const actions: Record<string, () => void> = {
+    n: () => createTab(),
+    o: () => { showLibrary.value = true },
+    i: () => { showImport.value = true },
+    e: () => openExport(),
+    p: () => printTablature(doc.value),
+    s: () => flash('Saved — every change is stored automatically'),
+    b: () => emit('switchView', 'trainer'),
+  }
+  const key = event.key.toLowerCase()
+
+  // Undo / redo also work when the focus is on a toolbar button rather than in the grid.
+  if ((key === 'z' || key === 'y') && !isTextEntryTarget(event.target)) {
     event.preventDefault()
-    void copyPreviewText()
+    if (key === 'y' || event.shiftKey) editor.redo()
+    else editor.undo()
     return
   }
 
-  if (hasPrimaryModifier && event.key.toLowerCase() === 'b') {
+  if (!event.altKey && !event.shiftKey && actions[key]) {
     event.preventDefault()
-    emit('switchView', 'trainer')
-    return
-  }
-
-  if (hasPrimaryModifier && event.key.toLowerCase() === 'i') {
-    event.preventDefault()
-    toggleInstrument()
-    return
-  }
-
-  if (event.key === 'Escape' && isPreviewModalOpen.value) {
-    event.preventDefault()
-    closePreviewModal()
-    return
-  }
-
-  if (event.key === ' ' && !isPreviewModalOpen.value) {
-    event.preventDefault()
-    handlePlayStop()
+    actions[key]()
   }
 }
 
@@ -389,18 +418,29 @@ onMounted(() => {
 
 onUnmounted(() => {
   globalThis.window.removeEventListener('keydown', handleComposeShortcuts)
+  if (statusTimer !== null) globalThis.clearTimeout(statusTimer)
 })
 </script>
 
 <style scoped>
-/* ── Top bar — mirrors .toolbar in AutoCycleControls ── */
-.compose-toolbar {
+/* The workspace fills the window between its edges and the bottom status bar. */
+.compose {
   position: fixed;
   top: 12px;
   left: 16px;
   right: 16px;
+  bottom: 80px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* ── Top bar — mirrors .toolbar in AutoCycleControls ── */
+.compose-toolbar {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
+  row-gap: 0.4rem;
   background: var(--glass-bg);
   backdrop-filter: blur(var(--glass-blur));
   -webkit-backdrop-filter: blur(var(--glass-blur));
@@ -409,107 +449,56 @@ onUnmounted(() => {
   border-radius: var(--glass-radius);
   padding: 0.5rem 1rem;
   z-index: 100;
-  transition: box-shadow 0.3s ease, background 0.3s ease;
-  gap: 0;
-}
-
-.compose-toolbar:hover {
-  box-shadow: var(--glass-shadow-hover), var(--glass-inset-highlight);
-  background: var(--glass-bg-hover);
 }
 
 .compose-toolbar__section {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0 1rem;
+  gap: 0.4rem;
+  padding: 0 0.75rem;
 }
 
 .compose-toolbar__section:first-of-type {
   padding-left: 0;
 }
 
-.compose-toolbar__section+.compose-toolbar__section {
+.compose-toolbar__section + .compose-toolbar__section {
   border-left: 1px solid var(--glass-border);
 }
 
 .compose-toolbar__section--title {
-  flex: 1;
+  flex: 1 1 260px;
   min-width: 0;
 }
 
 .compose-toolbar__section--end {
   margin-left: auto;
   padding-right: 0;
-  border-left: none !important;
-  gap: 0.6rem;
 }
 
-.compose-toolbar__label {
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: var(--text-secondary);
-  white-space: nowrap;
-}
-
-.compose-toolbar__title-input {
-  height: 30px;
+.compose-toolbar__title {
   flex: 1;
+  min-width: 80px;
+  font-weight: 600;
+}
+
+.compose-toolbar__tuning {
+  flex-shrink: 1;
   min-width: 0;
-  padding: 0 0.6rem;
-  border-radius: var(--glass-radius-sm);
-  border: 1px solid var(--glass-border);
-  background: rgba(255, 255, 255, 0.07);
-  color: var(--text-primary);
-  font-size: 0.85rem;
+  max-width: 260px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+  color: var(--accent-primary);
 }
 
-.compose-toolbar__btn {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  height: 30px;
-  padding: 0 0.7rem;
-  border-radius: var(--glass-radius-sm);
-  border: 1px solid var(--glass-border);
-  background: rgba(255, 255, 255, 0.06);
-  color: var(--text-primary);
-  font-size: 0.82rem;
-  font-weight: 600;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: background 0.2s, border-color 0.2s;
+.compose-toolbar__play {
+  width: 36px;
 }
 
-.compose-toolbar__btn:hover:not(:disabled) {
-  background: var(--accent-primary);
-  border-color: var(--accent-primary);
-}
-
-.compose-toolbar__btn:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
-.compose-toolbar__btn--primary {
-  background: var(--accent-primary);
-  border-color: var(--accent-primary);
-}
-
-.compose-toolbar__btn--stepper {
-  width: 28px;
-  padding: 0;
-  justify-content: center;
-  font-size: 1rem;
-  font-weight: 700;
-}
-
-.compose-toolbar__stepper-val {
-  min-width: 18px;
-  text-align: center;
-  font-size: 0.82rem;
-  font-weight: 600;
-  color: var(--text-primary);
+.compose-toolbar__play--on {
+  border-color: var(--tab-danger);
+  color: var(--tab-danger);
 }
 
 .compose-toolbar__view-switch {
@@ -537,360 +526,64 @@ onUnmounted(() => {
 .compose-toolbar__view-switch-btn--active {
   background: var(--accent-primary);
   border-color: var(--accent-primary);
+  color: #1a1a1a;
 }
 
-/* ── Main content area — mirrors .chord-display ── */
+/* ── Editor area ── */
 .compose-content {
+  flex: 1;
+  min-height: 0;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: flex-start;
-  width: 100%;
-  height: calc(100vh - 140px);
-  margin-top: 72px;
-  margin-bottom: 68px;
-  padding: 0.75rem 2rem 1.5rem;
-  overflow-y: auto;
-  overflow-x: hidden;
-  gap: 1.5rem;
-}
-
-.compose-content__hint {
-  color: var(--text-secondary);
-  font-size: 0.82rem;
-  text-align: center;
-}
-
-/* Grid: column-first layout for natural per-measure alignment */
-.compose-content__lines {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-  align-items: flex-start;
-}
-
-.compose-content__line {
-  display: flex;
-  align-items: flex-start;
-  overflow-x: auto;
-  max-width: calc(100vw - 4rem);
-}
-
-.compose-content__labels-col {
-  display: flex;
-  flex-direction: column;
-  flex-shrink: 0;
-}
-
-.compose-content__row-spacer {
-  height: 28px;
-  flex-shrink: 0;
-}
-
-.compose-content__label {
-  height: 38px;
-  width: 32px;
-  display: flex;
-  align-items: center;
-  font-family: monospace;
-  font-size: 1rem;
-  color: var(--accent-primary);
-  user-select: none;
-}
-
-.compose-content__measure-col {
-  display: flex;
-  flex-direction: column;
-  flex-shrink: 0;
-}
-
-.compose-content__measure-hd {
-  height: 28px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-}
-
-.compose-content__play-from {
-  background: transparent;
-  border: 1px solid transparent;
-  color: var(--muted);
-  border-radius: 4px;
-  width: 20px;
-  height: 20px;
-  font-size: 0.6rem;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background 0.15s, color 0.15s, border-color 0.15s;
-}
-
-.compose-content__play-from:hover {
-  background: rgba(80, 180, 120, 0.18);
-  color: #50c878;
-  border-color: rgba(80, 180, 120, 0.35);
-}
-
-.compose-content__del {
-  background: transparent;
-  border: 1px solid transparent;
-  color: var(--muted);
-  border-radius: 4px;
-  width: 20px;
-  height: 20px;
-  font-size: 0.85rem;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background 0.15s, color 0.15s, border-color 0.15s;
-}
-
-.compose-content__del:hover:not(:disabled) {
-  background: rgba(220, 80, 60, 0.18);
-  color: #e05a50;
-  border-color: rgba(220, 80, 60, 0.35);
-}
-
-.compose-content__del:disabled {
-  opacity: 0.2;
-  cursor: not-allowed;
-}
-
-.compose-content__cells-row {
-  height: 38px;
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-}
-
-.compose-content__sep-col {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  flex-shrink: 0;
-  width: 14px;
-}
-
-.compose-content__sep-cell {
-  height: 38px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--text-secondary);
-  font-family: monospace;
-  user-select: none;
-}
-
-.compose-content__add-col {
-  display: flex;
-  align-items: flex-start;
-  flex-shrink: 0;
-  padding-left: 2px;
-}
-
-.compose-content__add {
-  height: 28px;
-  padding: 0 0.55rem;
-  background: rgba(255, 255, 255, 0.06);
+  gap: 0.6rem;
+  padding: 0.6rem 0.9rem 0;
   border: 1px solid var(--glass-border);
-  border-radius: var(--glass-radius-sm);
-  color: var(--text-primary);
-  font-size: 1rem;
-  font-weight: 700;
-  cursor: pointer;
-  transition: background 0.15s, border-color 0.15s;
-}
-
-.compose-content__add:hover {
-  background: var(--accent-primary);
-  border-color: var(--accent-primary);
-}
-
-.compose-content__cells {
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-}
-
-.compose-content__cell {
-  width: 42px;
-  height: 32px;
-  text-align: center;
-  font-size: 0.9rem;
-  font-family: monospace;
-  border-radius: 6px;
-  border: 1px solid var(--glass-border);
-  background: rgba(255, 255, 255, 0.07);
-  color: var(--text-primary);
-  transition: border-color 0.15s, background 0.15s;
-}
-
-.compose-content__cell:focus {
-  border-color: var(--accent-primary);
-  background: rgba(212, 165, 116, 0.12);
-  outline: none;
-}
-
-.compose-content__cell--active {
-  border-color: var(--accent-primary);
-  background: rgba(212, 165, 116, 0.28);
-  box-shadow: 0 0 0 2px rgba(212, 165, 116, 0.35);
-}
-
-.compose-toolbar__bpm-input {
-  height: 30px;
-  width: 58px;
-  padding: 0 0.4rem;
-  border-radius: var(--glass-radius-sm);
-  border: 1px solid var(--glass-border);
-  background: rgba(255, 255, 255, 0.07);
-  color: var(--text-primary);
-  font-size: 0.82rem;
-  font-weight: 600;
-  text-align: center;
-  /* hide native spin buttons — stepper feel is handled by the number input */
-  -moz-appearance: textfield;
-}
-
-.compose-toolbar__bpm-input::-webkit-outer-spin-button,
-.compose-toolbar__bpm-input::-webkit-inner-spin-button {
-  -webkit-appearance: none;
-}
-
-.compose-toolbar__bpm-input:focus {
-  outline: none;
-  border-color: var(--accent-primary);
-}
-
-.compose-toolbar__select {
-  height: 30px;
-  padding: 0 0.5rem;
-  border-radius: var(--glass-radius-sm);
-  border: 1px solid var(--glass-border);
-  background: rgba(255, 255, 255, 0.07);
-  color: var(--text-primary);
-  font-size: 0.82rem;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.compose-toolbar__select:focus {
-  outline: none;
-  border-color: var(--accent-primary);
-}
-
-.compose-toolbar__btn--play {
-  min-width: 36px;
-  font-size: 0.9rem;
-  gap: 0;
-  justify-content: center;
-  padding: 0;
-}
-
-.compose-toolbar__btn--playing {
-  background: rgba(220, 80, 60, 0.22);
-  border-color: rgba(220, 80, 60, 0.5);
-  color: #e05a50;
-}
-
-.compose-toolbar__btn--playing:hover:not(:disabled) {
-  background: rgba(220, 80, 60, 0.4);
-  border-color: rgba(220, 80, 60, 0.7);
-}
-
-.compose-preview-modal {
-  position: fixed;
-  inset: 0;
-  z-index: 200;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 1rem;
-  background: rgba(0, 0, 0, 0.52);
-}
-
-.compose-preview-modal__panel {
-  width: min(900px, 100%);
-  max-height: 85vh;
-  display: flex;
-  flex-direction: column;
   border-radius: var(--glass-radius);
-  border: 1px solid var(--glass-border);
   background: var(--glass-bg);
-  backdrop-filter: blur(var(--glass-blur));
-  -webkit-backdrop-filter: blur(var(--glass-blur));
-  box-shadow: var(--glass-shadow), var(--glass-inset-highlight);
 }
 
-.compose-preview-modal__header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0.8rem 1rem;
+.compose-content__tools {
+  flex-shrink: 0;
+  padding-bottom: 0.55rem;
   border-bottom: 1px solid var(--glass-border);
 }
 
-.compose-preview-modal__title {
-  margin: 0;
-  color: var(--text-primary);
-  font-size: 1rem;
-  font-weight: 700;
-}
-
-.compose-preview-modal__close {
-  width: 28px;
-  height: 28px;
-  border: 1px solid var(--glass-border);
-  border-radius: var(--glass-radius-sm);
-  background: transparent;
-  color: var(--text-primary);
-  font-size: 1rem;
-  cursor: pointer;
-}
-
-.compose-preview-modal__content {
-  margin: 0;
-  padding: 1rem;
+.compose-content__scroll {
+  flex: 1;
+  min-height: 0;
   overflow: auto;
-  color: var(--text-primary);
-  font-size: 0.85rem;
-  line-height: 1.45;
+  padding-bottom: 0.75rem;
 }
 
-.compose-preview-modal__footer {
-  display: flex;
-  justify-content: flex-end;
-  padding: 0.8rem 1rem;
-  border-top: 1px solid var(--glass-border);
+.compose-content__hint {
+  margin-top: 0.5rem;
+  color: var(--muted);
+  font-size: 0.76rem;
+  text-align: center;
 }
 
-/* ── Responsive ── */
-@media (max-width: 820px) {
-  .compose-toolbar {
-    flex-wrap: wrap;
-    gap: 0.35rem;
-  }
+.compose-content__hint kbd {
+  padding: 0 0.3rem;
+  border: 1px solid var(--glass-border-strong);
+  border-radius: 4px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  color: var(--accent-primary);
+}
 
-  .compose-toolbar__section {
-    padding: 0.25rem 0.5rem;
-  }
-
-  .compose-toolbar__section+.compose-toolbar__section {
+@media (max-width: 1100px) {
+  .compose-toolbar__section + .compose-toolbar__section {
     border-left: none;
   }
 
-  .compose-toolbar__section--end {
-    width: 100%;
-    justify-content: flex-end;
+  .compose-toolbar__section {
+    padding: 0 0.4rem;
   }
+}
 
-  .compose-content {
-    height: calc(100vh - 168px);
-    margin-top: 96px;
-    padding: 0.6rem 1rem 1rem;
+@media (prefers-reduced-motion: reduce) {
+  .compose-toolbar {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
   }
 }
 </style>

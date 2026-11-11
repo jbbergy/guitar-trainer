@@ -1,6 +1,7 @@
 import { ref, onUnmounted } from 'vue'
 import type { TablatureDocument } from '@/types/tablature'
-import { fretToFrequency, columnDurationSeconds, playNote } from '@/utils/music/tabPlayback'
+import { columnDurationSeconds, midiToFrequency, playNote } from '@/utils/music/tabPlayback'
+import { collectTabEvents, notePitch, type TabNoteEvent } from '@/utils/tab/rhythm'
 
 /**
  * How far ahead (in seconds) the scheduler pre-fills the audio timeline.
@@ -13,21 +14,45 @@ const SCHEDULE_AHEAD_TIME = 0.1
  */
 const SCHEDULER_INTERVAL = 25
 
+/** A plucked string rings until it is played again, but never longer than this. */
+const MAX_RING_SECONDS = 3
+
+export interface PlaybackRange {
+    /** First global column played (default 0) */
+    startColumn?: number
+    /** Column after the last one played (default: end of the tablature) */
+    endColumn?: number
+    /** Start again from startColumn when the end is reached */
+    loop?: boolean
+}
+
+interface ScheduledNote {
+    event: TabNoteEvent
+    /** Number of columns before the same string is played again */
+    ringColumns: number
+}
+
 export function useTablaturePlayback() {
     const isPlaying = ref(false)
     const playingColumn = ref<number | null>(null)
 
     let audioCtx: AudioContext | null = null
+    let masterGain: GainNode | null = null
     let schedulerTimer: ReturnType<typeof setTimeout> | null = null
+    let uiTimers: ReturnType<typeof setTimeout>[] = []
 
     // Playback cursor — mutated only inside the scheduler loop
     let nextColumnTime = 0
     let currentColumnIndex = 0
-    let totalColumns = 0
+    let rangeStart = 0
+    let rangeEnd = 0
+    let loop = false
     let colDuration = 0
 
-    // Frozen copy of the document taken the moment play() is called
-    let documentSnapshot: TablatureDocument | null = null
+    // Frozen view of the document taken the moment play() is called
+    let notesByColumn: Map<number, ScheduledNote[]> = new Map()
+    let openStrings: number[] = []
+    let capo = 0
 
     const getOrCreateContext = (): AudioContext => {
         if (!audioCtx || audioCtx.state === 'closed') {
@@ -36,39 +61,54 @@ export function useTablaturePlayback() {
         return audioCtx
     }
 
+    /** Flattens the measures into notes keyed by global column, with how long each one rings. */
+    const prepare = (doc: TablatureDocument): number => {
+        const flat: { column: number; event: TabNoteEvent }[] = []
+        let offset = 0
+        for (const measure of collectTabEvents(doc.measures)) {
+            for (const onset of measure.onsets) {
+                for (const event of onset.notes) flat.push({ column: offset + onset.column, event })
+            }
+            offset += measure.columns
+        }
+
+        const nextOnString = new Map<number, number>()
+        notesByColumn = new Map()
+        for (let i = flat.length - 1; i >= 0; i--) {
+            const { column, event } = flat[i]
+            const next = nextOnString.get(event.string) ?? offset
+            nextOnString.set(event.string, column)
+            const list = notesByColumn.get(column) ?? []
+            list.push({ event, ringColumns: Math.max(1, next - column) })
+            notesByColumn.set(column, list)
+        }
+        return offset
+    }
+
     /**
      * Schedules all notes for a given column index at the given audio timestamp.
      * Also queues a setTimeout to update the reactive playingColumn at the right moment.
      */
     const scheduleColumn = (ctx: AudioContext, columnIndex: number, columnTime: number): void => {
-        if (!documentSnapshot) return
-        const { instrument, measures, columnsPerMeasure } = documentSnapshot
-
-        const measureIndex = Math.floor(columnIndex / columnsPerMeasure)
-        const localCol = columnIndex % columnsPerMeasure
-        const measure = measures[measureIndex]
-        if (!measure) return
-
-        for (let stringIndex = 0; stringIndex < measure.rows.length; stringIndex++) {
-            const cell = measure.rows[stringIndex]?.[localCol]
-            if (!cell || cell === '' || cell === 'x') continue
-
-            const fret = parseInt(cell, 10)
-            if (Number.isNaN(fret)) continue
-
-            const freq = fretToFrequency(instrument, stringIndex, fret)
-            if (freq > 0) {
-                playNote(ctx, freq, columnTime, colDuration * 0.9)
-            }
+        for (const { event, ringColumns } of notesByColumn.get(columnIndex) ?? []) {
+            const pitch = notePitch(openStrings, capo, event.string, event.fret ?? 0)
+            playNote(ctx, midiToFrequency(pitch), columnTime, Math.min(MAX_RING_SECONDS, ringColumns * colDuration), {
+                destination: masterGain ?? undefined,
+                dead: event.fret === null,
+                legato: event.legato,
+                bend: event.bend,
+                bendRelease: event.bendRelease,
+                vibrato: event.technique === '~',
+            })
         }
 
         // Sync the reactive cursor to the audio clock using a wall-clock delay
         const uiDelay = Math.max(0, (columnTime - ctx.currentTime) * 1000)
-        globalThis.setTimeout(() => {
+        uiTimers.push(globalThis.setTimeout(() => {
             if (isPlaying.value) {
                 playingColumn.value = columnIndex
             }
-        }, uiDelay)
+        }, uiDelay))
     }
 
     /**
@@ -78,17 +118,21 @@ export function useTablaturePlayback() {
      */
     const scheduler = (): void => {
         const ctx = audioCtx
-        if (!ctx || !documentSnapshot) return
+        if (!ctx || !isPlaying.value) return
 
         while (nextColumnTime < ctx.currentTime + SCHEDULE_AHEAD_TIME) {
             scheduleColumn(ctx, currentColumnIndex, nextColumnTime)
             nextColumnTime += colDuration
             currentColumnIndex++
 
-            if (currentColumnIndex >= totalColumns) {
+            if (currentColumnIndex >= rangeEnd) {
+                if (loop) {
+                    currentColumnIndex = rangeStart
+                    continue
+                }
                 // Wait for the last column to finish, then stop
                 const endDelay = Math.max(0, (nextColumnTime - ctx.currentTime) * 1000)
-                globalThis.setTimeout(stop, endDelay)
+                schedulerTimer = globalThis.setTimeout(stop, endDelay)
                 return
             }
         }
@@ -97,21 +141,32 @@ export function useTablaturePlayback() {
     }
 
     /**
-     * Starts playback from the given column index (defaults to 0).
-     * If playback is already running it is stopped first.
+     * Starts playback. `range` is either the first column to play or a full range
+     * (start, end, loop). If playback is already running it is stopped first.
      */
-    const play = (doc: TablatureDocument, startColumn = 0): void => {
+    const play = (doc: TablatureDocument, range: number | PlaybackRange = 0): void => {
         if (isPlaying.value) stop()
+
+        const options: PlaybackRange = typeof range === 'number' ? { startColumn: range } : range
+        const total = prepare(doc)
+        if (total === 0) return
 
         const ctx = getOrCreateContext()
         if (ctx.state === 'suspended') {
             ctx.resume()
         }
 
-        documentSnapshot = doc
-        totalColumns = doc.measures.length * doc.columnsPerMeasure
+        masterGain = ctx.createGain()
+        masterGain.gain.setValueAtTime(1, ctx.currentTime)
+        masterGain.connect(ctx.destination)
+
+        openStrings = [...doc.tuning.strings]
+        capo = doc.capo
         colDuration = columnDurationSeconds(doc.bpm, doc.quantization)
-        currentColumnIndex = Math.max(0, Math.min(startColumn, totalColumns - 1))
+        rangeEnd = Math.max(1, Math.min(options.endColumn ?? total, total))
+        rangeStart = Math.max(0, Math.min(options.startColumn ?? 0, rangeEnd - 1))
+        loop = options.loop ?? false
+        currentColumnIndex = rangeStart
         nextColumnTime = ctx.currentTime + 0.05  // small lead-in offset
 
         isPlaying.value = true
@@ -121,16 +176,29 @@ export function useTablaturePlayback() {
     }
 
     /**
-     * Stops playback immediately and resets the cursor.
+     * Stops playback immediately, silences ringing notes and resets the cursor.
      */
     const stop = (): void => {
         if (schedulerTimer !== null) {
             globalThis.clearTimeout(schedulerTimer)
             schedulerTimer = null
         }
+        uiTimers.forEach((timer) => globalThis.clearTimeout(timer))
+        uiTimers = []
+
+        if (masterGain && audioCtx) {
+            const fading = masterGain
+            const now = audioCtx.currentTime
+            fading.gain.cancelScheduledValues(now)
+            fading.gain.setValueAtTime(fading.gain.value, now)
+            fading.gain.linearRampToValueAtTime(0, now + 0.03)
+            globalThis.setTimeout(() => fading.disconnect(), 80)
+            masterGain = null
+        }
+
         isPlaying.value = false
         playingColumn.value = null
-        documentSnapshot = null
+        notesByColumn = new Map()
     }
 
     onUnmounted(stop)

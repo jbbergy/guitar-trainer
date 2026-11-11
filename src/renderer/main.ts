@@ -2,6 +2,7 @@ import { createApp } from 'vue'
 import App from './App.vue'
 import './styles/theme.css'
 import './styles/chord-diagram.css'
+import './styles/tab-ui.css'
 
 const app = createApp(App)
 
